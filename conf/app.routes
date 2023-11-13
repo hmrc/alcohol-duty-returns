@@ -1,7 +1,5 @@
 # microservice specific routes
 
-GET        /hello-world             uk.gov.hmrc.alcoholdutyreturns.controllers.MicroserviceHelloWorldController.hello
-
 # User Answers Cache
 GET         /cache/get/:internalId                            uk.gov.hmrc.alcoholdutyreturns.controllers.CacheController.get(internalId: String)
 POST        /cache/set/:internalId                            uk.gov.hmrc.alcoholdutyreturns.controllers.CacheController.set(internalId: String)
