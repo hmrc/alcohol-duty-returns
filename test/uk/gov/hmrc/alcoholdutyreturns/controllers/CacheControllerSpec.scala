@@ -55,22 +55,22 @@ class CacheControllerSpec extends SpecBase {
       val result: Future[Result] =
         controller.get("id")(fakeRequest)
 
-      status(result)        shouldBe NOT_FOUND
+      status(result) shouldBe NOT_FOUND
     }
 
-      "set" should {
-        "return 200 OK with the user answers that was inserted" in {
-          when(mockCacheRepository.set(any())).thenReturn(Future.successful(true))
+    "set" should {
+      "return 200 OK with the user answers that was inserted" in {
+        when(mockCacheRepository.set(any())).thenReturn(Future.successful(true))
 
-          val result: Future[Result] =
-            controller.set("internalId")(
-              fakeRequestWithJsonBody(Json.toJson(emptyUserAnswers))
-            )
+        val result: Future[Result] =
+          controller.set("internalId")(
+            fakeRequestWithJsonBody(Json.toJson(emptyUserAnswers))
+          )
 
-          status(result)        shouldBe OK
-          contentAsJson(result) shouldBe Json.toJson(emptyUserAnswers)
-        }
+        status(result)        shouldBe OK
+        contentAsJson(result) shouldBe Json.toJson(emptyUserAnswers)
       }
+    }
   }
 
 }

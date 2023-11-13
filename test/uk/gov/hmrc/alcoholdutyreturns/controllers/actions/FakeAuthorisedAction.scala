@@ -21,7 +21,7 @@ import play.api.mvc._
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-class FakeAuthorisedAction @Inject()(bodyParsers: PlayBodyParsers) extends AuthorisedAction {
+class FakeAuthorisedAction @Inject() (bodyParsers: PlayBodyParsers) extends AuthorisedAction {
 
   override def parser: BodyParser[AnyContent] = bodyParsers.defaultBodyParser
 

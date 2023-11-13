@@ -32,7 +32,7 @@ import java.time.{Clock, Instant, ZoneId}
 import scala.concurrent.ExecutionContext
 
 class CacheRepositorySpec
-  extends AnyFreeSpec
+    extends AnyFreeSpec
     with Matchers
     with DefaultPlayMongoRepositorySupport[UserAnswers]
     with ScalaFutures
@@ -42,7 +42,7 @@ class CacheRepositorySpec
 
   implicit val ec: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
 
-  private val instant = Instant.now
+  private val instant          = Instant.now
   private val stubClock: Clock = Clock.fixed(instant, ZoneId.systemDefault)
 
   private val userAnswers = UserAnswers("id", Json.obj("foo" -> "bar"), Instant.ofEpochSecond(1))
@@ -52,8 +52,8 @@ class CacheRepositorySpec
 
   protected override val repository = new CacheRepository(
     mongoComponent = mongoComponent,
-    appConfig      = mockAppConfig,
-    clock          = stubClock
+    appConfig = mockAppConfig,
+    clock = stubClock
   )
 
   ".set" - {
@@ -92,8 +92,6 @@ class CacheRepositorySpec
       }
     }
   }
-
-
 
   ".keepAlive" - {
 

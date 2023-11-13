@@ -31,7 +31,7 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class CacheRepository @Inject()(
+class CacheRepository @Inject() (
   mongoComponent: MongoComponent,
   appConfig: AppConfig,
   clock: Clock
@@ -41,10 +41,11 @@ class CacheRepository @Inject()(
       mongoComponent = mongoComponent,
       domainFormat = UserAnswers.format,
       indexes = Seq(
-        IndexModel(Indexes.ascending("lastUpdated"),
-                   IndexOptions()
-                     .name("lastUpdatedIdx")
-                     .expireAfter(appConfig.dbTimeToLiveInSeconds, TimeUnit.SECONDS)
+        IndexModel(
+          Indexes.ascending("lastUpdated"),
+          IndexOptions()
+            .name("lastUpdatedIdx")
+            .expireAfter(appConfig.dbTimeToLiveInSeconds, TimeUnit.SECONDS)
         )
       ),
       replaceIndexes = true
@@ -61,11 +62,10 @@ class CacheRepository @Inject()(
       .map(_ => true)
 
   def get(id: String): Future[Option[UserAnswers]] =
-    keepAlive(id).flatMap {
-      _ =>
-        collection
-          .find(byId(id))
-          .headOption()
+    keepAlive(id).flatMap { _ =>
+      collection
+        .find(byId(id))
+        .headOption()
     }
 
   def set(answers: UserAnswers): Future[Boolean] = {
@@ -73,9 +73,10 @@ class CacheRepository @Inject()(
     val updatedAnswers = answers copy (lastUpdated = Instant.now(clock))
 
     collection
-      .replaceOne(filter = byId(updatedAnswers.id),
-                  replacement = updatedAnswers,
-                  options = ReplaceOptions().upsert(true)
+      .replaceOne(
+        filter = byId(updatedAnswers.id),
+        replacement = updatedAnswers,
+        options = ReplaceOptions().upsert(true)
       )
       .toFuture()
       .map(_ => true)

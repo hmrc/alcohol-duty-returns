@@ -55,8 +55,8 @@ trait SpecBase
   def configOverrides: Map[String, Any] = Map()
 
   val additionalAppConfig: Map[String, Any] = Map(
-    "metrics.enabled"                     -> false,
-    "auditing.enabled"                    -> false
+    "metrics.enabled"  -> false,
+    "auditing.enabled" -> false
   ) ++ configOverrides
 
   override def fakeApplication(): Application =

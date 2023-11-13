@@ -43,20 +43,20 @@ class BaseAuthorisedAction @Inject() (
     with AuthorisedFunctions {
 
   override def invokeBlock[A](request: Request[A], block: Request[A] => Future[Result]): Future[Result] = {
-  implicit val headerCarrier: HeaderCarrier = hc(request)
+    implicit val headerCarrier: HeaderCarrier = hc(request)
 
-  authorised((AuthProviders(GovernmentGateway))) {
-    block(request)
-  } recover { case e: AuthorisationException =>
-    Unauthorized(
-      Json.toJson(
-        ErrorResponse(
-          UNAUTHORIZED,
-          e.reason
+    authorised((AuthProviders(GovernmentGateway))) {
+      block(request)
+    } recover { case e: AuthorisationException =>
+      Unauthorized(
+        Json.toJson(
+          ErrorResponse(
+            UNAUTHORIZED,
+            e.reason
+          )
         )
       )
-    )
+    }
   }
-}
 
 }
