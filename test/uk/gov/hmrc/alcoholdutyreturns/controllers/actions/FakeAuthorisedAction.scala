@@ -14,17 +14,20 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.alcoholdutyreturns.controllers
+package uk.gov.hmrc.alcoholdutyreturns.controllers.actions
 
-import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
-import play.api.mvc.{Action, AnyContent, ControllerComponents}
-import javax.inject.{Inject, Singleton}
-import scala.concurrent.Future
+import play.api.mvc._
 
-@Singleton()
-class MicroserviceHelloWorldController @Inject() (cc: ControllerComponents) extends BackendController(cc) {
+import javax.inject.Inject
+import scala.concurrent.{ExecutionContext, Future}
 
-  def hello(): Action[AnyContent] = Action.async { implicit request =>
-    Future.successful(Ok("Hello world"))
-  }
+class FakeAuthorisedAction @Inject() (bodyParsers: PlayBodyParsers) extends AuthorisedAction {
+
+  override def parser: BodyParser[AnyContent] = bodyParsers.defaultBodyParser
+
+  override def invokeBlock[A](request: Request[A], block: Request[A] => Future[Result]): Future[Result] =
+    block(request)
+
+  override protected def executionContext: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
+
 }

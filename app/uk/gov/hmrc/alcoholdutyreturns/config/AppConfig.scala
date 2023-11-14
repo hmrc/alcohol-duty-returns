@@ -16,11 +16,15 @@
 
 package uk.gov.hmrc.alcoholdutyreturns.config
 
-import javax.inject.{Inject, Singleton}
 import play.api.Configuration
+
+import javax.inject.{Inject, Singleton}
 
 @Singleton
 class AppConfig @Inject() (config: Configuration) {
 
   val appName: String = config.get[String]("appName")
+
+  val dbTimeToLiveInSeconds: Int = config.get[Int]("mongodb.timeToLiveInSeconds")
+
 }
