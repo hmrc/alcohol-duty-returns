@@ -22,7 +22,7 @@ The service runs on port `16001` by default.
 
 ## Scalafmt and Scalastyle
 
-To check if all the scala files in the project are formatted correctly:
+To check if all the scala files in the project are formatted correctly: 
 > `sbt scalafmtCheckAll`
 
 To format all the scala files in the project correctly:
