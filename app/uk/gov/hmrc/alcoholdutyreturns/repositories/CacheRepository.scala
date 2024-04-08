@@ -57,7 +57,13 @@ class CacheRepository @Inject() (
 
   def keepAlive(id: String): Future[Boolean] =
     collection
-      .updateOne(filter = byId(id), update = Updates.set("lastUpdated", Instant.now(clock)))
+      .updateOne(
+        filter = byId(id),
+        update = Updates.combine(
+          Updates.set("lastUpdated", Instant.now(clock)),
+          Updates.set("validUntil", Instant.now(clock).plusSeconds(appConfig.dbTimeToLiveInSeconds))
+        )
+      )
       .toFuture()
       .map(_ => true)
 
@@ -70,7 +76,10 @@ class CacheRepository @Inject() (
 
   def set(answers: UserAnswers): Future[Boolean] = {
 
-    val updatedAnswers = answers copy (lastUpdated = Instant.now(clock))
+    val updatedAnswers = answers.copy(
+      lastUpdated = Instant.now(clock),
+      validUntil = Some(Instant.now(clock).plusSeconds(appConfig.dbTimeToLiveInSeconds))
+    )
 
     collection
       .replaceOne(
