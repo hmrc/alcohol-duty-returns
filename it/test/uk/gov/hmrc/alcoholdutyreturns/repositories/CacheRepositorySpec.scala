@@ -47,8 +47,10 @@ class CacheRepositorySpec
 
   private val userAnswers = UserAnswers("id", Json.obj("foo" -> "bar"), Instant.ofEpochSecond(1))
 
+  private val DB_TTL_IN_SEC = 100
+
   private val mockAppConfig = mock[AppConfig]
-  when(mockAppConfig.dbTimeToLiveInSeconds) thenReturn 1
+  when(mockAppConfig.dbTimeToLiveInSeconds) thenReturn DB_TTL_IN_SEC
 
   protected override val repository = new CacheRepository(
     mongoComponent = mongoComponent,
@@ -60,7 +62,10 @@ class CacheRepositorySpec
 
     "must set the last updated time on the supplied user answers to `now`, and save them" in {
 
-      val expectedResult = userAnswers copy (lastUpdated = instant.truncatedTo(ChronoUnit.MILLIS))
+      val expectedResult = userAnswers.copy(
+        lastUpdated = instant.truncatedTo(ChronoUnit.MILLIS),
+        validUntil = Some(instant.truncatedTo(ChronoUnit.MILLIS).plusSeconds(DB_TTL_IN_SEC))
+      )
 
       val setResult     = repository.set(userAnswers).futureValue
       val updatedRecord = find(Filters.equal("_id", userAnswers.id)).futureValue.headOption.value
@@ -73,12 +78,15 @@ class CacheRepositorySpec
   ".get" - {
 
     "when there is a record for this id" - {
-      "must update the lastUpdated time and get the record" in {
+      "must update the lastUpdated time, validUntil time, and get the record" in {
 
         insert(userAnswers).futureValue
 
         val result         = repository.get(userAnswers.id).futureValue
-        val expectedResult = userAnswers copy (lastUpdated = instant)
+        val expectedResult = userAnswers.copy(
+          lastUpdated = instant,
+          validUntil = Some(instant.plusSeconds(DB_TTL_IN_SEC))
+        )
 
         verifyUserAnswerResult(result.value, expectedResult)
       }
@@ -103,7 +111,10 @@ class CacheRepositorySpec
 
         val result = repository.keepAlive(userAnswers.id).futureValue
 
-        val expectedUpdatedAnswers = userAnswers copy (lastUpdated = instant)
+        val expectedUpdatedAnswers = userAnswers.copy(
+          lastUpdated = instant,
+          validUntil = Some(instant.plusSeconds(DB_TTL_IN_SEC))
+        )
 
         result mustEqual true
         val updatedAnswers = find(Filters.equal("_id", userAnswers.id)).futureValue.headOption.value
@@ -125,5 +136,6 @@ class CacheRepositorySpec
     actual.id mustEqual expected.id
     actual.data mustEqual expected.data
     actual.lastUpdated.truncatedTo(ChronoUnit.MILLIS) mustEqual expected.lastUpdated.truncatedTo(ChronoUnit.MILLIS)
+    actual.validUntil.get.truncatedTo(ChronoUnit.MILLIS) mustEqual expected.validUntil.get.truncatedTo(ChronoUnit.MILLIS)
   }
 }
