@@ -24,8 +24,8 @@ import org.scalatest.freespec.AnyFreeSpec
 import org.scalatest.matchers.must.Matchers
 import play.api.libs.json.Json
 import uk.gov.hmrc.alcoholdutyreturns.config.AppConfig
-import uk.gov.hmrc.alcoholdutyreturns.models.UserAnswers
-import uk.gov.hmrc.mongo.test.DefaultPlayMongoRepositorySupport
+import uk.gov.hmrc.alcoholdutyreturns.models.{ReturnId, UserAnswers}
+import uk.gov.hmrc.mongo.test.{CleanMongoCollectionSupport, DefaultPlayMongoRepositorySupport}
 
 import java.time.temporal.ChronoUnit
 import java.time.{Clock, Instant, ZoneId}
@@ -45,7 +45,17 @@ class CacheRepositorySpec
   private val instant          = Instant.now
   private val stubClock: Clock = Clock.fixed(instant, ZoneId.systemDefault)
 
-  private val userAnswers = UserAnswers("id", Json.obj("foo" -> "bar"), Instant.ofEpochSecond(1))
+  private val appaId = "ADR0001"
+  private val periodKey = "24AA"
+  private val internalId = "internalId"
+  private val groupId = "groupId"
+
+  private val userAnswers = UserAnswers(
+    id = ReturnId(appaId, periodKey),
+    internalId = internalId,
+    groupId = groupId,
+    data = Json.obj("foo" -> "bar"),
+    lastUpdated = Instant.ofEpochSecond(1))
 
   private val DB_TTL_IN_SEC = 100
 
@@ -68,7 +78,7 @@ class CacheRepositorySpec
       )
 
       val setResult     = repository.set(userAnswers).futureValue
-      val updatedRecord = find(Filters.equal("_id", userAnswers.id)).futureValue.headOption.value
+      val updatedRecord = find(Filters.equal("_id", ReturnId(appaId, periodKey))).futureValue.headOption.value
 
       setResult mustEqual true
       verifyUserAnswerResult(updatedRecord, expectedResult)
@@ -96,7 +106,7 @@ class CacheRepositorySpec
 
       "must return None" in {
 
-        repository.get("id that does not exist").futureValue must not be defined
+        repository.get(ReturnId("APPA id that does not exist", "period key that does not exist")).futureValue must not be defined
       }
     }
   }
@@ -117,7 +127,8 @@ class CacheRepositorySpec
         )
 
         result mustEqual true
-        val updatedAnswers = find(Filters.equal("_id", userAnswers.id)).futureValue.headOption.value
+        val updatedAnswers = find(Filters.equal("_id", ReturnId(appaId, periodKey))
+        ).futureValue.headOption.value
 
         verifyUserAnswerResult(updatedAnswers, expectedUpdatedAnswers)
       }
@@ -127,13 +138,15 @@ class CacheRepositorySpec
 
       "must return true" in {
 
-        repository.keepAlive("id that does not exist").futureValue mustEqual true
+        repository.keepAlive(ReturnId("APPA id that does not exist", "period key that does not exist")).futureValue mustEqual true
       }
     }
   }
 
   def verifyUserAnswerResult(actual: UserAnswers, expected: UserAnswers) = {
     actual.id mustEqual expected.id
+    actual.groupId mustEqual expected.groupId
+    actual.internalId mustEqual expected.internalId
     actual.data mustEqual expected.data
     actual.lastUpdated.truncatedTo(ChronoUnit.MILLIS) mustEqual expected.lastUpdated.truncatedTo(ChronoUnit.MILLIS)
     actual.validUntil.get.truncatedTo(ChronoUnit.MILLIS) mustEqual expected.validUntil.get.truncatedTo(ChronoUnit.MILLIS)

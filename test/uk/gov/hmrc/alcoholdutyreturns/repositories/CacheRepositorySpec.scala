@@ -18,7 +18,7 @@ package uk.gov.hmrc.alcoholdutyreturns.repositories
 
 import play.api.libs.json.Json
 import uk.gov.hmrc.alcoholdutyreturns.base.SpecBase
-import uk.gov.hmrc.alcoholdutyreturns.models.UserAnswers
+import uk.gov.hmrc.alcoholdutyreturns.models.{ReturnId, UserAnswers}
 import uk.gov.hmrc.mongo.test.MongoSupport
 
 import java.time.{Clock, Instant, LocalDate, ZoneOffset}
@@ -35,9 +35,14 @@ class CacheRepositorySpec extends SpecBase with MongoSupport {
 
   "Cache Repository" should {
     "save the UserAnswer and with the correct values" in {
-      val id          = "my-id"
-      val data        = Json.obj("foo" -> "bar")
-      val userAnswers = UserAnswers(id, data = data)
+      val appaId     = "ADR0001"
+      val periodKey  = "24AA"
+      val id         = ReturnId(appaId, periodKey)
+      val groupId    = "groupId"
+      val internalId = "internalId"
+      val data       = Json.obj("foo" -> "bar")
+
+      val userAnswers = UserAnswers(id, groupId, internalId, data = data)
 
       val updatedUserAnswers = for {
         _      <- repository.set(userAnswers)
@@ -46,7 +51,10 @@ class CacheRepositorySpec extends SpecBase with MongoSupport {
 
       whenReady(updatedUserAnswers) { ua =>
         ua                    shouldBe defined
-        ua.get.id             shouldBe id
+        ua.get.id.appaId      shouldBe appaId
+        ua.get.id.periodKey   shouldBe periodKey
+        ua.get.groupId        shouldBe groupId
+        ua.get.internalId     shouldBe internalId
         ua.get.data           shouldBe data
         ua.get.lastUpdated    shouldBe Instant.now(clock)
         ua.get.validUntil     shouldBe defined
@@ -55,11 +63,17 @@ class CacheRepositorySpec extends SpecBase with MongoSupport {
     }
 
     "save the UserAnswer and overriding lastUpdated and validUntil fields" in {
-      val id          = "my-id"
+      val appaId      = "ADR0001"
+      val periodKey   = "24AA"
+      val id          = ReturnId(appaId, periodKey)
+      val groupId     = "groupId"
+      val internalId  = "internalId"
       val data        = Json.obj("foo" -> "bar")
       val userAnswers =
         UserAnswers(
-          id,
+          ReturnId(appaId, periodKey),
+          groupId = groupId,
+          internalId = internalId,
           data = data,
           lastUpdated = Instant.now(clock).plusSeconds(appConfig.dbTimeToLiveInSeconds * 2),
           validUntil = Some(Instant.now(clock).plusSeconds(appConfig.dbTimeToLiveInSeconds * 3))
@@ -72,7 +86,10 @@ class CacheRepositorySpec extends SpecBase with MongoSupport {
 
       whenReady(updatedUserAnswers) { ua =>
         ua                    shouldBe defined
-        ua.get.id             shouldBe id
+        ua.get.id.appaId      shouldBe appaId
+        ua.get.id.periodKey   shouldBe periodKey
+        ua.get.groupId        shouldBe groupId
+        ua.get.internalId     shouldBe internalId
         ua.get.data           shouldBe data
         ua.get.lastUpdated    shouldBe Instant.now(clock)
         ua.get.validUntil     shouldBe defined

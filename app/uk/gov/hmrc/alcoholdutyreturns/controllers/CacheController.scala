@@ -19,7 +19,7 @@ package uk.gov.hmrc.alcoholdutyreturns.controllers
 import play.api.libs.json._
 import play.api.mvc._
 import uk.gov.hmrc.alcoholdutyreturns.controllers.actions.AuthorisedAction
-import uk.gov.hmrc.alcoholdutyreturns.models.UserAnswers
+import uk.gov.hmrc.alcoholdutyreturns.models.{ReturnId, UserAnswers}
 import uk.gov.hmrc.alcoholdutyreturns.repositories.CacheRepository
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
@@ -33,15 +33,15 @@ class CacheController @Inject() (
 )(implicit executionContext: ExecutionContext)
     extends BackendController(controllerComponents) {
 
-  def get(internalId: String): Action[AnyContent] =
+  def get(appaId: String, periodKey: String): Action[AnyContent] =
     authorise.async { _ =>
-      cacheRepository.get(internalId).map {
+      cacheRepository.get(ReturnId(appaId, periodKey)).map {
         case Some(ua) => Ok(Json.toJson(ua))
         case None     => NotFound
       }
     }
 
-  def set(internalId: String): Action[JsValue] =
+  def set(): Action[JsValue] =
     authorise(parse.json).async { implicit request =>
       withJsonBody[UserAnswers] { userAnswers =>
         cacheRepository.set(userAnswers).map(_ => Ok(Json.toJson(userAnswers)))

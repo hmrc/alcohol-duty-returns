@@ -21,7 +21,7 @@ import org.mockito.ArgumentMatchers.any
 import play.api.libs.json.Json
 import play.api.mvc.Result
 import uk.gov.hmrc.alcoholdutyreturns.base.SpecBase
-import uk.gov.hmrc.alcoholdutyreturns.models.UserAnswers
+import uk.gov.hmrc.alcoholdutyreturns.models.{ReturnId, UserAnswers}
 import uk.gov.hmrc.alcoholdutyreturns.repositories.CacheRepository
 
 import scala.concurrent.Future
@@ -30,7 +30,17 @@ class CacheControllerSpec extends SpecBase {
 
   val mockCacheRepository: CacheRepository = mock[CacheRepository]
 
-  val emptyUserAnswers: UserAnswers = UserAnswers("id")
+  private val appaId     = "ADR0001"
+  private val periodKey  = "24AA"
+  private val groupId    = "groupId"
+  private val internalId = "internalId"
+  private val id         = ReturnId(appaId, periodKey)
+
+  val emptyUserAnswers: UserAnswers = UserAnswers(
+    id,
+    groupId,
+    internalId
+  )
 
   val controller = new CacheController(
     fakeAuthorisedAction,
@@ -40,20 +50,22 @@ class CacheControllerSpec extends SpecBase {
 
   "get" should {
     "return 200 OK with an existing user answers when there is one for the id" in {
-      when(mockCacheRepository.get(ArgumentMatchers.eq("id"))).thenReturn(Future.successful(Some(emptyUserAnswers)))
+      when(mockCacheRepository.get(ArgumentMatchers.eq(id)))
+        .thenReturn(Future.successful(Some(emptyUserAnswers)))
 
       val result: Future[Result] =
-        controller.get("id")(fakeRequest)
+        controller.get(appaId, periodKey)(fakeRequest)
 
       status(result)        shouldBe OK
       contentAsJson(result) shouldBe Json.toJson(emptyUserAnswers)
     }
 
     "return 404 NOT_FOUND when there is no user answers for the id" in {
-      when(mockCacheRepository.get(ArgumentMatchers.eq("id"))).thenReturn(Future.successful(None))
+      when(mockCacheRepository.get(ArgumentMatchers.eq(id)))
+        .thenReturn(Future.successful(None))
 
       val result: Future[Result] =
-        controller.get("id")(fakeRequest)
+        controller.get(appaId, periodKey)(fakeRequest)
 
       status(result) shouldBe NOT_FOUND
     }
@@ -63,7 +75,7 @@ class CacheControllerSpec extends SpecBase {
         when(mockCacheRepository.set(any())).thenReturn(Future.successful(true))
 
         val result: Future[Result] =
-          controller.set("internalId")(
+          controller.set()(
             fakeRequestWithJsonBody(Json.toJson(emptyUserAnswers))
           )
 

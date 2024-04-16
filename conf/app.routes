@@ -1,5 +1,5 @@
 # microservice specific routes
 
 # User Answers Cache
-GET         /cache/get/:internalId                            uk.gov.hmrc.alcoholdutyreturns.controllers.CacheController.get(internalId: String)
-POST        /cache/set/:internalId                            uk.gov.hmrc.alcoholdutyreturns.controllers.CacheController.set(internalId: String)
+GET         /cache/get/:appaId/:periodKey                     uk.gov.hmrc.alcoholdutyreturns.controllers.CacheController.get(appaId:String, periodKey:String)
+POST        /cache/set                                        uk.gov.hmrc.alcoholdutyreturns.controllers.CacheController.set()

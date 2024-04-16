@@ -16,13 +16,12 @@
 
 package uk.gov.hmrc.alcoholdutyreturns.repositories
 
-import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.model._
 import play.api.libs.json.Format
 import uk.gov.hmrc.alcoholdutyreturns.config.AppConfig
-import uk.gov.hmrc.alcoholdutyreturns.models.UserAnswers
+import uk.gov.hmrc.alcoholdutyreturns.models.{ReturnId, UserAnswers}
 import uk.gov.hmrc.mongo.MongoComponent
-import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
+import uk.gov.hmrc.mongo.play.json.{Codecs, PlayMongoRepository}
 import uk.gov.hmrc.mongo.play.json.formats.MongoJavatimeFormats
 
 import java.time.{Clock, Instant}
@@ -48,14 +47,15 @@ class CacheRepository @Inject() (
             .expireAfter(appConfig.dbTimeToLiveInSeconds, TimeUnit.SECONDS)
         )
       ),
-      replaceIndexes = true
+      replaceIndexes = true,
+      extraCodecs = Seq(Codecs.playFormatCodec(ReturnId.format))
     ) {
 
   implicit val instantFormat: Format[Instant] = MongoJavatimeFormats.instantFormat
 
-  private def byId(id: String): Bson = Filters.equal("_id", id)
+  private def byId(id: ReturnId) = Filters.equal("_id", id)
 
-  def keepAlive(id: String): Future[Boolean] =
+  def keepAlive(id: ReturnId): Future[Boolean] =
     collection
       .updateOne(
         filter = byId(id),
@@ -67,7 +67,7 @@ class CacheRepository @Inject() (
       .toFuture()
       .map(_ => true)
 
-  def get(id: String): Future[Option[UserAnswers]] =
+  def get(id: ReturnId): Future[Option[UserAnswers]] =
     keepAlive(id).flatMap { _ =>
       collection
         .find(byId(id))
@@ -81,7 +81,7 @@ class CacheRepository @Inject() (
       validUntil = Some(Instant.now(clock).plusSeconds(appConfig.dbTimeToLiveInSeconds))
     )
 
-    collection
+    val result = collection
       .replaceOne(
         filter = byId(updatedAnswers.id),
         replacement = updatedAnswers,
@@ -89,5 +89,7 @@ class CacheRepository @Inject() (
       )
       .toFuture()
       .map(_ => true)
+
+    result
   }
 }

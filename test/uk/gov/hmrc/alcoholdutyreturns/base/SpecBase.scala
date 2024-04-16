@@ -65,7 +65,6 @@ trait SpecBase
       .build()
 
   val cc: ControllerComponents                         = stubControllerComponents()
-  val internalId: String                               = "test-id"
   val fakeRequest: FakeRequest[AnyContentAsEmpty.type] = FakeRequest()
   val appConfig: AppConfig                             = app.injector.instanceOf[AppConfig]
   val bodyParsers: PlayBodyParsers                     = app.injector.instanceOf[PlayBodyParsers]
