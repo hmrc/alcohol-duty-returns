@@ -15,6 +15,10 @@ lazy val microservice = Project("alcohol-duty-returns", file("."))
   .settings(resolvers += Resolver.jcenterRepo)
   .settings(CodeCoverageSettings.settings: _*)
   .settings(PlayKeys.playDefaultPort := 16001)
+  .settings(
+    Test / parallelExecution := false,
+    Test / fork := true,
+  )
 
 lazy val it = project
   .enablePlugins(PlayScala)

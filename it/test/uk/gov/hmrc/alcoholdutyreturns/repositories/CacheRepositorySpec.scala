@@ -25,7 +25,7 @@ import org.scalatest.matchers.must.Matchers
 import play.api.libs.json.Json
 import uk.gov.hmrc.alcoholdutyreturns.config.AppConfig
 import uk.gov.hmrc.alcoholdutyreturns.models.{ReturnId, UserAnswers}
-import uk.gov.hmrc.mongo.test.{CleanMongoCollectionSupport, DefaultPlayMongoRepositorySupport}
+import uk.gov.hmrc.mongo.test.DefaultPlayMongoRepositorySupport
 
 import java.time.temporal.ChronoUnit
 import java.time.{Clock, Instant, ZoneId}
@@ -68,7 +68,7 @@ class CacheRepositorySpec
     clock = stubClock
   )
 
-  ".set" - {
+  ".add" - {
 
     "must set the last updated time on the supplied user answers to `now`, and save them" in {
 
@@ -77,11 +77,41 @@ class CacheRepositorySpec
         validUntil = Some(instant.truncatedTo(ChronoUnit.MILLIS).plusSeconds(DB_TTL_IN_SEC))
       )
 
-      val setResult     = repository.set(userAnswers).futureValue
+      val addResult     = repository.add(userAnswers).futureValue
       val updatedRecord = find(Filters.equal("_id", ReturnId(appaId, periodKey))).futureValue.headOption.value
 
-      setResult mustEqual true
+      addResult mustEqual true
       verifyUserAnswerResult(updatedRecord, expectedResult)
+    }
+  }
+
+  ".set" - {
+
+    "must set the last updated time on the supplied user answers to `now`, and update them" in {
+
+      val addResult     = repository.add(userAnswers).futureValue
+
+      val updatedResult = userAnswers.copy(
+        internalId = "new-internal-id"
+      )
+
+      val expectedResult = updatedResult.copy(
+        lastUpdated = instant.truncatedTo(ChronoUnit.MILLIS),
+        validUntil = Some(instant.truncatedTo(ChronoUnit.MILLIS).plusSeconds(DB_TTL_IN_SEC))
+      )
+
+      val setResult     = repository.set(updatedResult).futureValue
+      val updatedRecord = find(Filters.equal("_id", ReturnId(appaId, periodKey))).futureValue.headOption.value
+
+      addResult mustEqual true
+      setResult mustEqual UpdateSuccess
+      verifyUserAnswerResult(updatedRecord, expectedResult)
+    }
+
+    "must fail to update a user answer if it wasn't previously saved" in {
+      val newUserAnswers = userAnswers.copy(id = ReturnId("new-appa-id", "new-period-key"))
+      val setResult     = repository.set(newUserAnswers).futureValue
+      setResult mustEqual UpdateFailure
     }
   }
 

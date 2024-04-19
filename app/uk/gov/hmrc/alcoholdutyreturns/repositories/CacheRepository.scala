@@ -29,6 +29,10 @@ import java.util.concurrent.TimeUnit
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
+sealed trait UpdateResult
+case object UpdateSuccess extends UpdateResult
+case object UpdateFailure extends UpdateResult
+
 @Singleton
 class CacheRepository @Inject() (
   mongoComponent: MongoComponent,
@@ -74,22 +78,33 @@ class CacheRepository @Inject() (
         .headOption()
     }
 
-  def set(answers: UserAnswers): Future[Boolean] = {
+  def set(answers: UserAnswers): Future[UpdateResult] = {
 
     val updatedAnswers = answers.copy(
       lastUpdated = Instant.now(clock),
       validUntil = Some(Instant.now(clock).plusSeconds(appConfig.dbTimeToLiveInSeconds))
     )
 
-    val result = collection
+    collection
       .replaceOne(
         filter = byId(updatedAnswers.id),
         replacement = updatedAnswers,
-        options = ReplaceOptions().upsert(true)
+        options = ReplaceOptions().upsert(false)
       )
       .toFuture()
-      .map(_ => true)
+      .map(res => if (res.getModifiedCount == 1) UpdateSuccess else UpdateFailure)
+  }
 
-    result
+  def add(answers: UserAnswers): Future[Boolean] = {
+
+    val updatedAnswers = answers.copy(
+      lastUpdated = Instant.now(clock),
+      validUntil = Some(Instant.now(clock).plusSeconds(appConfig.dbTimeToLiveInSeconds))
+    )
+
+    collection
+      .insertOne(updatedAnswers)
+      .toFuture()
+      .map(_ => true)
   }
 }

@@ -45,7 +45,7 @@ class CacheRepositorySpec extends SpecBase with MongoSupport {
       val userAnswers = UserAnswers(id, groupId, internalId, data = data)
 
       val updatedUserAnswers = for {
-        _      <- repository.set(userAnswers)
+        _      <- repository.add(userAnswers)
         result <- repository.get(id)
       } yield result
 
@@ -62,9 +62,40 @@ class CacheRepositorySpec extends SpecBase with MongoSupport {
       }
     }
 
+    "modify the UserAnswer and with the correct values" in {
+      val appaId     = "ADR0001"
+      val periodKey  = "24AB"
+      val id         = ReturnId(appaId, periodKey)
+      val groupId    = "groupId"
+      val internalId = "internalId"
+      val data       = Json.obj("foo" -> "bar")
+
+      val userAnswers = UserAnswers(id, groupId, internalId, data = data)
+
+      val newInternalId = "newInternalId"
+
+      val updatedUserAnswers = for {
+        _      <- repository.add(userAnswers)
+        _      <- repository.set(userAnswers.copy(internalId = newInternalId))
+        result <- repository.get(id)
+      } yield result
+
+      whenReady(updatedUserAnswers) { ua =>
+        ua                    shouldBe defined
+        ua.get.id.appaId      shouldBe appaId
+        ua.get.id.periodKey   shouldBe periodKey
+        ua.get.groupId        shouldBe groupId
+        ua.get.internalId     shouldBe newInternalId
+        ua.get.data           shouldBe data
+        ua.get.lastUpdated    shouldBe Instant.now(clock)
+        ua.get.validUntil     shouldBe defined
+        ua.get.validUntil.get shouldBe Instant.now(clock).plusSeconds(appConfig.dbTimeToLiveInSeconds)
+      }
+    }
+
     "save the UserAnswer and overriding lastUpdated and validUntil fields" in {
       val appaId      = "ADR0001"
-      val periodKey   = "24AA"
+      val periodKey   = "24AC"
       val id          = ReturnId(appaId, periodKey)
       val groupId     = "groupId"
       val internalId  = "internalId"
@@ -80,7 +111,7 @@ class CacheRepositorySpec extends SpecBase with MongoSupport {
         )
 
       val updatedUserAnswers = for {
-        _      <- repository.set(userAnswers)
+        _      <- repository.add(userAnswers)
         result <- repository.get(id)
       } yield result
 

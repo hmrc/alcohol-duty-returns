@@ -17,14 +17,22 @@
 package uk.gov.hmrc.alcoholdutyreturns.config
 
 import play.api.Configuration
+import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import javax.inject.{Inject, Singleton}
 
 @Singleton
-class AppConfig @Inject() (config: Configuration) {
+class AppConfig @Inject() (config: Configuration, servicesConfig: ServicesConfig) {
 
   val appName: String = config.get[String]("appName")
 
+  private lazy val adrAccountHost: String =
+    servicesConfig.baseUrl("alcohol-duty-accounts")
+
   val dbTimeToLiveInSeconds: Int = config.get[Int]("mongodb.timeToLiveInSeconds")
+
+  def getSubscriptionUrl(appaId: String): String = s"$adrAccountHost/subscription/$appaId"
+
+  def getObligationUrl(appaId: String, periodKey: String) = s"$adrAccountHost/obligations/$appaId/$periodKey"
 
 }
