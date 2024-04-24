@@ -15,15 +15,15 @@ lazy val microservice = Project("alcohol-duty-returns", file("."))
   .settings(resolvers += Resolver.jcenterRepo)
   .settings(CodeCoverageSettings.settings: _*)
   .settings(PlayKeys.playDefaultPort := 16001)
-  .settings(
-    Test / parallelExecution := false,
-    Test / fork := true,
-  )
 
 lazy val it = project
   .enablePlugins(PlayScala)
   .dependsOn(microservice % "test->test") // the "test->test" allows reusing test code and test dependencies
   .settings(DefaultBuildSettings.itSettings())
   .settings(libraryDependencies ++= AppDependencies.itDependencies)
+  .settings(
+    Test / parallelExecution := false,
+    Test / fork := true,
+  )
 
 addCommandAlias("runAllChecks", ";clean;compile;scalafmtCheckAll;coverage;test;it/test;scalastyle;coverageReport")
