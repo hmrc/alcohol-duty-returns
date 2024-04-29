@@ -1,4 +1,5 @@
 import uk.gov.hmrc.DefaultBuildSettings
+import scoverage.ScoverageKeys
 
 ThisBuild / majorVersion := 0
 ThisBuild / scalaVersion := "2.13.12"
@@ -13,7 +14,12 @@ lazy val microservice = Project("alcohol-duty-returns", file("."))
     scalafmtOnCompile := true,
   )
   .settings(resolvers += Resolver.jcenterRepo)
-  .settings(CodeCoverageSettings.settings: _*)
+  .settings(
+    ScoverageKeys.coverageExcludedFiles := scoverageExcludedList.mkString(";"),
+    ScoverageKeys.coverageMinimumStmtTotal := 100,
+    ScoverageKeys.coverageFailOnMinimum := true,
+    ScoverageKeys.coverageHighlighting := true,
+  )
   .settings(PlayKeys.playDefaultPort := 16001)
 
 lazy val it = project
@@ -25,5 +31,22 @@ lazy val it = project
     Test / parallelExecution := false,
     Test / fork := true,
   )
+
+lazy val scoverageExcludedList: Seq[String] = Seq(
+  "<empty>",
+  "Reverse.*",
+  ".*handlers.*",
+  "uk.gov.hmrc.BuildInfo",
+  "app.*",
+  "prod.*",
+  ".*Routes.*",
+  "testOnly.*",
+  ".*testOnly.*",
+  ".*TestOnlyController.*",
+  "testOnlyDoNotUseInAppConf.*",
+  ".*config.*"
+)
+
+
 
 addCommandAlias("runAllChecks", ";clean;compile;scalafmtCheckAll;coverage;test;it/test;scalastyle;coverageReport")

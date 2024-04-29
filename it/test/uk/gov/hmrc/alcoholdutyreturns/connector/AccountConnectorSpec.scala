@@ -16,121 +16,98 @@
 
 package uk.gov.hmrc.alcoholdutyreturns.connector
 
+import org.scalatest.concurrent.PatienceConfiguration.Timeout
 import org.scalatest.matchers.must.Matchers.convertToAnyMustWrapper
+import org.scalatest.time.{Seconds, Span}
 import play.api.libs.json.Json
+import uk.gov.hmrc.alcoholdutyreturns.base.ISpecBase
 import uk.gov.hmrc.alcoholdutyreturns.models.AlcoholRegime.{Beer, Cider, OtherFermentedProduct, Spirits, Wine}
 import uk.gov.hmrc.alcoholdutyreturns.models.ApprovalStatus.Approved
 import uk.gov.hmrc.alcoholdutyreturns.models.ErrorResponse.{EntityNotFound, InvalidJson, UnexpectedResponse}
 import uk.gov.hmrc.alcoholdutyreturns.models.ObligationStatus.Open
 import uk.gov.hmrc.alcoholdutyreturns.models.{ObligationData, ReturnId, SubscriptionSummary}
 
-class AccountConnectorSpec extends ConnectorBase {
+class AccountConnectorSpec extends ISpecBase {
 
   protected val endpointName = "alcohol-duty-accounts"
 
+  val appaId         = "ADR00001"
+  val periodKey      = "24AA"
+  val alcoholRegimes = Seq(Beer, Cider, Spirits, Wine, OtherFermentedProduct)
+
+  val subscriptionSummary = SubscriptionSummary(Approved, alcoholRegimes)
+  val obligationData      = ObligationData(Open)
+
   "Alcohol Duty Connector accounts" should {
 
-    val appaId         = "ADR00001"
-    val periodKey      = "24AA"
-    val alcoholRegimes = Seq(Beer, Cider, Spirits, Wine, OtherFermentedProduct)
-
-    val subscriptionSummary = SubscriptionSummary(Approved, alcoholRegimes)
-    val obligationData      = ObligationData(Open)
-
-    "successfully get a subscription summary" in new ConnectorFixture {
-      val connector = new AccountConnector(config = config, httpClient = httpClient)
-
-      val url = config.getSubscriptionUrl(appaId)
-      stubGet(url, OK, Json.toJson(subscriptionSummary).toString())
-
-      whenReady(connector.getSubscriptionSummary(appaId).value) { result =>
+    "successfully get a subscription summary" in new SetUp {
+      stubGet(subscriptionUrl, OK, Json.toJson(subscriptionSummary).toString())
+      whenReady(connector.getSubscriptionSummary(appaId).value, timeout = Timeout(Span(3, Seconds))) { result =>
         result mustBe Right(subscriptionSummary)
-        verifyGet(url)
+        verifyGet(subscriptionUrl)
       }
     }
 
-    "return an InvalidJson error if the get subscription summary call return an invalid response" in new ConnectorFixture {
-      val connector = new AccountConnector(config = config, httpClient = httpClient)
-
-      val url = config.getSubscriptionUrl(appaId)
-      stubGet(url, OK, "invalid")
-
+    "return an InvalidJson error if the get subscription summary call return an invalid response" in new SetUp {
+      stubGet(subscriptionUrl, OK, "invalid")
       whenReady(connector.getSubscriptionSummary(appaId).value) { result =>
         result mustBe Left(InvalidJson)
-        verifyGet(url)
+        verifyGet(subscriptionUrl)
       }
     }
 
-    "return a NotFound error if the get subscription summary call return a 404 response" in new ConnectorFixture {
-      val connector = new AccountConnector(config = config, httpClient = httpClient)
-
-      val url = config.getSubscriptionUrl(appaId)
-      stubGet(url, NOT_FOUND, "")
-
+    "return a NotFound error if the get subscription summary call return a 404 response" in new SetUp {
+      stubGet(subscriptionUrl, NOT_FOUND, "")
       whenReady(connector.getSubscriptionSummary(appaId).value) { result =>
         result mustBe Left(EntityNotFound)
-        verifyGet(url)
+        verifyGet(subscriptionUrl)
       }
     }
 
-    "return a UnexpectedResponse error if the get subscription summary call return a 500 response" in new ConnectorFixture {
-      val connector = new AccountConnector(config = config, httpClient = httpClient)
-
-      val url = config.getSubscriptionUrl(appaId)
-      stubGet(url, INTERNAL_SERVER_ERROR, "")
-
+    "return a UnexpectedResponse error if the get subscription summary call return a 500 response" in new SetUp {
+      stubGet(subscriptionUrl, INTERNAL_SERVER_ERROR, "")
       whenReady(connector.getSubscriptionSummary(appaId).value) { result =>
         result mustBe Left(UnexpectedResponse)
-        verifyGet(url)
+        verifyGet(subscriptionUrl)
       }
     }
 
-    "successfully get an obligation" in new ConnectorFixture {
-      val connector = new AccountConnector(config = config, httpClient = httpClient)
-
-      val url = config.getObligationUrl(appaId, periodKey)
-      stubGet(url, OK, Json.toJson(obligationData).toString())
-
+    "successfully get an obligation" in new SetUp {
+      stubGet(obligationUrl, OK, Json.toJson(obligationData).toString())
       whenReady(connector.getObligationData(ReturnId(appaId, periodKey)).value) { result =>
         result mustBe Right(obligationData)
-        verifyGet(url)
+        verifyGet(obligationUrl)
       }
     }
 
-    "return a InvalidJson error if the get obligation data call return an invalid response" in new ConnectorFixture {
-      val connector = new AccountConnector(config = config, httpClient = httpClient)
-
-      val url = config.getObligationUrl(appaId, periodKey)
-      stubGet(url, OK, "invalid")
-
+    "return a InvalidJson error if the get obligation data call return an invalid response" in new SetUp {
+      stubGet(obligationUrl, OK, "invalid")
       whenReady(connector.getObligationData(ReturnId(appaId, periodKey)).value) { result =>
         result mustBe Left(InvalidJson)
-        verifyGet(url)
+        verifyGet(obligationUrl)
       }
     }
 
-    "return a NotFound error if the get obligation data call return a 404 response" in new ConnectorFixture {
-      val connector = new AccountConnector(config = config, httpClient = httpClient)
-
-      val url = config.getObligationUrl(appaId, periodKey)
-      stubGet(url, NOT_FOUND, "")
-
+    "return a NotFound error if the get obligation data call return a 404 response" in new SetUp {
+      stubGet(obligationUrl, NOT_FOUND, "")
       whenReady(connector.getObligationData(ReturnId(appaId, periodKey)).value) { result =>
         result mustBe Left(EntityNotFound)
-        verifyGet(url)
+        verifyGet(obligationUrl)
       }
     }
 
-    "return a UnexpectedResponse error if the get obligation data call return a 500 response" in new ConnectorFixture {
-      val connector = new AccountConnector(config = config, httpClient = httpClient)
-
-      val url = config.getObligationUrl(appaId, periodKey)
-      stubGet(url, INTERNAL_SERVER_ERROR, "")
-
+    "return a UnexpectedResponse error if the get obligation data call return a 500 response" in new SetUp {
+      stubGet(obligationUrl, INTERNAL_SERVER_ERROR, "")
       whenReady(connector.getObligationData(ReturnId(appaId, periodKey)).value) { result =>
         result mustBe Left(UnexpectedResponse)
-        verifyGet(url)
+        verifyGet(obligationUrl)
       }
     }
+  }
+
+  class SetUp extends ConnectorFixture {
+    val connector = new AccountConnector(config = config, httpClient = httpClient)
+    val subscriptionUrl = config.getSubscriptionUrl(appaId)
+    val obligationUrl = config.getObligationUrl(appaId, periodKey)
   }
 }

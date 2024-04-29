@@ -1,0 +1,1 @@
+GET        /cache/clear-all    uk.gov.hmrc.alcoholdutyreturns.testonly.controllers.TestOnlyController.clearAllData()
