@@ -38,7 +38,7 @@ class AccountConnector @Inject() (
   ): EitherT[Future, ErrorResponse, SubscriptionSummary] = EitherT(
     httpClient
       .GET[Either[UpstreamErrorResponse, HttpResponse]](
-        url = config.getSubscriptionUrl(appaId)
+        url = config.getSubscriptionSummaryUrl(appaId)
       )
       .map {
         case Right(response) if response.status == OK                     =>
@@ -54,7 +54,7 @@ class AccountConnector @Inject() (
   ): EitherT[Future, ErrorResponse, ObligationData] = EitherT(
     httpClient
       .GET[Either[UpstreamErrorResponse, HttpResponse]](
-        url = config.getObligationUrl(returnId.appaId, returnId.periodKey)
+        url = config.getObligationDataUrl(returnId.appaId, returnId.periodKey)
       )
       .map {
         case Right(response) if response.status == OK                     =>

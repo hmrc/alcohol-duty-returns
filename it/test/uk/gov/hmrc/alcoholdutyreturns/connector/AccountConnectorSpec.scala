@@ -107,7 +107,7 @@ class AccountConnectorSpec extends ISpecBase {
 
   class SetUp extends ConnectorFixture {
     val connector = new AccountConnector(config = config, httpClient = httpClient)
-    val subscriptionUrl = config.getSubscriptionUrl(appaId)
-    val obligationUrl = config.getObligationUrl(appaId, periodKey)
+    val subscriptionUrl = config.getSubscriptionSummaryUrl(appaId)
+    val obligationUrl = config.getObligationDataUrl(appaId, periodKey)
   }
 }

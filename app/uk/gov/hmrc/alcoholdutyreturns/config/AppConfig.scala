@@ -31,9 +31,10 @@ class AppConfig @Inject() (config: Configuration, servicesConfig: ServicesConfig
 
   val dbTimeToLiveInSeconds: Int = config.get[Int]("mongodb.timeToLiveInSeconds")
 
-  def getSubscriptionUrl(appaId: String): String = s"$adrAccountHost/alcohol-duty-account/subscriptionSummary/$appaId"
+  def getSubscriptionSummaryUrl(appaId: String): String =
+    s"$adrAccountHost/alcohol-duty-account/subscriptionSummary/$appaId"
 
-  def getObligationUrl(appaId: String, periodKey: String) =
+  def getObligationDataUrl(appaId: String, periodKey: String) =
     s"$adrAccountHost/alcohol-duty-account/obligationDetails/$appaId/$periodKey"
 
 }
