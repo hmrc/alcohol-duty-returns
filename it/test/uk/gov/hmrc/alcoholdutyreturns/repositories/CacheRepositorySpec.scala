@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.alcoholdutyreturns.repositories
 
+import generators.ModelGenerators
 import org.mockito.MockitoSugar
 import org.mongodb.scala.model.Filters
 import org.scalatest.OptionValues
@@ -38,15 +39,16 @@ class CacheRepositorySpec
     with ScalaFutures
     with IntegrationPatience
     with OptionValues
-    with MockitoSugar {
+    with MockitoSugar
+    with ModelGenerators {
 
   implicit val ec: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
 
   private val instant          = Instant.now
   private val stubClock: Clock = Clock.fixed(instant, ZoneId.systemDefault)
 
-  private val appaId = "ADR0001"
-  private val periodKey = "24AA"
+  private val appaId = appaIdGen.sample.get
+  private val periodKey = periodKeyGen.sample.get
   private val internalId = "internalId"
   private val groupId = "groupId"
 

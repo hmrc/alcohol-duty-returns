@@ -31,8 +31,8 @@ class AccountConnectorSpec extends ISpecBase {
 
   protected val endpointName = "alcohol-duty-accounts"
 
-  val appaId         = "ADR00001"
-  val periodKey      = "24AA"
+  val appaId         = appaIdGen.sample.get
+  val periodKey      = periodKeyGen.sample.get
   val alcoholRegimes = Seq(Beer, Cider, Spirits, Wine, OtherFermentedProduct)
 
   val subscriptionSummary = SubscriptionSummary(Approved, alcoholRegimes)
@@ -74,7 +74,7 @@ class AccountConnectorSpec extends ISpecBase {
 
     "successfully get an obligation" in new SetUp {
       stubGet(obligationUrl, OK, Json.toJson(obligationData).toString())
-      whenReady(connector.getObligationData(ReturnId(appaId, periodKey)).value) { result =>
+      whenReady(connector.getOpenObligationData(ReturnId(appaId, periodKey)).value) { result =>
         result mustBe Right(obligationData)
         verifyGet(obligationUrl)
       }
@@ -82,7 +82,7 @@ class AccountConnectorSpec extends ISpecBase {
 
     "return a InvalidJson error if the get obligation data call return an invalid response" in new SetUp {
       stubGet(obligationUrl, OK, "invalid")
-      whenReady(connector.getObligationData(ReturnId(appaId, periodKey)).value) { result =>
+      whenReady(connector.getOpenObligationData(ReturnId(appaId, periodKey)).value) { result =>
         result mustBe Left(InvalidJson)
         verifyGet(obligationUrl)
       }
@@ -90,7 +90,7 @@ class AccountConnectorSpec extends ISpecBase {
 
     "return a NotFound error if the get obligation data call return a 404 response" in new SetUp {
       stubGet(obligationUrl, NOT_FOUND, "")
-      whenReady(connector.getObligationData(ReturnId(appaId, periodKey)).value) { result =>
+      whenReady(connector.getOpenObligationData(ReturnId(appaId, periodKey)).value) { result =>
         result mustBe Left(EntityNotFound)
         verifyGet(obligationUrl)
       }
@@ -98,7 +98,7 @@ class AccountConnectorSpec extends ISpecBase {
 
     "return a UnexpectedResponse error if the get obligation data call return a 500 response" in new SetUp {
       stubGet(obligationUrl, INTERNAL_SERVER_ERROR, "")
-      whenReady(connector.getObligationData(ReturnId(appaId, periodKey)).value) { result =>
+      whenReady(connector.getOpenObligationData(ReturnId(appaId, periodKey)).value) { result =>
         result mustBe Left(UnexpectedResponse)
         verifyGet(obligationUrl)
       }
@@ -108,6 +108,6 @@ class AccountConnectorSpec extends ISpecBase {
   class SetUp extends ConnectorFixture {
     val connector = new AccountConnector(config = config, httpClient = httpClient)
     val subscriptionUrl = config.getSubscriptionSummaryUrl(appaId)
-    val obligationUrl = config.getObligationDataUrl(appaId, periodKey)
+    val obligationUrl = config.getOpenObligationDataUrl(appaId, periodKey)
   }
 }

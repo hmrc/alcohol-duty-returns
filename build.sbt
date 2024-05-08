@@ -13,6 +13,7 @@ lazy val microservice = Project("alcohol-duty-returns", file("."))
     scalacOptions += "-Wconf:src=routes/.*:s",
     scalafmtOnCompile := true,
   )
+  .settings(inConfig(Test)(testSettings): _*)
   .settings(resolvers += Resolver.jcenterRepo)
   .settings(
     ScoverageKeys.coverageExcludedFiles := scoverageExcludedList.mkString(";"),
@@ -32,6 +33,10 @@ lazy val it = project
     Test / fork := true,
   )
 
+lazy val testSettings: Seq[Def.Setting[_]] = Seq(
+  unmanagedSourceDirectories += baseDirectory.value / "test-utils"
+)
+
 lazy val scoverageExcludedList: Seq[String] = Seq(
   "<empty>",
   "Reverse.*",
@@ -46,7 +51,5 @@ lazy val scoverageExcludedList: Seq[String] = Seq(
   "testOnlyDoNotUseInAppConf.*",
   ".*config.*"
 )
-
-
 
 addCommandAlias("runAllChecks", ";clean;compile;scalafmtCheckAll;coverage;test;it/test;scalastyle;coverageReport")

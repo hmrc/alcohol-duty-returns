@@ -29,8 +29,8 @@ import uk.gov.hmrc.alcoholdutyreturns.models.{AlcoholRegime, ObligationData, Ret
 
 class AccountServiceSpec extends SpecBase {
 
-  private val appaId     = "ADR0001"
-  private val periodKey  = "24AA"
+  private val appaId     = appaIdGen.sample.get
+  private val periodKey  = periodKeyGen.sample.get
   private val groupId    = "groupId"
   private val internalId = "internalId"
   private val id         = ReturnId(appaId, periodKey)
@@ -51,7 +51,7 @@ class AccountServiceSpec extends SpecBase {
       val subscriptionSummary =
         SubscriptionSummary(Approved, alcoholRegimes)
       when(accountConnector.getSubscriptionSummary(any())(any())).thenReturn(EitherT.rightT(subscriptionSummary))
-      when(accountConnector.getObligationData(any())(any())).thenReturn(EitherT.rightT(ObligationData(Open)))
+      when(accountConnector.getOpenObligationData(any())(any())).thenReturn(EitherT.rightT(ObligationData(Open)))
 
       val service = new AccountServiceImpl(accountConnector)
 
@@ -67,7 +67,7 @@ class AccountServiceSpec extends SpecBase {
       val subscriptionSummary =
         SubscriptionSummary(Insolvent, alcoholRegimes)
       when(accountConnector.getSubscriptionSummary(any())(any())).thenReturn(EitherT.rightT(subscriptionSummary))
-      when(accountConnector.getObligationData(any())(any())).thenReturn(EitherT.rightT(ObligationData(Open)))
+      when(accountConnector.getOpenObligationData(any())(any())).thenReturn(EitherT.rightT(ObligationData(Open)))
 
       val service = new AccountServiceImpl(accountConnector)
 
@@ -117,7 +117,7 @@ class AccountServiceSpec extends SpecBase {
       val subscriptionSummary =
         SubscriptionSummary(Approved, alcoholRegimes)
       when(accountConnector.getSubscriptionSummary(any())(any())).thenReturn(EitherT.rightT(subscriptionSummary))
-      when(accountConnector.getObligationData(any())(any())).thenReturn(EitherT.rightT(ObligationData(Fulfilled)))
+      when(accountConnector.getOpenObligationData(any())(any())).thenReturn(EitherT.rightT(ObligationData(Fulfilled)))
 
       val service = new AccountServiceImpl(accountConnector)
 
@@ -131,7 +131,7 @@ class AccountServiceSpec extends SpecBase {
       val subscriptionSummary =
         SubscriptionSummary(Approved, alcoholRegimes)
       when(accountConnector.getSubscriptionSummary(any())(any())).thenReturn(EitherT.rightT(subscriptionSummary))
-      when(accountConnector.getObligationData(any())(any())).thenReturn(EitherT.leftT(EntityNotFound))
+      when(accountConnector.getOpenObligationData(any())(any())).thenReturn(EitherT.leftT(EntityNotFound))
 
       val service = new AccountServiceImpl(accountConnector)
 

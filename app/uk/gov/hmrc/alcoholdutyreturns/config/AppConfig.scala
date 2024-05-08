@@ -34,7 +34,7 @@ class AppConfig @Inject() (config: Configuration, servicesConfig: ServicesConfig
   def getSubscriptionSummaryUrl(appaId: String): String =
     s"$adrAccountHost/alcohol-duty-account/subscriptionSummary/$appaId"
 
-  def getObligationDataUrl(appaId: String, periodKey: String) =
+  def getOpenObligationDataUrl(appaId: String, periodKey: String) =
     s"$adrAccountHost/alcohol-duty-account/obligationDetails/$appaId/$periodKey"
 
 }

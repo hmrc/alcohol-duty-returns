@@ -35,8 +35,8 @@ class CacheRepositorySpec extends SpecBase with MongoSupport {
 
   "Cache Repository" should {
     "save the UserAnswer and with the correct values" in {
-      val appaId     = "ADR0001"
-      val periodKey  = "24AA"
+      val appaId     = appaIdGen.sample.get
+      val periodKey  = periodKeyGen.sample.get
       val id         = ReturnId(appaId, periodKey)
       val groupId    = "groupId"
       val internalId = "internalId"
@@ -63,8 +63,8 @@ class CacheRepositorySpec extends SpecBase with MongoSupport {
     }
 
     "modify the UserAnswer and with the correct values" in {
-      val appaId     = "ADR0001"
-      val periodKey  = "24AB"
+      val appaId     = appaIdGen.sample.get
+      val periodKey  = periodKeyGen.sample.get
       val id         = ReturnId(appaId, periodKey)
       val groupId    = "groupId"
       val internalId = "internalId"
@@ -94,8 +94,8 @@ class CacheRepositorySpec extends SpecBase with MongoSupport {
     }
 
     "save the UserAnswer and overriding lastUpdated and validUntil fields" in {
-      val appaId      = "ADR0001"
-      val periodKey   = "24AC"
+      val appaId      = appaIdGen.sample.get
+      val periodKey   = periodKeyGen.sample.get
       val id          = ReturnId(appaId, periodKey)
       val groupId     = "groupId"
       val internalId  = "internalId"

@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.alcoholdutyreturns.base
 
+import generators.ModelGenerators
 import org.mockito.MockitoSugar
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers
@@ -50,7 +51,8 @@ trait SpecBase
     with GuiceOneAppPerSuite
     with MockitoSugar
     with ScalaCheckPropertyChecks
-    with BeforeAndAfterEach {
+    with BeforeAndAfterEach
+    with ModelGenerators {
 
   def configOverrides: Map[String, Any] = Map()
 

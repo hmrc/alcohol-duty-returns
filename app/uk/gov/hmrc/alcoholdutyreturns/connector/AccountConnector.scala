@@ -49,12 +49,12 @@ class AccountConnector @Inject() (
       }
   )
 
-  def getObligationData(returnId: ReturnId)(implicit
+  def getOpenObligationData(returnId: ReturnId)(implicit
     hc: HeaderCarrier
   ): EitherT[Future, ErrorResponse, ObligationData] = EitherT(
     httpClient
       .GET[Either[UpstreamErrorResponse, HttpResponse]](
-        url = config.getObligationDataUrl(returnId.appaId, returnId.periodKey)
+        url = config.getOpenObligationDataUrl(returnId.appaId, returnId.periodKey)
       )
       .map {
         case Right(response) if response.status == OK                     =>

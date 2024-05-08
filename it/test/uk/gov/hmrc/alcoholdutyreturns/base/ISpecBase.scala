@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.alcoholdutyreturns.base
 
+import generators.ModelGenerators
 import org.mockito.MockitoSugar
 import org.scalatest.{OptionValues, TryValues}
 import org.scalatest.concurrent.ScalaFutures
@@ -43,7 +44,8 @@ trait ISpecBase extends AnyWordSpec
     with GuiceOneAppPerSuite
     with MockitoSugar
     with ScalaCheckPropertyChecks
-    with ConnectorTestHelpers {
+    with ConnectorTestHelpers
+    with ModelGenerators {
 
 
   implicit def ec: ExecutionContext = global

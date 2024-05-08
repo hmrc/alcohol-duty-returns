@@ -17,6 +17,7 @@
 package uk.gov.hmrc.alcoholdutyreturns.controllers
 
 import cats.data.EitherT
+import generators.ModelGenerators
 import org.mockito.ArgumentMatchers
 import org.mockito.ArgumentMatchers.any
 import play.api.libs.json.Json
@@ -33,8 +34,8 @@ class CacheControllerSpec extends SpecBase {
   val mockCacheRepository: CacheRepository = mock[CacheRepository]
   val mockAccountService: AccountService   = mock[AccountService]
 
-  private val appaId     = "ADR0001"
-  private val periodKey  = "24AA"
+  private val appaId     = appaIdGen.sample.get
+  private val periodKey  = periodKeyGen.sample.get
   private val groupId    = "groupId"
   private val internalId = "internalId"
   private val id         = ReturnId(appaId, periodKey)
