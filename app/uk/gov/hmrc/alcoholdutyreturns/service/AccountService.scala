@@ -38,11 +38,18 @@ class AccountServiceImpl @Inject() (
   )(implicit hc: HeaderCarrier, ec: ExecutionContext): EitherT[Future, ErrorResponse, UserAnswers]         =
     for {
       subscription <- checkSubscriptionStatus(userAnswers.id.appaId)
-      _            <- getOpenObligation(userAnswers.id)
-    } yield addAlcoholRegimeToUserAnswers(userAnswers, subscription.regimes)
+      obligation   <- getOpenObligation(userAnswers.id)
+    } yield addAlcoholRegimeToUserAnswers(userAnswers, subscription.regimes, obligation)
 
-  private def addAlcoholRegimeToUserAnswers(answers: UserAnswers, regimes: Seq[AlcoholRegime]): UserAnswers = {
-    val data = Json.obj((AlcoholRegime.toString, Json.toJson(regimes)))
+  private def addAlcoholRegimeToUserAnswers(
+    answers: UserAnswers,
+    regimes: Seq[AlcoholRegime],
+    obligationData: ObligationData
+  ): UserAnswers = {
+    val data = Json.obj(
+      (AlcoholRegime.toString, Json.toJson(regimes)),
+      (ObligationData.toString, Json.toJson(obligationData))
+    )
     answers.copy(data = data)
   }
   private def checkSubscriptionStatus(

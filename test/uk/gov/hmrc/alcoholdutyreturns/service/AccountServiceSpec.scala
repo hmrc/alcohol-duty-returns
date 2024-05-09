@@ -27,13 +27,28 @@ import uk.gov.hmrc.alcoholdutyreturns.models.ErrorResponse.{EntityNotFound, Inva
 import uk.gov.hmrc.alcoholdutyreturns.models.ObligationStatus.{Fulfilled, Open}
 import uk.gov.hmrc.alcoholdutyreturns.models.{AlcoholRegime, ObligationData, ReturnId, SubscriptionSummary, UserAnswers}
 
+import java.time.LocalDate
+
 class AccountServiceSpec extends SpecBase {
 
-  private val appaId     = appaIdGen.sample.get
-  private val periodKey  = periodKeyGen.sample.get
-  private val groupId    = "groupId"
-  private val internalId = "internalId"
-  private val id         = ReturnId(appaId, periodKey)
+  private val appaId         = appaIdGen.sample.get
+  private val periodKey      = periodKeyGen.sample.get
+  private val groupId        = "groupId"
+  private val internalId     = "internalId"
+  private val id             = ReturnId(appaId, periodKey)
+  private val obligationData = ObligationData(
+    status = Open,
+    fromDate = LocalDate.now(),
+    toDate = LocalDate.now(),
+    dueDate = LocalDate.now()
+  )
+
+  private val fulfilledObligationData = ObligationData(
+    status = Fulfilled,
+    fromDate = LocalDate.now(),
+    toDate = LocalDate.now(),
+    dueDate = LocalDate.now()
+  )
 
   val emptyUserAnswers: UserAnswers = UserAnswers(
     id,
@@ -51,11 +66,16 @@ class AccountServiceSpec extends SpecBase {
       val subscriptionSummary =
         SubscriptionSummary(Approved, alcoholRegimes)
       when(accountConnector.getSubscriptionSummary(any())(any())).thenReturn(EitherT.rightT(subscriptionSummary))
-      when(accountConnector.getOpenObligationData(any())(any())).thenReturn(EitherT.rightT(ObligationData(Open)))
+      when(accountConnector.getOpenObligationData(any())(any())).thenReturn(EitherT.rightT(obligationData))
 
       val service = new AccountServiceImpl(accountConnector)
 
-      val expectedAnswer = emptyUserAnswers.copy(data = Json.obj((AlcoholRegime.toString, Json.toJson(alcoholRegimes))))
+      val expectedAnswer = emptyUserAnswers.copy(data =
+        Json.obj(
+          (AlcoholRegime.toString, Json.toJson(alcoholRegimes)),
+          (ObligationData.toString, Json.toJson(obligationData))
+        )
+      )
 
       whenReady(service.createUserAnswers(emptyUserAnswers).value) { result =>
         result shouldBe Right(expectedAnswer)
@@ -67,11 +87,16 @@ class AccountServiceSpec extends SpecBase {
       val subscriptionSummary =
         SubscriptionSummary(Insolvent, alcoholRegimes)
       when(accountConnector.getSubscriptionSummary(any())(any())).thenReturn(EitherT.rightT(subscriptionSummary))
-      when(accountConnector.getOpenObligationData(any())(any())).thenReturn(EitherT.rightT(ObligationData(Open)))
+      when(accountConnector.getOpenObligationData(any())(any())).thenReturn(EitherT.rightT(obligationData))
 
       val service = new AccountServiceImpl(accountConnector)
 
-      val expectedAnswer = emptyUserAnswers.copy(data = Json.obj((AlcoholRegime.toString, Json.toJson(alcoholRegimes))))
+      val expectedAnswer = emptyUserAnswers.copy(data =
+        Json.obj(
+          (AlcoholRegime.toString, Json.toJson(alcoholRegimes)),
+          (ObligationData.toString, Json.toJson(obligationData))
+        )
+      )
 
       whenReady(service.createUserAnswers(emptyUserAnswers).value) { result =>
         result shouldBe Right(expectedAnswer)
@@ -117,7 +142,7 @@ class AccountServiceSpec extends SpecBase {
       val subscriptionSummary =
         SubscriptionSummary(Approved, alcoholRegimes)
       when(accountConnector.getSubscriptionSummary(any())(any())).thenReturn(EitherT.rightT(subscriptionSummary))
-      when(accountConnector.getOpenObligationData(any())(any())).thenReturn(EitherT.rightT(ObligationData(Fulfilled)))
+      when(accountConnector.getOpenObligationData(any())(any())).thenReturn(EitherT.rightT(fulfilledObligationData))
 
       val service = new AccountServiceImpl(accountConnector)
 

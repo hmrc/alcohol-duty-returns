@@ -19,6 +19,8 @@ package uk.gov.hmrc.alcoholdutyreturns.models
 import enumeratum.{Enum, EnumEntry, PlayJsonEnum}
 import play.api.libs.json.{Format, Json}
 
+import java.time.LocalDate
+
 sealed trait ObligationStatus extends EnumEntry
 object ObligationStatus extends Enum[ObligationStatus] with PlayJsonEnum[ObligationStatus] {
   val values = findValues
@@ -27,8 +29,15 @@ object ObligationStatus extends Enum[ObligationStatus] with PlayJsonEnum[Obligat
   case object Fulfilled extends ObligationStatus
 }
 
-case class ObligationData(status: ObligationStatus)
+case class ObligationData(
+  status: ObligationStatus,
+  fromDate: LocalDate,
+  toDate: LocalDate,
+  dueDate: LocalDate
+)
 
 object ObligationData {
   implicit val format: Format[ObligationData] = Json.format[ObligationData]
+
+  override def toString: String = "obligationData"
 }

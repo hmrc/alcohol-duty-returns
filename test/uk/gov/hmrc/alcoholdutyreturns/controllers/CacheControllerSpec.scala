@@ -17,7 +17,6 @@
 package uk.gov.hmrc.alcoholdutyreturns.controllers
 
 import cats.data.EitherT
-import generators.ModelGenerators
 import org.mockito.ArgumentMatchers
 import org.mockito.ArgumentMatchers.any
 import play.api.libs.json.Json

@@ -27,6 +27,8 @@ import uk.gov.hmrc.alcoholdutyreturns.models.ErrorResponse.{EntityNotFound, Inva
 import uk.gov.hmrc.alcoholdutyreturns.models.ObligationStatus.Open
 import uk.gov.hmrc.alcoholdutyreturns.models.{ObligationData, ReturnId, SubscriptionSummary}
 
+import java.time.LocalDate
+
 class AccountConnectorSpec extends ISpecBase {
 
   protected val endpointName = "alcohol-duty-accounts"
@@ -36,7 +38,12 @@ class AccountConnectorSpec extends ISpecBase {
   val alcoholRegimes = Seq(Beer, Cider, Spirits, Wine, OtherFermentedProduct)
 
   val subscriptionSummary = SubscriptionSummary(Approved, alcoholRegimes)
-  val obligationData      = ObligationData(Open)
+  val obligationData = ObligationData(
+    status = Open,
+    fromDate = LocalDate.now(),
+    toDate = LocalDate.now(),
+    dueDate = LocalDate.now()
+  )
 
   "Alcohol Duty Connector accounts" should {
 
