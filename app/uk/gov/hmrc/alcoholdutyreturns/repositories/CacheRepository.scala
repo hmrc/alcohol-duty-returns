@@ -16,19 +16,22 @@
 
 package uk.gov.hmrc.alcoholdutyreturns.repositories
 
-import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.model._
 import play.api.libs.json.Format
 import uk.gov.hmrc.alcoholdutyreturns.config.AppConfig
-import uk.gov.hmrc.alcoholdutyreturns.models.UserAnswers
+import uk.gov.hmrc.alcoholdutyreturns.models.{ReturnId, UserAnswers}
 import uk.gov.hmrc.mongo.MongoComponent
-import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
+import uk.gov.hmrc.mongo.play.json.{Codecs, PlayMongoRepository}
 import uk.gov.hmrc.mongo.play.json.formats.MongoJavatimeFormats
 
 import java.time.{Clock, Instant}
 import java.util.concurrent.TimeUnit
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
+
+sealed trait UpdateResult
+case object UpdateSuccess extends UpdateResult
+case object UpdateFailure extends UpdateResult
 
 @Singleton
 class CacheRepository @Inject() (
@@ -48,14 +51,15 @@ class CacheRepository @Inject() (
             .expireAfter(appConfig.dbTimeToLiveInSeconds, TimeUnit.SECONDS)
         )
       ),
-      replaceIndexes = true
+      replaceIndexes = true,
+      extraCodecs = Seq(Codecs.playFormatCodec(ReturnId.format))
     ) {
 
   implicit val instantFormat: Format[Instant] = MongoJavatimeFormats.instantFormat
 
-  private def byId(id: String): Bson = Filters.equal("_id", id)
+  private def byId(id: ReturnId) = Filters.equal("_id", id)
 
-  def keepAlive(id: String): Future[Boolean] =
+  def keepAlive(id: ReturnId): Future[Boolean] =
     collection
       .updateOne(
         filter = byId(id),
@@ -67,14 +71,14 @@ class CacheRepository @Inject() (
       .toFuture()
       .map(_ => true)
 
-  def get(id: String): Future[Option[UserAnswers]] =
+  def get(id: ReturnId): Future[Option[UserAnswers]] =
     keepAlive(id).flatMap { _ =>
       collection
         .find(byId(id))
         .headOption()
     }
 
-  def set(answers: UserAnswers): Future[Boolean] = {
+  def set(answers: UserAnswers): Future[UpdateResult] = {
 
     val updatedAnswers = answers.copy(
       lastUpdated = Instant.now(clock),
@@ -85,8 +89,21 @@ class CacheRepository @Inject() (
       .replaceOne(
         filter = byId(updatedAnswers.id),
         replacement = updatedAnswers,
-        options = ReplaceOptions().upsert(true)
+        options = ReplaceOptions().upsert(false)
       )
+      .toFuture()
+      .map(res => if (res.getModifiedCount == 1) UpdateSuccess else UpdateFailure)
+  }
+
+  def add(answers: UserAnswers): Future[Boolean] = {
+
+    val updatedAnswers = answers.copy(
+      lastUpdated = Instant.now(clock),
+      validUntil = Some(Instant.now(clock).plusSeconds(appConfig.dbTimeToLiveInSeconds))
+    )
+
+    collection
+      .insertOne(updatedAnswers)
       .toFuture()
       .map(_ => true)
   }

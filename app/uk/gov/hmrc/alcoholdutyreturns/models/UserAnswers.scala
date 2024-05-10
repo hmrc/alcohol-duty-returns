@@ -21,8 +21,38 @@ import uk.gov.hmrc.mongo.play.json.formats.MongoJavatimeFormats
 
 import java.time.Instant
 
+case class ReturnId(
+  appaId: String,
+  periodKey: String
+)
+
+object ReturnId {
+
+  val reads: Reads[ReturnId] = {
+    import play.api.libs.functional.syntax._
+
+    (
+      (__ \ "appaId").read[String] and
+        (__ \ "periodKey").read[String]
+    )(ReturnId.apply _)
+  }
+
+  val writes: OWrites[ReturnId] = {
+
+    import play.api.libs.functional.syntax._
+    (
+      (__ \ "appaId").write[String] and
+        (__ \ "periodKey").write[String]
+    )(unlift(ReturnId.unapply))
+  }
+
+  implicit val format: OFormat[ReturnId] = OFormat(reads, writes)
+}
+
 case class UserAnswers(
-  id: String,
+  id: ReturnId,
+  groupId: String,
+  internalId: String,
   data: JsObject = Json.obj(),
   lastUpdated: Instant = Instant.now,
   validUntil: Option[Instant] = None
@@ -35,7 +65,9 @@ object UserAnswers {
     import play.api.libs.functional.syntax._
 
     (
-      (__ \ "_id").read[String] and
+      (__ \ "_id").read[ReturnId] and
+        (__ \ "groupId").read[String] and
+        (__ \ "internalId").read[String] and
         (__ \ "data").read[JsObject] and
         (__ \ "lastUpdated").read(MongoJavatimeFormats.instantFormat) and
         (__ \ "validUntil").readNullable(MongoJavatimeFormats.instantFormat)
@@ -47,7 +79,9 @@ object UserAnswers {
     import play.api.libs.functional.syntax._
 
     (
-      (__ \ "_id").write[String] and
+      (__ \ "_id").write[ReturnId] and
+        (__ \ "groupId").write[String] and
+        (__ \ "internalId").write[String] and
         (__ \ "data").write[JsObject] and
         (__ \ "lastUpdated").write(MongoJavatimeFormats.instantFormat) and
         (__ \ "validUntil").writeNullable(MongoJavatimeFormats.instantFormat)
