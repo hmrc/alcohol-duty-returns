@@ -56,7 +56,7 @@ class AuditService @Inject()(appConfig: AppConfig,
                        alcoholRegime: String,
                        returnStartedTime: String,
                        returnValidUntilDate: String
-                      )(implicit hc: HeaderCarrier): Unit = {
+                      )(implicit hc: HeaderCarrier): Future[Unit] = {
     val eventDetail = Map(
       EventKeyProducerId -> producerId,
       EventKeyPeriodKey -> periodKey,
@@ -71,7 +71,7 @@ class AuditService @Inject()(appConfig: AppConfig,
       EventKeyReturnValidUntilDate -> returnValidUntilDate
     )
 
-    audit(ReturnStarted, eventDetail).flatMap(Future.successful)
+    audit(ReturnStarted, eventDetail).map(_ => ())
   }
 
  /*
