@@ -71,7 +71,7 @@ class AuditService @Inject()(appConfig: AppConfig,
       EventKeyReturnValidUntilDate -> returnValidUntilDate
     )
 
-    audit(ReturnStarted, eventDetail)
+    audit(ReturnStarted, eventDetail).flatMap(Future.successful)
   }
 
  /*
