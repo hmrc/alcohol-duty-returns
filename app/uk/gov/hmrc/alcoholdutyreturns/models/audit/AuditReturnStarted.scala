@@ -16,12 +16,27 @@
 
 package uk.gov.hmrc.alcoholdutyreturns.models.audit
 
-import enumeratum._
+import play.api.libs.json.{Json, OFormat}
+import uk.gov.hmrc.alcoholdutyreturns.models.audit.AuditType.ReturnStarted
 
-sealed trait AuditType extends EnumEntry
+import java.time.{Instant, LocalDate}
 
-object AuditType extends Enum[AuditType] {
-  val values = findValues
+case class AuditReturnStarted(
+  producerId: String,
+  periodKey: String,
+  governmentGatewayId: String,
+  governmentGatewayGroupId: String,
+  obligationDetails: String,
+  fromDate: String,
+  toDate: String,
+  dueDate: String,
+  alcoholRegime: String,
+  returnStartedTime: Instant,
+  returnValidUntilDate: LocalDate
+) extends AuditEventDetail {
+  protected val _auditType = ReturnStarted
+}
 
-  case object ReturnStarted extends AuditType
+object AuditReturnStarted {
+  implicit val format: OFormat[AuditReturnStarted] = Json.format[AuditReturnStarted]
 }

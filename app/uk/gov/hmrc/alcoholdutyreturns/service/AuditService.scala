@@ -1,98 +1,49 @@
+/*
+ * Copyright 2024 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package uk.gov.hmrc.alcoholdutyreturns.service
 
 import com.google.inject.Inject
+import play.api.Logging
+import play.api.libs.json.{JsObject, Json, Writes}
 import uk.gov.hmrc.alcoholdutyreturns.config.AppConfig
-import uk.gov.hmrc.alcoholdutyreturns.models.audit.AuditType.ReturnStarted
-import uk.gov.hmrc.alcoholdutyreturns.models.audit.EventKey.{EventKeyAlcoholRegime, EventKeyDueDate, EventKeyFromDate, EventKeyGovernmentGatewayGroupId, EventKeyGovernmentGatewayId, EventKeyObligationDetails, EventKeyPeriodKey, EventKeyProducerId, EventKeyReturnStartedTime, EventKeyReturnValidUntilDate, EventKeyToDate}
-import uk.gov.hmrc.alcoholdutyreturns.models.audit.{AuditType, EventKey}
+import uk.gov.hmrc.alcoholdutyreturns.models.audit.AuditEventDetail
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.play.audit.http.connector.{AuditConnector, AuditResult}
-import uk.gov.hmrc.play.audit.model.DataEvent
+import uk.gov.hmrc.play.audit.http.connector.AuditConnector
+import uk.gov.hmrc.play.audit.model.ExtendedDataEvent
+import uk.gov.hmrc.play.audit.AuditExtensions._
+import uk.gov.hmrc.play.audit.http.connector.AuditResult.Failure
 
 import scala.concurrent.{ExecutionContext, Future}
 
-// will need to set up config for higher envs
-/*
-    if (configuration.get[Boolean]("auditing.enabled"))
-      AuditingConfig(
-        enabled           = true,
-        consumer          = Some(
-                              Consumer(
-                                BaseUri(
-                                  host     = configuration.get[String]("auditing.consumer.baseUri.host"),
-                                  port     = configuration.get[Int]("auditing.consumer.baseUri.port"),
-                                  protocol = configuration.getOptional[String]("auditing.consumer.baseUri.protocol").getOrElse("http")
-                                )
-                              )
-                            ),
-        auditSource       = configuration.get[String]("appName"),
-        auditSentHeaders  = configuration.get[Boolean]("auditing.auditSentHeaders")
- */
-class AuditService @Inject()(appConfig: AppConfig,
-                             auditConnector: AuditConnector)(implicit ec: ExecutionContext) {
-  private def audit[E <: EventKey](auditType: AuditType, eventDetail: Map[E, String])(implicit hc: HeaderCarrier): Future[AuditResult] = {
-    val event = DataEvent(
-      auditSource = appConfig.appName,
-      auditType = auditType.entryName,
-      detail = eventDetail.map { case (k, v) => k.entryName -> v}
-    )
-
-    auditConnector.sendEvent(event)
-  }
-
-  // Questions:
-  // If this fails, should it log, or return an error or leave to the caller - is Unit okay as a return?
-  // Dates/Times, send in as an instant and format here (consistency, saves caller doing it?)
-  // periodKey - send in as a ReturnPeriod?
-  // from/to/due are strings from the API and won't be as Instant etc?
-  def auditStartReturn(producerId: String,
-                       periodKey: String,
-                       governmentGatewayId: String,
-                       governmentGatewayGroupId: String,
-                       obligationDetails: String,
-                       fromDate: String,
-                       toDate: String,
-                       dueDate: String,
-                       alcoholRegime: String,
-                       returnStartedTime: String,
-                       returnValidUntilDate: String
-                      )(implicit hc: HeaderCarrier): Future[Unit] = {
-    val eventDetail = Map(
-      EventKeyProducerId -> producerId,
-      EventKeyPeriodKey -> periodKey,
-      EventKeyGovernmentGatewayId -> governmentGatewayId,
-      EventKeyGovernmentGatewayGroupId -> governmentGatewayGroupId,
-      EventKeyObligationDetails -> obligationDetails,
-      EventKeyFromDate -> fromDate,
-      EventKeyToDate -> toDate,
-      EventKeyDueDate -> dueDate,
-      EventKeyAlcoholRegime -> alcoholRegime,
-      EventKeyReturnStartedTime -> returnStartedTime,
-      EventKeyReturnValidUntilDate -> returnValidUntilDate
-    )
-
-    audit(ReturnStarted, eventDetail).map(_ => ())
-  }
-
- /*
- When Can This Audit Event Be Created? Once the Returns Started link is developed
-Audit Source: [micro service name]
-Audit Type Name: ReturnStarted
-Audit Event Trigger: When a user starts a new return
-Audit Event Should Contain:
-Alcohol Producer ID
-Period Key
-Government Gateway ID
-Government Gateway Group ID
-Obligation Details
-From date
-To date
-Due date
-Period Key(maybe)
-Alcohol Regimes
-Session ID
-Date & Time Return Started
-Return Valid Until Date
-  */
-
+class AuditService @Inject() (appConfig: AppConfig, auditConnector: AuditConnector)(implicit ec: ExecutionContext)
+    extends Logging {
+  def audit[T <: AuditEventDetail](detail: T)(implicit hc: HeaderCarrier, writes: Writes[T]): Future[Boolean] =
+    auditConnector
+      .sendExtendedEvent(
+        ExtendedDataEvent(
+          auditSource = appConfig.appName,
+          auditType = detail.auditType,
+          tags = hc.toAuditTags(),
+          detail = Json.toJson(detail).as[JsObject]
+        )
+      ).map {
+        case Failure(msg, nested) =>
+          logger.warn(s"Unable to audit ${detail.auditType} - $msg${nested.fold("")(t => s": ${t.getMessage}")}")
+          false
+        case _                    => true
+      }
 }
