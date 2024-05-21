@@ -16,67 +16,54 @@
 
 package uk.gov.hmrc.alcoholdutyreturns.service
 
+import helpers.TestData.{alcoholRegimes, obligationData}
 import org.mockito.ArgumentMatchers.any
-import play.api.libs.json.{JsObject, Json}
+import org.scalatest.concurrent.Eventually.eventually
+import org.scalatest.concurrent.PatienceConfiguration.Timeout
+import org.scalatest.time.{Second, Span}
 import uk.gov.hmrc.alcoholdutyreturns.base.SpecBase
 import uk.gov.hmrc.alcoholdutyreturns.config.AppConfig
 import uk.gov.hmrc.alcoholdutyreturns.models.audit.AuditReturnStarted
-import uk.gov.hmrc.alcoholdutyreturns.models.audit.AuditType.ReturnStarted
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
-import uk.gov.hmrc.play.audit.AuditExtensions._
-import uk.gov.hmrc.play.audit.http.connector.AuditResult.{Disabled, Failure, Success}
-import uk.gov.hmrc.play.audit.model.ExtendedDataEvent
 
 import java.time.{Instant, LocalDate}
-import scala.concurrent.Future
 
 class AuditServiceSpec extends SpecBase {
   "AuditService" should {
-    "return true if Success is returned from the connector" in new SetUp {
-      when(auditConnector.sendExtendedEvent(any)(any, any)).thenReturn(Future.successful(Success))
-      whenReady(auditService.audit(auditDetail)) { _ shouldBe true}
-    }
+    "call the audit connector" in new SetUp {
+      doNothing.when(auditConnector).sendExplicitAudit(any, any[AuditReturnStarted])(any, any, any)
 
-    "return true if Disabled is returned from the connector" in new SetUp {
-      when(auditConnector.sendExtendedEvent(any)(any, any)).thenReturn(Future.successful(Disabled))
-      whenReady(auditService.audit(auditDetail)) { _ shouldBe true}
-    }
+      auditService.audit(auditDetail)
 
-    "return false if Failure is returned from the connector with an exception" in new SetUp {
-      when(auditConnector.sendExtendedEvent(any)(any, any)).thenReturn(Future.successful(Failure("failed", Some(new IllegalArgumentException("error")))))
-      whenReady(auditService.audit(auditDetail)) { _ shouldBe false}
-    }
-
-    "return false if Failure is returned from the connector without an exception" in new SetUp {
-      when(auditConnector.sendExtendedEvent(any)(any, any)).thenReturn(Future.successful(Failure("failed", None)))
-      whenReady(auditService.audit(auditDetail)) { _ shouldBe false}
+      eventually(timeout) {
+        verify(auditConnector, times(1)).sendExplicitAudit(any, any[AuditReturnStarted])(any, any, any)
+      }
     }
 
     class SetUp {
-      val now = Instant.now()
+      val timeout = Timeout(Span(1, Second))
+
+      val now   = Instant.now()
       val today = LocalDate.now()
 
       val auditDetail = AuditReturnStarted(
-        "producerId",
-        "periodKey",
-        "governmentGatewayId",
-        "governmentGatewayGroupId",
-        "obligationDetails",
-        "fromDate",
-        "toDate",
-        "dueDate",
-        "alcoholRegime",
-        now,
-        today
+        appaId = "XMADP0000000208",
+        periodKey = "24AC",
+        governmentGatewayId = "governmentGatewayId",
+        governmentGatewayGroupId = "governmentGatewayGroupId",
+        obligationData = obligationData(today),
+        alcoholRegimes = alcoholRegimes,
+        returnStartedTime = now,
+        returnValidUntilTime = Some(now)
       )
 
-      val appName = "alcohol-duty-returns"
+      val appName                    = "alcohol-duty-returns"
       implicit val hc: HeaderCarrier = HeaderCarrier()
 
-      val appConfig = mock[AppConfig]
+      val appConfig      = mock[AppConfig]
       val auditConnector = mock[AuditConnector]
-      val auditService = new AuditService(appConfig, auditConnector)
+      val auditService   = new AuditService(auditConnector)
 
       when(appConfig.appName).thenReturn(appName)
     }

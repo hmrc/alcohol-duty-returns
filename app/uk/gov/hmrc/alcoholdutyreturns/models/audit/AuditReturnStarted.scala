@@ -17,22 +17,20 @@
 package uk.gov.hmrc.alcoholdutyreturns.models.audit
 
 import play.api.libs.json.{Json, OFormat}
+import uk.gov.hmrc.alcoholdutyreturns.models.{AlcoholRegime, ObligationData}
 import uk.gov.hmrc.alcoholdutyreturns.models.audit.AuditType.ReturnStarted
 
-import java.time.{Instant, LocalDate}
+import java.time.Instant
 
 case class AuditReturnStarted(
-  producerId: String,
+  appaId: String,
   periodKey: String,
   governmentGatewayId: String,
   governmentGatewayGroupId: String,
-  obligationDetails: String,
-  fromDate: String,
-  toDate: String,
-  dueDate: String,
-  alcoholRegime: String,
+  obligationData: ObligationData,
+  alcoholRegimes: Seq[AlcoholRegime],
   returnStartedTime: Instant,
-  returnValidUntilDate: LocalDate
+  returnValidUntilTime: Option[Instant]
 ) extends AuditEventDetail {
   protected val _auditType = ReturnStarted
 }

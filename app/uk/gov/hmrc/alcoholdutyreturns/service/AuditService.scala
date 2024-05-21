@@ -16,34 +16,17 @@
 
 package uk.gov.hmrc.alcoholdutyreturns.service
 
-import com.google.inject.Inject
+import com.google.inject.{Inject, Singleton}
 import play.api.Logging
-import play.api.libs.json.{JsObject, Json, Writes}
-import uk.gov.hmrc.alcoholdutyreturns.config.AppConfig
+import play.api.libs.json.Writes
 import uk.gov.hmrc.alcoholdutyreturns.models.audit.AuditEventDetail
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
-import uk.gov.hmrc.play.audit.model.ExtendedDataEvent
-import uk.gov.hmrc.play.audit.AuditExtensions._
-import uk.gov.hmrc.play.audit.http.connector.AuditResult.Failure
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
 
-class AuditService @Inject() (appConfig: AppConfig, auditConnector: AuditConnector)(implicit ec: ExecutionContext)
-    extends Logging {
-  def audit[T <: AuditEventDetail](detail: T)(implicit hc: HeaderCarrier, writes: Writes[T]): Future[Boolean] =
-    auditConnector
-      .sendExtendedEvent(
-        ExtendedDataEvent(
-          auditSource = appConfig.appName,
-          auditType = detail.auditType,
-          tags = hc.toAuditTags(),
-          detail = Json.toJson(detail).as[JsObject]
-        )
-      ).map {
-        case Failure(msg, nested) =>
-          logger.warn(s"Unable to audit ${detail.auditType} - $msg${nested.fold("")(t => s": ${t.getMessage}")}")
-          false
-        case _                    => true
-      }
+@Singleton
+class AuditService @Inject() (auditConnector: AuditConnector)(implicit ec: ExecutionContext) extends Logging {
+  def audit[T <: AuditEventDetail](detail: T)(implicit hc: HeaderCarrier, writes: Writes[T]): Unit =
+    auditConnector.sendExplicitAudit(detail.auditType, detail)
 }
