@@ -48,7 +48,7 @@ class AuditServiceSpec extends SpecBase {
       val today = LocalDate.now()
 
       val auditDetail = AuditReturnStarted(
-        appaId = "XMADP0000000208",
+        appaId = appaIdGen.sample.get,
         periodKey = "24AC",
         governmentGatewayId = "governmentGatewayId",
         governmentGatewayGroupId = "governmentGatewayGroupId",
