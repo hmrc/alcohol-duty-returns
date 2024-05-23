@@ -21,7 +21,9 @@ import play.api.http.Status.UNAUTHORIZED
 import play.api.libs.json.Json
 import play.api.mvc.Results.Unauthorized
 import play.api.mvc._
+import uk.gov.hmrc.auth.core.AffinityGroup.Organisation
 import uk.gov.hmrc.auth.core.AuthProvider.GovernmentGateway
+import uk.gov.hmrc.auth.core.CredentialStrength.strong
 import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendHeaderCarrierProvider
@@ -42,10 +44,18 @@ class BaseAuthorisedAction @Inject() (
     with BackendHeaderCarrierProvider
     with AuthorisedFunctions {
 
+  private val alcoholDutyEnrolment = "HMRC-AD-ORG"
+
   override def invokeBlock[A](request: Request[A], block: Request[A] => Future[Result]): Future[Result] = {
     implicit val headerCarrier: HeaderCarrier = hc(request)
 
-    authorised((AuthProviders(GovernmentGateway))) {
+    authorised(
+      AuthProviders(GovernmentGateway)
+        and Enrolment(alcoholDutyEnrolment)
+        and CredentialStrength(strong)
+        and Organisation
+        and ConfidenceLevel.L50
+    ) {
       block(request)
     } recover { case e: AuthorisationException =>
       Unauthorized(

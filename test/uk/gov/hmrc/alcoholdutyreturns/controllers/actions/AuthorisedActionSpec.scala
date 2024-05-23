@@ -17,9 +17,13 @@
 package uk.gov.hmrc.alcoholdutyreturns.controllers.actions
 
 import org.mockito.ArgumentMatchers.any
+import org.mockito.ArgumentMatchersSugar.eqTo
 import play.api.mvc.{BodyParsers, Request, Result}
 import play.api.test.Helpers._
 import uk.gov.hmrc.alcoholdutyreturns.base.SpecBase
+import uk.gov.hmrc.auth.core.AffinityGroup.Organisation
+import uk.gov.hmrc.auth.core.AuthProvider.GovernmentGateway
+import uk.gov.hmrc.auth.core.CredentialStrength.strong
 import uk.gov.hmrc.auth.core._
 
 import scala.concurrent.Future
@@ -38,8 +42,19 @@ class AuthorisedActionSpec extends SpecBase {
 
   "invokeBlock" should {
 
-    "execute the block and return the result if authorised" in {
-      when(mockAuthConnector.authorise[Unit](any(), any())(any(), any()))
+    "execute the block and return OK if authorised" in {
+      when(
+        mockAuthConnector.authorise[Unit](
+          eqTo(
+            AuthProviders(GovernmentGateway)
+              and Enrolment("HMRC-AD-ORG")
+              and Organisation
+              and ConfidenceLevel.L50
+              and CredentialStrength(strong)
+          ),
+          any()
+        )(any(), any())
+      )
         .thenReturn(Future(()))
 
       val result: Future[Result] = authorisedAction.invokeBlock(fakeRequest, testAction)
@@ -80,6 +95,6 @@ class AuthorisedActionSpec extends SpecBase {
       await(authorisedAction.invokeBlock(fakeRequest, testAction))
     }
 
-    result.getMessage shouldBe s"Test Exception"
+    result.getMessage shouldBe "Test Exception"
   }
 }
