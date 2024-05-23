@@ -48,9 +48,9 @@ class AuthorisedActionSpec extends SpecBase {
           eqTo(
             AuthProviders(GovernmentGateway)
               and Enrolment("HMRC-AD-ORG")
+              and CredentialStrength(strong)
               and Organisation
               and ConfidenceLevel.L50
-              and CredentialStrength(strong)
           ),
           any()
         )(any(), any())
