@@ -95,7 +95,7 @@ class CacheRepository @Inject() (
       .map(res => if (res.getModifiedCount == 1) UpdateSuccess else UpdateFailure)
   }
 
-  def add(answers: UserAnswers): Future[Boolean] = {
+  def add(answers: UserAnswers): Future[UserAnswers] = {
 
     val updatedAnswers = answers.copy(
       lastUpdated = Instant.now(clock),
@@ -105,6 +105,6 @@ class CacheRepository @Inject() (
     collection
       .insertOne(updatedAnswers)
       .toFuture()
-      .map(_ => true)
+      .map(_ => updatedAnswers)
   }
 }

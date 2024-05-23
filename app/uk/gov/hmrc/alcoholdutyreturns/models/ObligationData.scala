@@ -17,7 +17,7 @@
 package uk.gov.hmrc.alcoholdutyreturns.models
 
 import enumeratum.{Enum, EnumEntry, PlayJsonEnum}
-import play.api.libs.json.{Format, Json}
+import play.api.libs.json.{Json, OFormat}
 
 import java.time.LocalDate
 
@@ -37,7 +37,7 @@ case class ObligationData(
 )
 
 object ObligationData {
-  implicit val format: Format[ObligationData] = Json.format[ObligationData]
+  implicit val format: OFormat[ObligationData] = Json.format[ObligationData]
 
   override def toString: String = "obligationData"
 }

@@ -35,13 +35,13 @@ class AccountServiceImpl @Inject() (
 
   def createUserAnswers(
     userAnswers: UserAnswers
-  )(implicit hc: HeaderCarrier, ec: ExecutionContext): EitherT[Future, ErrorResponse, UserAnswers]         =
+  )(implicit hc: HeaderCarrier, ec: ExecutionContext): EitherT[Future, ErrorResponse, UserAnswers] =
     for {
       subscription <- checkSubscriptionStatus(userAnswers.id.appaId)
       obligation   <- getOpenObligation(userAnswers.id)
-    } yield addAlcoholRegimeToUserAnswers(userAnswers, subscription.regimes, obligation)
+    } yield addAlcoholRegimeAndObligationToUserAnswers(userAnswers, subscription.regimes, obligation)
 
-  private def addAlcoholRegimeToUserAnswers(
+  private def addAlcoholRegimeAndObligationToUserAnswers(
     answers: UserAnswers,
     regimes: Seq[AlcoholRegime],
     obligationData: ObligationData
@@ -52,6 +52,7 @@ class AccountServiceImpl @Inject() (
     )
     answers.copy(data = data)
   }
+
   private def checkSubscriptionStatus(
     appaId: String
   )(implicit hc: HeaderCarrier, ec: ExecutionContext): EitherT[Future, ErrorResponse, SubscriptionSummary] = EitherT {

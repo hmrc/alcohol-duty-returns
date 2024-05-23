@@ -91,3 +91,9 @@ object UserAnswers {
   implicit val format: OFormat[UserAnswers] = OFormat(reads, writes)
 
 }
+
+case class RegimeAndObligations(alcoholRegime: Seq[AlcoholRegime], obligationData: ObligationData)
+
+object RegimeAndObligations {
+  implicit val regimeAndObligationsFormat: OFormat[RegimeAndObligations] = Json.format[RegimeAndObligations]
+}
