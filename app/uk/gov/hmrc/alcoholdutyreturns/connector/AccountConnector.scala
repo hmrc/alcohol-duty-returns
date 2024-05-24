@@ -65,4 +65,20 @@ class AccountConnector @Inject() (
       }
   )
 
+  def getObligationData(appaId: String)(implicit
+    hc: HeaderCarrier
+  ): EitherT[Future, ErrorResponse, Seq[ObligationData]] = EitherT(
+    httpClient
+      .GET[Either[UpstreamErrorResponse, HttpResponse]](
+        url = config.getObligationDataUrl(appaId)
+      )
+      .map {
+        case Right(response) if response.status == OK                     =>
+          Try(response.json.as[Seq[ObligationData]]).toOption
+            .fold[Either[ErrorResponse, Seq[ObligationData]]](Left(InvalidJson))(Right(_))
+        case Left(errorResponse) if errorResponse.statusCode == NOT_FOUND => Left(EntityNotFound)
+        case _                                                            => Left(UnexpectedResponse)
+      }
+  )
+
 }

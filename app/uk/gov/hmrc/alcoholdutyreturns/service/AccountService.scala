@@ -83,6 +83,13 @@ class AccountServiceImpl @Inject() (
         )
     }
 
+  def getObligations(
+    appaId: String
+  )(implicit hc: HeaderCarrier, ec: ExecutionContext): EitherT[Future, ErrorResponse, Seq[ObligationData]] = {
+    val data = accountConnector.getObligationData(appaId)
+    println(data)
+    data
+  }
 }
 
 @ImplementedBy(classOf[AccountServiceImpl])
@@ -90,4 +97,9 @@ trait AccountService {
   def createUserAnswers(
     userAnswers: UserAnswers
   )(implicit hc: HeaderCarrier, ec: ExecutionContext): EitherT[Future, ErrorResponse, UserAnswers]
+
+  def getObligations(
+    appaId: String
+  )(implicit hc: HeaderCarrier, ec: ExecutionContext): EitherT[Future, ErrorResponse, Seq[ObligationData]]
+
 }
