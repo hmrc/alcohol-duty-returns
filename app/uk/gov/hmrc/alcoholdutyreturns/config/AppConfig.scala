@@ -37,4 +37,5 @@ class AppConfig @Inject() (config: Configuration, servicesConfig: ServicesConfig
   def getOpenObligationDataUrl(appaId: String, periodKey: String) =
     s"$adrAccountHost/alcohol-duty-account/openObligationDetails/$appaId/$periodKey"
 
+  val enrolmentServiceName: String = config.get[String]("enrolment.serviceName")
 }

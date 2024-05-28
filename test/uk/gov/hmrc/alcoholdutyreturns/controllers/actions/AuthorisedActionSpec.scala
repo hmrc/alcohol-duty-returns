@@ -29,13 +29,14 @@ import uk.gov.hmrc.auth.core._
 import scala.concurrent.Future
 
 class AuthorisedActionSpec extends SpecBase {
+  val enrolment   = "HMRC-AD-ORG"
+  val testContent = "Test"
 
   val defaultBodyParser: BodyParsers.Default = app.injector.instanceOf[BodyParsers.Default]
   val mockAuthConnector: AuthConnector       = mock[AuthConnector]
-  val testContent                            = "Test"
 
   val authorisedAction =
-    new BaseAuthorisedAction(mockAuthConnector, defaultBodyParser)
+    new BaseAuthorisedAction(mockAuthConnector, appConfig, defaultBodyParser)
 
   val testAction: Request[_] => Future[Result] = { _ =>
     Future(Ok(testContent))
@@ -48,7 +49,7 @@ class AuthorisedActionSpec extends SpecBase {
         mockAuthConnector.authorise[Unit](
           eqTo(
             AuthProviders(GovernmentGateway)
-              and Enrolment("HMRC-AD-ORG")
+              and Enrolment(enrolment)
               and CredentialStrength(strong)
               and Organisation
               and ConfidenceLevel.L50
