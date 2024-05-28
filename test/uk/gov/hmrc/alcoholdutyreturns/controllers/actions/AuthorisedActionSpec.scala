@@ -32,12 +32,13 @@ class AuthorisedActionSpec extends SpecBase {
 
   val defaultBodyParser: BodyParsers.Default = app.injector.instanceOf[BodyParsers.Default]
   val mockAuthConnector: AuthConnector       = mock[AuthConnector]
+  val testContent                            = "Test"
 
   val authorisedAction =
     new BaseAuthorisedAction(mockAuthConnector, defaultBodyParser)
 
   val testAction: Request[_] => Future[Result] = { _ =>
-    Future(Ok("Test"))
+    Future(Ok(testContent))
   }
 
   "invokeBlock" should {
@@ -60,7 +61,7 @@ class AuthorisedActionSpec extends SpecBase {
       val result: Future[Result] = authorisedAction.invokeBlock(fakeRequest, testAction)
 
       status(result)          shouldBe OK
-      contentAsString(result) shouldBe "Test"
+      contentAsString(result) shouldBe testContent
     }
   }
 
@@ -87,14 +88,15 @@ class AuthorisedActionSpec extends SpecBase {
   }
 
   "return the exception if there is any other exception" in {
+    val msg = "Test Exception"
 
     when(mockAuthConnector.authorise[Unit](any(), any())(any(), any()))
-      .thenReturn(Future.failed(new RuntimeException("Test Exception")))
+      .thenReturn(Future.failed(new RuntimeException(msg)))
 
     val result = intercept[RuntimeException] {
       await(authorisedAction.invokeBlock(fakeRequest, testAction))
     }
 
-    result.getMessage shouldBe "Test Exception"
+    result.getMessage shouldBe msg
   }
 }
