@@ -40,14 +40,16 @@ class AccountServiceSpec extends SpecBase {
     status = Open,
     fromDate = LocalDate.now(),
     toDate = LocalDate.now(),
-    dueDate = LocalDate.now()
+    dueDate = LocalDate.now(),
+    periodKey
   )
 
   private val fulfilledObligationData = ObligationData(
     status = Fulfilled,
     fromDate = LocalDate.now(),
     toDate = LocalDate.now(),
-    dueDate = LocalDate.now()
+    dueDate = LocalDate.now(),
+    periodKey
   )
 
   val emptyUserAnswers: UserAnswers = UserAnswers(
@@ -162,6 +164,23 @@ class AccountServiceSpec extends SpecBase {
 
       whenReady(service.createUserAnswers(emptyUserAnswers).value) { result =>
         result shouldBe Left(EntityNotFound)
+      }
+    }
+    "getobligations" should {
+      "return a sequence of obligations when successful" in {
+        val expectedObligationData = Seq(fulfilledObligationData, obligationData)
+        when(accountConnector.getObligationData(any())(any())).thenReturn(EitherT.rightT(expectedObligationData))
+        val service                = new AccountServiceImpl(accountConnector)
+        whenReady(service.getObligations(appaId).value) { result =>
+          result shouldBe Right(expectedObligationData)
+        }
+      }
+      "return a fallback error response when there is a failure" in {
+        when(accountConnector.getObligationData(any())(any())).thenReturn(EitherT.leftT(UnexpectedResponse))
+        val service = new AccountServiceImpl(accountConnector)
+        whenReady(service.getObligations(appaId).value) { result =>
+          result shouldBe Left(UnexpectedResponse)
+        }
       }
     }
   }
