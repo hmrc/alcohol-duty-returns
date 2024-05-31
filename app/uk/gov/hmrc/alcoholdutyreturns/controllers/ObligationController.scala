@@ -26,16 +26,16 @@ import javax.inject.Inject
 import scala.concurrent.ExecutionContext
 
 class ObligationController @Inject() (
-                                       authorise: AuthorisedAction,
-                                       accountService: AccountService,
-                                       override val controllerComponents: ControllerComponents
-                                     )(implicit executionContext: ExecutionContext)
-  extends BackendController(controllerComponents) {
+  authorise: AuthorisedAction,
+  accountService: AccountService,
+  override val controllerComponents: ControllerComponents
+)(implicit executionContext: ExecutionContext)
+    extends BackendController(controllerComponents) {
   def getObligationDetails(appaId: String): Action[AnyContent] =
-    authorise.async {
-       implicit request => accountService.getObligations(appaId).value.map{
+    authorise.async { implicit request =>
+      accountService.getObligations(appaId).value.map {
         case Left(errorResponse) => NotFound(s"Error: {$errorResponse}")
-        case Right(obligations) => Ok(Json.toJson(obligations))
+        case Right(obligations)  => Ok(Json.toJson(obligations))
       }
     }
 

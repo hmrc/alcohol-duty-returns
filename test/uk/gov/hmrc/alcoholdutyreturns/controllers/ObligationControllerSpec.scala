@@ -27,19 +27,21 @@ import org.mockito.ArgumentMatchers.any
 
 import java.time.LocalDate
 import scala.concurrent.Future
-class ObligationControllerSpec extends SpecBase{
-  val mockAccountService: AccountService   = mock[AccountService]
+class ObligationControllerSpec extends SpecBase {
+  val mockAccountService: AccountService = mock[AccountService]
 
-  val controller = new ObligationController(fakeAuthorisedAction,mockAccountService,cc)
-  private val appaId     = appaIdGen.sample.get
-  private val periodKey  = periodKeyGen.sample.get
-  val obligationData = Seq(ObligationData(
-    status = Open,
-    fromDate = LocalDate.now(),
-    toDate = LocalDate.now(),
-    dueDate = LocalDate.now(),
-    periodKey
-  ))
+  val controller        = new ObligationController(fakeAuthorisedAction, mockAccountService, cc)
+  private val appaId    = appaIdGen.sample.get
+  private val periodKey = periodKeyGen.sample.get
+  val obligationData    = Seq(
+    ObligationData(
+      status = Open,
+      fromDate = LocalDate.now(),
+      toDate = LocalDate.now(),
+      dueDate = LocalDate.now(),
+      periodKey
+    )
+  )
   "ObligationController" should {
     "return 200 OK with obligations" in {
       when(mockAccountService.getObligations(any())(any(), any()))
@@ -48,19 +50,19 @@ class ObligationControllerSpec extends SpecBase{
       val result: Future[Result] =
         controller.getObligationDetails(appaId)(fakeRequest)
 
-      status(result) shouldBe OK
+      status(result)        shouldBe OK
       contentAsJson(result) shouldBe Json.toJson(obligationData)
     }
 
     "return 404 NOT_FOUND when there is an issue" in {
       when(mockAccountService.getObligations(any())(any(), any()))
-        .thenReturn(EitherT.leftT[Future,Seq[ObligationData]](ErrorResponse.UnexpectedResponse))
+        .thenReturn(EitherT.leftT[Future, Seq[ObligationData]](ErrorResponse.UnexpectedResponse))
 
       val result: Future[Result] =
         controller.getObligationDetails(appaId)(fakeRequest)
 
-      status(result) shouldBe NOT_FOUND
-      contentAsString(result) shouldBe ("Error: {UnexpectedResponse}")
+      status(result)          shouldBe NOT_FOUND
+      contentAsString(result) shouldBe "Error: {UnexpectedResponse}"
     }
   }
 }
