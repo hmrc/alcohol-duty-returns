@@ -74,15 +74,20 @@ class CacheRepositorySpec
 
     "must set the last updated time on the supplied user answers to `now`, and save them" in {
 
-      val expectedResult = userAnswers.copy(
-        lastUpdated = instant.truncatedTo(ChronoUnit.MILLIS),
-        validUntil = Some(instant.truncatedTo(ChronoUnit.MILLIS).plusSeconds(DB_TTL_IN_SEC))
+      val expectedAddedUserAnswers = userAnswers.copy(
+        lastUpdated = instant,
+        validUntil = Some(instant.plusSeconds(DB_TTL_IN_SEC))
       )
 
-      val addResult     = repository.add(userAnswers).futureValue
+      val expectedResult = expectedAddedUserAnswers.copy(
+        lastUpdated = expectedAddedUserAnswers.lastUpdated.truncatedTo(ChronoUnit.MILLIS),
+        validUntil = expectedAddedUserAnswers.validUntil.map(_.truncatedTo(ChronoUnit.MILLIS))
+      )
+
+      val updatedUserAnswers     = repository.add(userAnswers).futureValue
       val updatedRecord = find(Filters.equal("_id", ReturnId(appaId, periodKey))).futureValue.headOption.value
 
-      addResult mustEqual true
+      updatedUserAnswers mustEqual expectedAddedUserAnswers
       verifyUserAnswerResult(updatedRecord, expectedResult)
     }
   }
@@ -91,21 +96,27 @@ class CacheRepositorySpec
 
     "must set the last updated time on the supplied user answers to `now`, and update them" in {
 
-      val addResult     = repository.add(userAnswers).futureValue
+      val updatedUserAnswers     = repository.add(userAnswers).futureValue
 
       val updatedResult = userAnswers.copy(
         internalId = "new-internal-id"
       )
 
-      val expectedResult = updatedResult.copy(
-        lastUpdated = instant.truncatedTo(ChronoUnit.MILLIS),
-        validUntil = Some(instant.truncatedTo(ChronoUnit.MILLIS).plusSeconds(DB_TTL_IN_SEC))
+      val expectedAddedUserAnswers = userAnswers.copy(
+        lastUpdated = instant,
+        validUntil = Some(instant.plusSeconds(DB_TTL_IN_SEC))
+      )
+
+      val expectedResult = expectedAddedUserAnswers.copy(
+        internalId = "new-internal-id",
+        lastUpdated = expectedAddedUserAnswers.lastUpdated.truncatedTo(ChronoUnit.MILLIS),
+        validUntil = expectedAddedUserAnswers.validUntil.map(_.truncatedTo(ChronoUnit.MILLIS))
       )
 
       val setResult     = repository.set(updatedResult).futureValue
       val updatedRecord = find(Filters.equal("_id", ReturnId(appaId, periodKey))).futureValue.headOption.value
 
-      addResult mustEqual true
+      updatedUserAnswers mustEqual expectedAddedUserAnswers
       setResult mustEqual UpdateSuccess
       verifyUserAnswerResult(updatedRecord, expectedResult)
     }

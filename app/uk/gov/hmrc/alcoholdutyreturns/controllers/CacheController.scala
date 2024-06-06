@@ -17,25 +17,31 @@
 package uk.gov.hmrc.alcoholdutyreturns.controllers
 
 import org.apache.pekko.util.ByteString
+import play.api.Logging
 import play.api.http.HttpEntity
 import play.api.libs.json._
 import play.api.mvc._
 import uk.gov.hmrc.alcoholdutyreturns.controllers.actions.AuthorisedAction
-import uk.gov.hmrc.alcoholdutyreturns.models.{ErrorResponse, ReturnId, UserAnswers}
+import uk.gov.hmrc.alcoholdutyreturns.models.audit.AuditReturnStarted
+import uk.gov.hmrc.alcoholdutyreturns.models.{ErrorResponse, RegimeAndObligations, ReturnId, UserAnswers}
 import uk.gov.hmrc.alcoholdutyreturns.repositories.{CacheRepository, UpdateFailure, UpdateSuccess}
-import uk.gov.hmrc.alcoholdutyreturns.service.AccountService
+import uk.gov.hmrc.alcoholdutyreturns.service.{AccountService, AuditService}
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.Try
 
 class CacheController @Inject() (
   authorise: AuthorisedAction,
   cacheRepository: CacheRepository,
   accountService: AccountService,
+  auditService: AuditService,
   override val controllerComponents: ControllerComponents
 )(implicit executionContext: ExecutionContext)
-    extends BackendController(controllerComponents) {
+    extends BackendController(controllerComponents)
+    with Logging {
 
   def get(appaId: String, periodKey: String): Action[AnyContent] =
     authorise.async { _ =>
@@ -62,10 +68,36 @@ class CacheController @Inject() (
           .createUserAnswers(userAnswers)
           .foldF(
             err => Future.successful(error(err)),
-            ua => cacheRepository.add(ua).map(_ => Ok(Json.toJson(ua)))
+            ua =>
+              cacheRepository.add(ua).map { userAnswers =>
+                auditReturnStarted(userAnswers)
+                Ok(Json.toJson(ua))
+              }
           )
       }
     }
+
+  private def auditReturnStarted(userAnswers: UserAnswers)(implicit hc: HeaderCarrier): Unit = {
+    val maybeRegimeAndObligations = Try {
+      Json.fromJson[RegimeAndObligations](userAnswers.data).asOpt
+    }.toOption.flatten
+
+    maybeRegimeAndObligations.fold(logger.warn("Unable to fetch data from user answers to audit return started")) {
+      case RegimeAndObligations(alcoholRegimes, obligationData) =>
+        val eventDetail = AuditReturnStarted(
+          appaId = userAnswers.id.appaId,
+          periodKey = userAnswers.id.periodKey,
+          governmentGatewayId = userAnswers.internalId,
+          governmentGatewayGroupId = userAnswers.groupId,
+          obligationData = obligationData,
+          alcoholRegimes = alcoholRegimes,
+          returnStartedTime = userAnswers.lastUpdated,
+          returnValidUntilTime = userAnswers.validUntil
+        )
+
+        auditService.audit(eventDetail)
+    }
+  }
 
   def error(errorResponse: ErrorResponse): Result = Result(
     header = ResponseHeader(errorResponse.status),

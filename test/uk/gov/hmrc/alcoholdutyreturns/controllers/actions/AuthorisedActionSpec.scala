@@ -17,35 +17,52 @@
 package uk.gov.hmrc.alcoholdutyreturns.controllers.actions
 
 import org.mockito.ArgumentMatchers.any
+import org.mockito.ArgumentMatchersSugar.eqTo
 import play.api.mvc.{BodyParsers, Request, Result}
 import play.api.test.Helpers._
 import uk.gov.hmrc.alcoholdutyreturns.base.SpecBase
+import uk.gov.hmrc.auth.core.AffinityGroup.Organisation
+import uk.gov.hmrc.auth.core.AuthProvider.GovernmentGateway
+import uk.gov.hmrc.auth.core.CredentialStrength.strong
 import uk.gov.hmrc.auth.core._
 
 import scala.concurrent.Future
 
 class AuthorisedActionSpec extends SpecBase {
+  val enrolment   = "HMRC-AD-ORG"
+  val testContent = "Test"
 
   val defaultBodyParser: BodyParsers.Default = app.injector.instanceOf[BodyParsers.Default]
   val mockAuthConnector: AuthConnector       = mock[AuthConnector]
 
   val authorisedAction =
-    new BaseAuthorisedAction(mockAuthConnector, defaultBodyParser)
+    new BaseAuthorisedAction(mockAuthConnector, appConfig, defaultBodyParser)
 
   val testAction: Request[_] => Future[Result] = { _ =>
-    Future(Ok("Test"))
+    Future(Ok(testContent))
   }
 
   "invokeBlock" should {
 
-    "execute the block and return the result if authorised" in {
-      when(mockAuthConnector.authorise[Unit](any(), any())(any(), any()))
+    "execute the block and return OK if authorised" in {
+      when(
+        mockAuthConnector.authorise[Unit](
+          eqTo(
+            AuthProviders(GovernmentGateway)
+              and Enrolment(enrolment)
+              and CredentialStrength(strong)
+              and Organisation
+              and ConfidenceLevel.L50
+          ),
+          any()
+        )(any(), any())
+      )
         .thenReturn(Future(()))
 
       val result: Future[Result] = authorisedAction.invokeBlock(fakeRequest, testAction)
 
       status(result)          shouldBe OK
-      contentAsString(result) shouldBe "Test"
+      contentAsString(result) shouldBe testContent
     }
   }
 
@@ -72,14 +89,15 @@ class AuthorisedActionSpec extends SpecBase {
   }
 
   "return the exception if there is any other exception" in {
+    val msg = "Test Exception"
 
     when(mockAuthConnector.authorise[Unit](any(), any())(any(), any()))
-      .thenReturn(Future.failed(new RuntimeException("Test Exception")))
+      .thenReturn(Future.failed(new RuntimeException(msg)))
 
     val result = intercept[RuntimeException] {
       await(authorisedAction.invokeBlock(fakeRequest, testAction))
     }
 
-    result.getMessage shouldBe s"Test Exception"
+    result.getMessage shouldBe msg
   }
 }

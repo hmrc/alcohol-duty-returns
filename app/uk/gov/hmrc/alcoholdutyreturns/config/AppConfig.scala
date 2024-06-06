@@ -40,4 +40,5 @@ class AppConfig @Inject() (config: Configuration, servicesConfig: ServicesConfig
   def getObligationDataUrl(appaId: String): String =
     s"$adrAccountHost/alcohol-duty-account/obligationDetails/$appaId"
 
+  val enrolmentServiceName: String = config.get[String]("enrolment.serviceName")
 }

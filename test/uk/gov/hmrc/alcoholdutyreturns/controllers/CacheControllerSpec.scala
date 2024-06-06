@@ -17,21 +17,24 @@
 package uk.gov.hmrc.alcoholdutyreturns.controllers
 
 import cats.data.EitherT
+import helpers.TestData.{alcoholRegimes, obligationData}
 import org.mockito.ArgumentMatchers
 import org.mockito.ArgumentMatchers.any
 import play.api.libs.json.Json
 import play.api.mvc.Result
 import uk.gov.hmrc.alcoholdutyreturns.base.SpecBase
-import uk.gov.hmrc.alcoholdutyreturns.models.{ErrorResponse, ReturnId, UserAnswers}
+import uk.gov.hmrc.alcoholdutyreturns.models.{ErrorResponse, RegimeAndObligations, ReturnId, UserAnswers}
 import uk.gov.hmrc.alcoholdutyreturns.repositories.{CacheRepository, UpdateFailure, UpdateSuccess}
-import uk.gov.hmrc.alcoholdutyreturns.service.AccountService
+import uk.gov.hmrc.alcoholdutyreturns.service.{AccountService, AuditService}
 
+import java.time.LocalDate
 import scala.concurrent.Future
 
 class CacheControllerSpec extends SpecBase {
 
   val mockCacheRepository: CacheRepository = mock[CacheRepository]
   val mockAccountService: AccountService   = mock[AccountService]
+  val mockAuditService: AuditService       = mock[AuditService]
 
   private val appaId     = appaIdGen.sample.get
   private val periodKey  = periodKeyGen.sample.get
@@ -45,10 +48,25 @@ class CacheControllerSpec extends SpecBase {
     internalId
   )
 
+  val userAnswers: UserAnswers = UserAnswers(
+    id,
+    groupId,
+    internalId,
+    Json.toJsObject(RegimeAndObligations(alcoholRegimes, obligationData(LocalDate.now())))
+  )
+
+  val userAnswersBadJson: UserAnswers = UserAnswers(
+    id,
+    groupId,
+    internalId,
+    Json.toJsObject(obligationData(LocalDate.now()))
+  )
+
   val controller = new CacheController(
     fakeAuthorisedAction,
     mockCacheRepository,
     mockAccountService,
+    mockAuditService,
     cc
   )
 
@@ -101,22 +119,37 @@ class CacheControllerSpec extends SpecBase {
   }
 
   "add" should {
-    "return 200 OK with the user answers that was inserted and the account service return a UserAnswers" in {
-      when(mockCacheRepository.add(any())).thenReturn(Future.successful(true))
-      when(mockAccountService.createUserAnswers(any())(any(), any())).thenReturn(EitherT.rightT(emptyUserAnswers))
+    "return 200 OK with the user answers that was inserted" when {
+      "the account service returns a valid UserAnswers" in {
+        when(mockCacheRepository.add(any())).thenReturn(Future.successful(userAnswers))
+        when(mockAccountService.createUserAnswers(any())(any(), any())).thenReturn(EitherT.rightT(userAnswers))
 
-      val result: Future[Result] =
-        controller.add()(
-          fakeRequestWithJsonBody(Json.toJson(emptyUserAnswers))
-        )
+        val result: Future[Result] =
+          controller.add()(
+            fakeRequestWithJsonBody(Json.toJson(emptyUserAnswers))
+          )
 
-      status(result)        shouldBe OK
-      contentAsJson(result) shouldBe Json.toJson(emptyUserAnswers)
+        status(result)        shouldBe OK
+        contentAsJson(result) shouldBe Json.toJson(userAnswers)
+      }
+
+      "the account service returns a UserAnswers with bad data" in {
+        when(mockCacheRepository.add(any())).thenReturn(Future.successful(userAnswersBadJson))
+        when(mockAccountService.createUserAnswers(any())(any(), any())).thenReturn(EitherT.rightT(userAnswersBadJson))
+
+        val result: Future[Result] =
+          controller.add()(
+            fakeRequestWithJsonBody(Json.toJson(emptyUserAnswers))
+          )
+
+        status(result)        shouldBe OK
+        contentAsJson(result) shouldBe Json.toJson(userAnswersBadJson)
+      }
     }
 
     ErrorResponse.values.foreach { errorResponse =>
-      s"return the status ${errorResponse.status} if the account service return the error ${errorResponse.entryName}" in {
-        when(mockCacheRepository.add(any())).thenReturn(Future.successful(true))
+      s"return the status ${errorResponse.status} if the account service returns the error ${errorResponse.entryName}" in {
+        when(mockCacheRepository.add(any())).thenReturn(Future.successful(userAnswers))
         when(mockAccountService.createUserAnswers(any())(any(), any())).thenReturn(EitherT.leftT(errorResponse))
 
         val result: Future[Result] =
