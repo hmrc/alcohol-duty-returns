@@ -17,50 +17,25 @@
 package uk.gov.hmrc.alcoholdutyreturns.controllers
 
 import cats.data.EitherT
-import helpers.TestData.{alcoholRegimes, obligationData}
 import org.mockito.ArgumentMatchers
 import org.mockito.ArgumentMatchers.any
+import org.mockito.ArgumentMatchersSugar.eqTo
 import play.api.libs.json.Json
 import play.api.mvc.Result
 import uk.gov.hmrc.alcoholdutyreturns.base.SpecBase
-import uk.gov.hmrc.alcoholdutyreturns.models.{ErrorResponse, RegimeAndObligations, ReturnId, UserAnswers}
+import uk.gov.hmrc.alcoholdutyreturns.models.ErrorResponse
 import uk.gov.hmrc.alcoholdutyreturns.repositories.{CacheRepository, UpdateFailure, UpdateSuccess}
 import uk.gov.hmrc.alcoholdutyreturns.service.{AccountService, AuditService}
 
-import java.time.LocalDate
+import java.time.{Clock, Instant, LocalDate, ZoneId}
 import scala.concurrent.Future
 
 class CacheControllerSpec extends SpecBase {
+  override def clock: Clock = Clock.fixed(Instant.ofEpochMilli(1718037305240L), ZoneId.of("UTC"))
 
   val mockCacheRepository: CacheRepository = mock[CacheRepository]
   val mockAccountService: AccountService   = mock[AccountService]
   val mockAuditService: AuditService       = mock[AuditService]
-
-  private val appaId     = appaIdGen.sample.get
-  private val periodKey  = periodKeyGen.sample.get
-  private val groupId    = "groupId"
-  private val internalId = "internalId"
-  private val id         = ReturnId(appaId, periodKey)
-
-  val emptyUserAnswers: UserAnswers = UserAnswers(
-    id,
-    groupId,
-    internalId
-  )
-
-  val userAnswers: UserAnswers = UserAnswers(
-    id,
-    groupId,
-    internalId,
-    Json.toJsObject(RegimeAndObligations(alcoholRegimes, obligationData(LocalDate.now())))
-  )
-
-  val userAnswersBadJson: UserAnswers = UserAnswers(
-    id,
-    groupId,
-    internalId,
-    Json.toJsObject(obligationData(LocalDate.now()))
-  )
 
   val controller = new CacheController(
     fakeAuthorisedAction,
@@ -72,7 +47,7 @@ class CacheControllerSpec extends SpecBase {
 
   "get" should {
     "return 200 OK with an existing user answers when there is one for the id" in {
-      when(mockCacheRepository.get(ArgumentMatchers.eq(id)))
+      when(mockCacheRepository.get(ArgumentMatchers.eq(returnId)))
         .thenReturn(Future.successful(Some(emptyUserAnswers)))
 
       val result: Future[Result] =
@@ -83,7 +58,7 @@ class CacheControllerSpec extends SpecBase {
     }
 
     "return 404 NOT_FOUND when there is no user answers for the id" in {
-      when(mockCacheRepository.get(ArgumentMatchers.eq(id)))
+      when(mockCacheRepository.get(ArgumentMatchers.eq(returnId)))
         .thenReturn(Future.successful(None))
 
       val result: Future[Result] =
@@ -118,43 +93,34 @@ class CacheControllerSpec extends SpecBase {
     }
   }
 
-  "add" should {
-    "return 200 OK with the user answers that was inserted" when {
+  "createUserAnswers" should {
+    "return 200 OK with the user answers that was created" when {
       "the account service returns a valid UserAnswers" in {
         when(mockCacheRepository.add(any())).thenReturn(Future.successful(userAnswers))
-        when(mockAccountService.createUserAnswers(any())(any(), any())).thenReturn(EitherT.rightT(userAnswers))
+        when(mockAccountService.getSubscriptionSummaryAndCheckStatus(eqTo(appaId))(any(), any()))
+          .thenReturn(EitherT.rightT(subscriptionSummary))
+        when(mockAccountService.getOpenObligation(eqTo(returnId))(any(), any()))
+          .thenReturn(EitherT.rightT(getObligationData(LocalDate.now(clock))))
 
         val result: Future[Result] =
-          controller.add()(
-            fakeRequestWithJsonBody(Json.toJson(emptyUserAnswers))
+          controller.createUserAnswers()(
+            fakeRequestWithJsonBody(Json.toJson(returnAndUserDetails))
           )
 
         status(result)        shouldBe OK
         contentAsJson(result) shouldBe Json.toJson(userAnswers)
       }
-
-      "the account service returns a UserAnswers with bad data" in {
-        when(mockCacheRepository.add(any())).thenReturn(Future.successful(userAnswersBadJson))
-        when(mockAccountService.createUserAnswers(any())(any(), any())).thenReturn(EitherT.rightT(userAnswersBadJson))
-
-        val result: Future[Result] =
-          controller.add()(
-            fakeRequestWithJsonBody(Json.toJson(emptyUserAnswers))
-          )
-
-        status(result)        shouldBe OK
-        contentAsJson(result) shouldBe Json.toJson(userAnswersBadJson)
-      }
     }
 
     ErrorResponse.values.foreach { errorResponse =>
-      s"return the status ${errorResponse.status} if the account service returns the error ${errorResponse.entryName}" in {
+      s"return the status ${errorResponse.status} if the account service returns the error ${errorResponse.entryName} when getting the subscription summary" in {
         when(mockCacheRepository.add(any())).thenReturn(Future.successful(userAnswers))
-        when(mockAccountService.createUserAnswers(any())(any(), any())).thenReturn(EitherT.leftT(errorResponse))
+        when(mockAccountService.getSubscriptionSummaryAndCheckStatus(eqTo(appaId))(any(), any()))
+          .thenReturn(EitherT.leftT(errorResponse))
 
         val result: Future[Result] =
-          controller.add()(
-            fakeRequestWithJsonBody(Json.toJson(emptyUserAnswers))
+          controller.createUserAnswers()(
+            fakeRequestWithJsonBody(Json.toJson(returnAndUserDetails))
           )
 
         status(result)        shouldBe errorResponse.status
@@ -162,6 +128,23 @@ class CacheControllerSpec extends SpecBase {
       }
     }
 
+    ErrorResponse.values.foreach { errorResponse =>
+      s"return the status ${errorResponse.status} if the account service returns the error ${errorResponse.entryName} when getting the open obligations" in {
+        when(mockCacheRepository.add(any())).thenReturn(Future.successful(userAnswers))
+        when(mockAccountService.getSubscriptionSummaryAndCheckStatus(eqTo(appaId))(any(), any()))
+          .thenReturn(EitherT.rightT(subscriptionSummary))
+        when(mockAccountService.getOpenObligation(eqTo(returnId))(any(), any()))
+          .thenReturn(EitherT.leftT(errorResponse))
+
+        val result: Future[Result] =
+          controller.createUserAnswers()(
+            fakeRequestWithJsonBody(Json.toJson(returnAndUserDetails))
+          )
+
+        status(result)        shouldBe errorResponse.status
+        contentAsJson(result) shouldBe Json.toJson(errorResponse)
+      }
+    }
   }
 
 }

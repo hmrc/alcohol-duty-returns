@@ -23,7 +23,7 @@ import play.api.libs.json._
 import play.api.mvc._
 import uk.gov.hmrc.alcoholdutyreturns.controllers.actions.AuthorisedAction
 import uk.gov.hmrc.alcoholdutyreturns.models.audit.AuditReturnStarted
-import uk.gov.hmrc.alcoholdutyreturns.models.{ErrorResponse, RegimeAndObligations, ReturnId, UserAnswers}
+import uk.gov.hmrc.alcoholdutyreturns.models.{ErrorResponse, ObligationData, ReturnAndUserDetails, ReturnId, UserAnswers}
 import uk.gov.hmrc.alcoholdutyreturns.repositories.{CacheRepository, UpdateFailure, UpdateSuccess}
 import uk.gov.hmrc.alcoholdutyreturns.service.{AccountService, AuditService}
 import uk.gov.hmrc.http.HeaderCarrier
@@ -31,7 +31,6 @@ import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.Try
 
 class CacheController @Inject() (
   authorise: AuthorisedAction,
@@ -61,42 +60,45 @@ class CacheController @Inject() (
       }
     }
 
-  def add(): Action[JsValue] =
+  def createUserAnswers(): Action[JsValue] =
     authorise(parse.json).async { implicit request =>
-      withJsonBody[UserAnswers] { userAnswers =>
-        accountService
-          .createUserAnswers(userAnswers)
-          .foldF(
-            err => Future.successful(error(err)),
-            ua =>
-              cacheRepository.add(ua).map { userAnswers =>
-                auditReturnStarted(userAnswers)
-                Ok(Json.toJson(ua))
-              }
-          )
+      withJsonBody[ReturnAndUserDetails] { returnAndUserDetails =>
+        val returnId = returnAndUserDetails.returnId
+
+        val eitherAccountDetails = for {
+          subscriptionSummary <- accountService.getSubscriptionSummaryAndCheckStatus(returnId.appaId)
+          obligationData      <- accountService.getOpenObligation(returnId)
+        } yield (subscriptionSummary, obligationData)
+
+        eitherAccountDetails.foldF(
+          err => Future.successful(error(err)),
+          accountDetails => {
+            val (subscriptionSummary, obligationData) = accountDetails
+            val userAnswers                           = UserAnswers.createUserAnswers(returnAndUserDetails, subscriptionSummary, obligationData)
+            cacheRepository.add(userAnswers).map { userAnswers =>
+              auditReturnStarted(userAnswers, obligationData)
+              Ok(Json.toJson(userAnswers))
+            }
+          }
+        )
       }
     }
 
-  private def auditReturnStarted(userAnswers: UserAnswers)(implicit hc: HeaderCarrier): Unit = {
-    val maybeRegimeAndObligations = Try {
-      Json.fromJson[RegimeAndObligations](userAnswers.data).asOpt
-    }.toOption.flatten
+  private def auditReturnStarted(userAnswers: UserAnswers, obligationData: ObligationData)(implicit
+    hc: HeaderCarrier
+  ): Unit = {
+    val eventDetail = AuditReturnStarted(
+      appaId = userAnswers.returnId.appaId,
+      periodKey = userAnswers.returnId.periodKey,
+      governmentGatewayId = userAnswers.internalId,
+      governmentGatewayGroupId = userAnswers.groupId,
+      obligationData = obligationData,
+      alcoholRegimes = userAnswers.regimes.regimes.toSortedSet,
+      returnStartedTime = userAnswers.lastUpdated,
+      returnValidUntilTime = userAnswers.validUntil
+    )
 
-    maybeRegimeAndObligations.fold(logger.warn("Unable to fetch data from user answers to audit return started")) {
-      case RegimeAndObligations(alcoholRegimes, obligationData) =>
-        val eventDetail = AuditReturnStarted(
-          appaId = userAnswers.id.appaId,
-          periodKey = userAnswers.id.periodKey,
-          governmentGatewayId = userAnswers.internalId,
-          governmentGatewayGroupId = userAnswers.groupId,
-          obligationData = obligationData,
-          alcoholRegimes = alcoholRegimes,
-          returnStartedTime = userAnswers.lastUpdated,
-          returnValidUntilTime = userAnswers.validUntil
-        )
-
-        auditService.audit(eventDetail)
-    }
+    auditService.audit(eventDetail)
   }
 
   def error(errorResponse: ErrorResponse): Result = Result(

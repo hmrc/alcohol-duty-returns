@@ -16,19 +16,57 @@
 
 package helpers
 
-import uk.gov.hmrc.alcoholdutyreturns.models.AlcoholRegime.{Beer, Wine}
-import uk.gov.hmrc.alcoholdutyreturns.models.ObligationData
-import uk.gov.hmrc.alcoholdutyreturns.models.ObligationStatus.Open
+import cats.data.NonEmptySet
+import generators.ModelGenerators
+import play.api.libs.json.{JsObject, Json}
+import uk.gov.hmrc.alcoholdutyreturns.models.AlcoholRegime.{Beer, Cider, OtherFermentedProduct, Spirits, Wine}
+import uk.gov.hmrc.alcoholdutyreturns.models.ApprovalStatus.Approved
+import uk.gov.hmrc.alcoholdutyreturns.models.{AlcoholRegime, AlcoholRegimes, ObligationData, ReturnAndUserDetails, ReturnId, SubscriptionSummary, UserAnswers}
+import uk.gov.hmrc.alcoholdutyreturns.models.ObligationStatus.{Fulfilled, Open}
 
-import java.time.LocalDate
+import java.time.{Clock, Instant, LocalDate}
+import scala.collection.immutable.SortedSet
 
-object TestData {
-  def obligationData(now: LocalDate) = ObligationData(
+trait TestData extends ModelGenerators {
+  def clock: Clock       = Clock.systemDefaultZone()
+  val appaId: String     = appaIdGen.sample.get
+  val periodKey: String  = periodKeyGen.sample.get
+  val groupId: String    = "groupId"
+  val internalId: String = "internalId"
+  val returnId: ReturnId = ReturnId(appaId, periodKey)
+
+  val returnAndUserDetails: ReturnAndUserDetails = ReturnAndUserDetails(returnId, groupId, internalId)
+
+  val alcoholRegimes: AlcoholRegimes    = AlcoholRegimes(NonEmptySet.fromSet(SortedSet[AlcoholRegime](Beer, Wine)).get)
+  val allAlcoholRegimes: AlcoholRegimes = AlcoholRegimes(
+    NonEmptySet.fromSet(SortedSet[AlcoholRegime](Beer, Cider, Spirits, Wine, OtherFermentedProduct)).get
+  )
+
+  val subscriptionSummary: SubscriptionSummary = SubscriptionSummary(Approved, allAlcoholRegimes.regimes)
+
+  val emptyUserAnswers: UserAnswers = UserAnswers(
+    returnId,
+    groupId,
+    internalId,
+    allAlcoholRegimes,
+    lastUpdated = Instant.now(clock)
+  )
+
+  val userAnswers: UserAnswers = UserAnswers(
+    returnId,
+    groupId,
+    internalId,
+    allAlcoholRegimes,
+    JsObject(Seq(ObligationData.toString -> Json.toJson(getObligationData(LocalDate.now(clock))))),
+    lastUpdated = Instant.now(clock)
+  )
+
+  def getObligationData(now: LocalDate): ObligationData = ObligationData(
     status = Open,
     fromDate = now,
     toDate = now.plusDays(1),
     dueDate = now.plusDays(2)
   )
 
-  val alcoholRegimes = Seq(Beer, Wine)
+  def getFulfilledObligationData(now: LocalDate): ObligationData = getObligationData(now).copy(status = Fulfilled)
 }

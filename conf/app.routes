@@ -3,4 +3,4 @@
 # User Answers Cache
 GET         /cache/get/:appaId/:periodKey                     uk.gov.hmrc.alcoholdutyreturns.controllers.CacheController.get(appaId:String, periodKey:String)
 PUT         /cache/set                                        uk.gov.hmrc.alcoholdutyreturns.controllers.CacheController.set()
-POST        /cache/add                                        uk.gov.hmrc.alcoholdutyreturns.controllers.CacheController.add()
+POST        /cache/create-user-answers                        uk.gov.hmrc.alcoholdutyreturns.controllers.CacheController.createUserAnswers()
