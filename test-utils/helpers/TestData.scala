@@ -27,7 +27,8 @@ object TestData {
     status = Open,
     fromDate = now,
     toDate = now.plusDays(1),
-    dueDate = now.plusDays(2)
+    dueDate = now.plusDays(2),
+    periodKey = "24AA"
   )
 
   val alcoholRegimes = Seq(Beer, Wine)

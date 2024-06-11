@@ -84,6 +84,12 @@ class AccountServiceImpl @Inject() (
         )
     }
 
+  def getObligations(
+    appaId: String
+  )(implicit hc: HeaderCarrier, ec: ExecutionContext): EitherT[Future, ErrorResponse, Seq[ObligationData]] =
+    accountConnector.getObligationData(appaId).leftFlatMap { _ =>
+      EitherT.leftT[Future, Seq[ObligationData]](ErrorResponse.UnexpectedResponse)
+    }
 }
 
 @ImplementedBy(classOf[AccountServiceImpl])
@@ -91,4 +97,9 @@ trait AccountService {
   def createUserAnswers(
     userAnswers: UserAnswers
   )(implicit hc: HeaderCarrier, ec: ExecutionContext): EitherT[Future, ErrorResponse, UserAnswers]
+
+  def getObligations(
+    appaId: String
+  )(implicit hc: HeaderCarrier, ec: ExecutionContext): EitherT[Future, ErrorResponse, Seq[ObligationData]]
+
 }
