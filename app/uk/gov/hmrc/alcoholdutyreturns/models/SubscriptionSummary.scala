@@ -16,12 +16,9 @@
 
 package uk.gov.hmrc.alcoholdutyreturns.models
 
-import cats.data.NonEmptySet
 import enumeratum.{Enum, EnumEntry, PlayJsonEnum}
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
-
-import scala.collection.immutable.SortedSet
 
 sealed trait ApprovalStatus extends EnumEntry
 object ApprovalStatus extends Enum[ApprovalStatus] with PlayJsonEnum[ApprovalStatus] {
@@ -36,22 +33,24 @@ object ApprovalStatus extends Enum[ApprovalStatus] with PlayJsonEnum[ApprovalSta
 
 case class SubscriptionSummary(
   approvalStatus: ApprovalStatus,
-  regimes: NonEmptySet[AlcoholRegime]
+  regimes: Set[AlcoholRegime]
 )
 
 object SubscriptionSummary {
-  implicit val reads: Reads[SubscriptionSummary] =
+  private implicit val reads: Reads[SubscriptionSummary] =
     ((JsPath \ "approvalStatus").read[ApprovalStatus] and
-      (JsPath \ "regimes").read[SortedSet[AlcoholRegime]])((approvalStatus, regimes) =>
+      (JsPath \ "regimes").read[Set[AlcoholRegime]])((approvalStatus, regimes) =>
       SubscriptionSummary.apply(
         approvalStatus,
-        NonEmptySet.fromSet(regimes).getOrElse(throw new IllegalArgumentException("No regimes found"))
+        if (regimes.nonEmpty) {
+          regimes
+        } else {
+          throw new IllegalArgumentException("No regimes found")
+        }
       )
     )
 
-  implicit val writes: Writes[SubscriptionSummary] =
-    ((JsPath \ "approvalStatus").write[ApprovalStatus] and
-      (JsPath \ "regimes").write[Set[AlcoholRegime]])(s => (s.approvalStatus, s.regimes.toSortedSet))
+  private implicit val writes: OWrites[SubscriptionSummary] = Json.writes[SubscriptionSummary]
 
   implicit val format: Format[SubscriptionSummary] = Format(reads, writes)
 }

@@ -16,23 +16,23 @@
 
 package uk.gov.hmrc.alcoholdutyreturns.models
 
-import cats.data.NonEmptySet
-import play.api.libs.json.{Format, JsObject, JsPath, JsResult, JsValue, OFormat, Reads, Writes}
+import play.api.libs.json.{Format, JsObject, JsPath, JsResult, JsValue, Json, OFormat, OWrites, Reads}
 
-import scala.collection.immutable.SortedSet
-
-case class AlcoholRegimes(regimes: NonEmptySet[AlcoholRegime])
+case class AlcoholRegimes(regimes: Set[AlcoholRegime])
 
 object AlcoholRegimes {
   private[models] val reads: Reads[AlcoholRegimes] =
     (JsPath \ "regimes")
-      .read[SortedSet[AlcoholRegime]]
+      .read[Set[AlcoholRegime]]
       .map(regimes =>
-        AlcoholRegimes(NonEmptySet.fromSet(regimes).getOrElse(throw new IllegalArgumentException("No regimes found")))
+        if (regimes.nonEmpty) {
+          AlcoholRegimes(regimes)
+        } else {
+          throw new IllegalArgumentException("Expecting at least one alcohol regime found")
+        }
       )
 
-  private[models] val writes: Writes[AlcoholRegimes] =
-    (JsPath \ "regimes").write[SortedSet[AlcoholRegime]].contramap(_.regimes.toSortedSet)
+  private[models] val writes: OWrites[AlcoholRegimes] = Json.writes[AlcoholRegimes]
 
   private val format: Format[AlcoholRegimes] = Format[AlcoholRegimes](reads, writes)
 

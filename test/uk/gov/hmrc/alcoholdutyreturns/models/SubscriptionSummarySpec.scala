@@ -21,8 +21,10 @@ import uk.gov.hmrc.alcoholdutyreturns.base.SpecBase
 
 class SubscriptionSummarySpec extends SpecBase {
   "SubscriptionSummary" should {
-    val json =
-      """{"approvalStatus":"Approved","regimes":["Spirits","Beer","Wine","Cider","OtherFermentedProduct"]}"""
+    val json          =
+      """{"approvalStatus":"Approved","regimes":["Spirits","Wine","Cider","OtherFermentedProduct","Beer"]}"""
+    val noRegimesJson =
+      """{"approvalStatus":"Approved","regimes":[]}"""
 
     "serialise to json" in {
       Json.toJson(subscriptionSummary).toString() shouldBe json
@@ -30,6 +32,10 @@ class SubscriptionSummarySpec extends SpecBase {
 
     "deserialise from json" in {
       Json.parse(json).as[SubscriptionSummary] shouldBe subscriptionSummary
+    }
+
+    "throw an error if no regimes" in {
+      a[RuntimeException] shouldBe thrownBy(Json.parse(noRegimesJson).as[SubscriptionSummary])
     }
   }
 }

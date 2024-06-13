@@ -27,8 +27,10 @@ class UserAnswersSpec extends SpecBase {
   val ua = userAnswers.copy(validUntil = Some(Instant.now(clock).plusMillis(1)))
 
   "UserAnswers" should {
-    val json =
-      s"""{"_id":{"appaId":"$appaId","periodKey":"$periodKey"},"groupId":"$groupId","internalId":"$internalId","regimes":["Spirits","Beer","Wine","Cider","OtherFermentedProduct"],"data":{"obligationData":{"status":"Open","fromDate":"2024-06-10","toDate":"2024-06-11","dueDate":"2024-06-12"}},"lastUpdated":{"$$date":{"$$numberLong":"1718037305240"}},"validUntil":{"$$date":{"$$numberLong":"1718037305241"}}}"""
+    val json          =
+      s"""{"_id":{"appaId":"$appaId","periodKey":"$periodKey"},"groupId":"$groupId","internalId":"$internalId","regimes":["Spirits","Wine","Cider","OtherFermentedProduct","Beer"],"data":{"obligationData":{"status":"Open","fromDate":"2024-06-10","toDate":"2024-06-11","dueDate":"2024-06-12"}},"lastUpdated":{"$$date":{"$$numberLong":"1718037305240"}},"validUntil":{"$$date":{"$$numberLong":"1718037305241"}}}"""
+    val noRegimesJson =
+      s"""{"_id":{"appaId":"$appaId","periodKey":"$periodKey"},"groupId":"$groupId","internalId":"$internalId","regimes":[],"data":{"obligationData":{"status":"Open","fromDate":"2024-06-10","toDate":"2024-06-11","dueDate":"2024-06-12"}},"lastUpdated":{"$$date":{"$$numberLong":"1718037305240"}},"validUntil":{"$$date":{"$$numberLong":"1718037305241"}}}"""
 
     "serialise to json" in {
       Json.toJson(ua).toString() shouldBe json
@@ -36,6 +38,10 @@ class UserAnswersSpec extends SpecBase {
 
     "deserialise from json" in {
       Json.parse(json).as[UserAnswers] shouldBe ua
+    }
+
+    "throw an error if no regimes" in {
+      a[IllegalArgumentException] shouldBe thrownBy(Json.parse(noRegimesJson).as[UserAnswers])
     }
 
     "create a UserAnswers from components" in {

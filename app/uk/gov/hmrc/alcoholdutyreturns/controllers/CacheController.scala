@@ -93,7 +93,7 @@ class CacheController @Inject() (
       governmentGatewayId = userAnswers.internalId,
       governmentGatewayGroupId = userAnswers.groupId,
       obligationData = obligationData,
-      alcoholRegimes = userAnswers.regimes.regimes.toSortedSet,
+      alcoholRegimes = userAnswers.regimes.regimes,
       returnStartedTime = userAnswers.lastUpdated,
       returnValidUntilTime = userAnswers.validUntil
     )

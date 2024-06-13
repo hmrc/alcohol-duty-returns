@@ -16,16 +16,14 @@
 
 package helpers
 
-import cats.data.NonEmptySet
 import generators.ModelGenerators
 import play.api.libs.json.{JsObject, Json}
 import uk.gov.hmrc.alcoholdutyreturns.models.AlcoholRegime.{Beer, Cider, OtherFermentedProduct, Spirits, Wine}
 import uk.gov.hmrc.alcoholdutyreturns.models.ApprovalStatus.Approved
-import uk.gov.hmrc.alcoholdutyreturns.models.{AlcoholRegime, AlcoholRegimes, ObligationData, ReturnAndUserDetails, ReturnId, SubscriptionSummary, UserAnswers}
+import uk.gov.hmrc.alcoholdutyreturns.models.{AlcoholRegimes, ObligationData, ReturnAndUserDetails, ReturnId, SubscriptionSummary, UserAnswers}
 import uk.gov.hmrc.alcoholdutyreturns.models.ObligationStatus.{Fulfilled, Open}
 
 import java.time.{Clock, Instant, LocalDate}
-import scala.collection.immutable.SortedSet
 
 trait TestData extends ModelGenerators {
   def clock: Clock       = Clock.systemDefaultZone()
@@ -37,10 +35,8 @@ trait TestData extends ModelGenerators {
 
   val returnAndUserDetails: ReturnAndUserDetails = ReturnAndUserDetails(returnId, groupId, internalId)
 
-  val alcoholRegimes: AlcoholRegimes    = AlcoholRegimes(NonEmptySet.fromSet(SortedSet[AlcoholRegime](Beer, Wine)).get)
-  val allAlcoholRegimes: AlcoholRegimes = AlcoholRegimes(
-    NonEmptySet.fromSet(SortedSet[AlcoholRegime](Beer, Cider, Spirits, Wine, OtherFermentedProduct)).get
-  )
+  val alcoholRegimes: AlcoholRegimes    = AlcoholRegimes(Set(Beer, Wine))
+  val allAlcoholRegimes: AlcoholRegimes = AlcoholRegimes(Set(Beer, Cider, Spirits, Wine, OtherFermentedProduct))
 
   val subscriptionSummary: SubscriptionSummary = SubscriptionSummary(Approved, allAlcoholRegimes.regimes)
 

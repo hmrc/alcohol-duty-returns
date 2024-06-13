@@ -52,7 +52,7 @@ class AuditServiceSpec extends SpecBase {
         governmentGatewayId = "governmentGatewayId",
         governmentGatewayGroupId = "governmentGatewayGroupId",
         obligationData = getObligationData(today),
-        alcoholRegimes = allAlcoholRegimes.regimes.toSortedSet,
+        alcoholRegimes = allAlcoholRegimes.regimes,
         returnStartedTime = now,
         returnValidUntilTime = Some(now)
       )
