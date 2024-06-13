@@ -28,7 +28,7 @@ object AlcoholRegimes {
         if (regimes.nonEmpty) {
           AlcoholRegimes(regimes)
         } else {
-          throw new IllegalArgumentException("Expecting at least one alcohol regime found")
+          throw new IllegalArgumentException("Expecting at least one regime to be approved")
         }
       )
 

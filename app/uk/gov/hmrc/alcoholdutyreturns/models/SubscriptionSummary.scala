@@ -45,7 +45,7 @@ object SubscriptionSummary {
         if (regimes.nonEmpty) {
           regimes
         } else {
-          throw new IllegalArgumentException("No regimes found")
+          throw new IllegalArgumentException("Expecting at least one regime to be approved")
         }
       )
     )
