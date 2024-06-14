@@ -41,7 +41,7 @@ class UserAnswersSpec extends SpecBase {
     }
 
     "throw an error if no regimes" in {
-      a[IllegalArgumentException] shouldBe thrownBy(Json.parse(noRegimesJson).as[UserAnswers])
+      an[IllegalArgumentException] shouldBe thrownBy(Json.parse(noRegimesJson).as[UserAnswers])
     }
 
     "create a UserAnswers from components" in {

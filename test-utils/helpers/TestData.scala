@@ -26,7 +26,7 @@ import uk.gov.hmrc.alcoholdutyreturns.models.ObligationStatus.{Fulfilled, Open}
 import java.time.{Clock, Instant, LocalDate}
 
 trait TestData extends ModelGenerators {
-  def clock: Clock       = Clock.systemDefaultZone()
+  def clock: Clock       = Clock.systemUTC()
   val appaId: String     = appaIdGen.sample.get
   val periodKey: String  = periodKeyGen.sample.get
   val groupId: String    = "groupId"

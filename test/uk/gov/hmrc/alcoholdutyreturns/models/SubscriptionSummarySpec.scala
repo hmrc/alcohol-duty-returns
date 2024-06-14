@@ -35,7 +35,7 @@ class SubscriptionSummarySpec extends SpecBase {
     }
 
     "throw an error if no regimes" in {
-      a[RuntimeException] shouldBe thrownBy(Json.parse(noRegimesJson).as[SubscriptionSummary])
+      an[IllegalArgumentException] shouldBe thrownBy(Json.parse(noRegimesJson).as[SubscriptionSummary])
     }
   }
 }
