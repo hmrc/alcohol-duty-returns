@@ -61,7 +61,8 @@ trait TestData extends ModelGenerators {
     status = Open,
     fromDate = now,
     toDate = now.plusDays(1),
-    dueDate = now.plusDays(2)
+    dueDate = now.plusDays(2),
+    periodKey = "24AA"
   )
 
   def getFulfilledObligationData(now: LocalDate): ObligationData = getObligationData(now).copy(status = Fulfilled)

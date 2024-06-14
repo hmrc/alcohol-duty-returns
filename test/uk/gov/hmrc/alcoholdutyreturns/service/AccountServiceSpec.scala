@@ -93,12 +93,28 @@ class AccountServiceSpec extends SpecBase {
         }
       }
     }
+    "getObligations" should {
+      "return a sequence of obligations when successful" in new SetUp {
+        val expectedObligationData = Seq(fulfilledObligationData, obligationData)
+        when(accountConnector.getObligationData(any())(any())).thenReturn(EitherT.rightT(expectedObligationData))
+        whenReady(accountService.getObligations(appaId).value) { result =>
+          result shouldBe Right(expectedObligationData)
+        }
+      }
+      "return a fallback error response when there is a failure" in new SetUp {
+        when(accountConnector.getObligationData(any())(any())).thenReturn(EitherT.leftT(UnexpectedResponse))
+        whenReady(accountService.getObligations(appaId).value) { result =>
+          result shouldBe Left(UnexpectedResponse)
+        }
+      }
+    }
   }
 
   class SetUp {
     val accountConnector = mock[AccountConnector]
 
-    val obligationData = getObligationData(LocalDate.now(clock))
+    val obligationData          = getObligationData(LocalDate.now(clock))
+    val fulfilledObligationData = getFulfilledObligationData(LocalDate.now(clock))
 
     val accountService = new AccountService(accountConnector)
   }

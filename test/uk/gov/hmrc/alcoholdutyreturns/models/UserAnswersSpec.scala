@@ -28,9 +28,9 @@ class UserAnswersSpec extends SpecBase {
 
   "UserAnswers" should {
     val json          =
-      s"""{"_id":{"appaId":"$appaId","periodKey":"$periodKey"},"groupId":"$groupId","internalId":"$internalId","regimes":["Spirits","Wine","Cider","OtherFermentedProduct","Beer"],"data":{"obligationData":{"status":"Open","fromDate":"2024-06-10","toDate":"2024-06-11","dueDate":"2024-06-12"}},"lastUpdated":{"$$date":{"$$numberLong":"1718037305240"}},"validUntil":{"$$date":{"$$numberLong":"1718037305241"}}}"""
+      s"""{"_id":{"appaId":"$appaId","periodKey":"$periodKey"},"groupId":"$groupId","internalId":"$internalId","regimes":["Spirits","Wine","Cider","OtherFermentedProduct","Beer"],"data":{"obligationData":{"status":"Open","fromDate":"2024-06-10","toDate":"2024-06-11","dueDate":"2024-06-12","periodKey":"24AA"}},"lastUpdated":{"$$date":{"$$numberLong":"1718037305240"}},"validUntil":{"$$date":{"$$numberLong":"1718037305241"}}}"""
     val noRegimesJson =
-      s"""{"_id":{"appaId":"$appaId","periodKey":"$periodKey"},"groupId":"$groupId","internalId":"$internalId","regimes":[],"data":{"obligationData":{"status":"Open","fromDate":"2024-06-10","toDate":"2024-06-11","dueDate":"2024-06-12"}},"lastUpdated":{"$$date":{"$$numberLong":"1718037305240"}},"validUntil":{"$$date":{"$$numberLong":"1718037305241"}}}"""
+      s"""{"_id":{"appaId":"$appaId","periodKey":"$periodKey"},"groupId":"$groupId","internalId":"$internalId","regimes":[],"data":{"obligationData":{"status":"Open","fromDate":"2024-06-10","toDate":"2024-06-11","dueDate":"2024-06-12","periodKey":"24AA"}},"lastUpdated":{"$$date":{"$$numberLong":"1718037305240"}},"validUntil":{"$$date":{"$$numberLong":"1718037305241"}}}"""
 
     "serialise to json" in {
       Json.toJson(ua).toString() shouldBe json

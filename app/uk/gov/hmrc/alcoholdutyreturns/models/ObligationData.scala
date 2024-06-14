@@ -33,7 +33,8 @@ case class ObligationData(
   status: ObligationStatus,
   fromDate: LocalDate,
   toDate: LocalDate,
-  dueDate: LocalDate
+  dueDate: LocalDate,
+  periodKey: String
 )
 
 object ObligationData {
