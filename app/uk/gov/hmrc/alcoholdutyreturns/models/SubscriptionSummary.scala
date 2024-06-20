@@ -17,7 +17,8 @@
 package uk.gov.hmrc.alcoholdutyreturns.models
 
 import enumeratum.{Enum, EnumEntry, PlayJsonEnum}
-import play.api.libs.json.{Format, Json}
+import play.api.libs.functional.syntax._
+import play.api.libs.json._
 
 sealed trait ApprovalStatus extends EnumEntry
 object ApprovalStatus extends Enum[ApprovalStatus] with PlayJsonEnum[ApprovalStatus] {
@@ -32,9 +33,24 @@ object ApprovalStatus extends Enum[ApprovalStatus] with PlayJsonEnum[ApprovalSta
 
 case class SubscriptionSummary(
   approvalStatus: ApprovalStatus,
-  regimes: Seq[AlcoholRegime]
+  regimes: Set[AlcoholRegime]
 )
 
 object SubscriptionSummary {
-  implicit val format: Format[SubscriptionSummary] = Json.format[SubscriptionSummary]
+  private implicit val reads: Reads[SubscriptionSummary] =
+    ((JsPath \ "approvalStatus").read[ApprovalStatus] and
+      (JsPath \ "regimes").read[Set[AlcoholRegime]])((approvalStatus, regimes) =>
+      SubscriptionSummary.apply(
+        approvalStatus,
+        if (regimes.nonEmpty) {
+          regimes
+        } else {
+          throw new IllegalArgumentException("Expecting at least one regime to be approved")
+        }
+      )
+    )
+
+  private implicit val writes: OWrites[SubscriptionSummary] = Json.writes[SubscriptionSummary]
+
+  implicit val format: Format[SubscriptionSummary] = Format(reads, writes)
 }

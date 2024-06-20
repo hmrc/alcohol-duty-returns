@@ -21,11 +21,7 @@ import org.scalatest.matchers.must.Matchers.convertToAnyMustWrapper
 import org.scalatest.time.{Seconds, Span}
 import play.api.libs.json.Json
 import uk.gov.hmrc.alcoholdutyreturns.base.ISpecBase
-import uk.gov.hmrc.alcoholdutyreturns.models.AlcoholRegime.{Beer, Cider, OtherFermentedProduct, Spirits, Wine}
-import uk.gov.hmrc.alcoholdutyreturns.models.ApprovalStatus.Approved
 import uk.gov.hmrc.alcoholdutyreturns.models.ErrorResponse.{EntityNotFound, InvalidJson, UnexpectedResponse}
-import uk.gov.hmrc.alcoholdutyreturns.models.ObligationStatus.Open
-import uk.gov.hmrc.alcoholdutyreturns.models.{ObligationData, ReturnId, SubscriptionSummary}
 
 import java.time.LocalDate
 
@@ -33,21 +29,7 @@ class AccountConnectorSpec extends ISpecBase {
 
   protected val endpointName = "alcohol-duty-accounts"
 
-  val appaId         = appaIdGen.sample.get
-  val periodKey      = periodKeyGen.sample.get
-  val alcoholRegimes = Seq(Beer, Cider, Spirits, Wine, OtherFermentedProduct)
-
-  val subscriptionSummary = SubscriptionSummary(Approved, alcoholRegimes)
-  val obligationData = ObligationData(
-    status = Open,
-    fromDate = LocalDate.now(),
-    toDate = LocalDate.now(),
-    dueDate = LocalDate.now(),
-    periodKey
-  )
-
-  "Alcohol Duty Connector accounts" should {
-"getSubscriptionSummary" should {
+  "getSubscriptionSummary" should {
     "successfully get a subscription summary" in new SetUp {
       stubGet(subscriptionUrl, OK, Json.toJson(subscriptionSummary).toString())
       whenReady(connector.getSubscriptionSummary(appaId).value, timeout = Timeout(Span(3, Seconds))) { result =>
@@ -80,10 +62,11 @@ class AccountConnectorSpec extends ISpecBase {
       }
     }
   }
-"getOpenObligationData" should {
+
+  "getOpenObligationData" should {
     "successfully get an obligation" in new SetUp {
       stubGet(openObligationUrl, OK, Json.toJson(obligationData).toString())
-      whenReady(connector.getOpenObligationData(ReturnId(appaId, periodKey)).value) { result =>
+      whenReady(connector.getOpenObligationData(returnId).value) { result =>
         result mustBe Right(obligationData)
         verifyGet(openObligationUrl)
       }
@@ -91,7 +74,7 @@ class AccountConnectorSpec extends ISpecBase {
 
     "return a InvalidJson error if the get obligation data call return an invalid response" in new SetUp {
       stubGet(openObligationUrl, OK, "invalid")
-      whenReady(connector.getOpenObligationData(ReturnId(appaId, periodKey)).value) { result =>
+      whenReady(connector.getOpenObligationData(returnId).value) { result =>
         result mustBe Left(InvalidJson)
         verifyGet(openObligationUrl)
       }
@@ -99,7 +82,7 @@ class AccountConnectorSpec extends ISpecBase {
 
     "return a NotFound error if the get obligation data call return a 404 response" in new SetUp {
       stubGet(openObligationUrl, NOT_FOUND, "")
-      whenReady(connector.getOpenObligationData(ReturnId(appaId, periodKey)).value) { result =>
+      whenReady(connector.getOpenObligationData(returnId).value) { result =>
         result mustBe Left(EntityNotFound)
         verifyGet(openObligationUrl)
       }
@@ -107,7 +90,7 @@ class AccountConnectorSpec extends ISpecBase {
 
     "return a UnexpectedResponse error if the get obligation data call return a 500 response" in new SetUp {
       stubGet(openObligationUrl, INTERNAL_SERVER_ERROR, "")
-      whenReady(connector.getOpenObligationData(ReturnId(appaId, periodKey)).value) { result =>
+      whenReady(connector.getOpenObligationData(returnId).value) { result =>
         result mustBe Left(UnexpectedResponse)
         verifyGet(openObligationUrl)
       }
@@ -147,12 +130,11 @@ class AccountConnectorSpec extends ISpecBase {
     }
   }
 
-  }
-
   class SetUp extends ConnectorFixture {
     val connector = new AccountConnector(config = config, httpClient = httpClient)
     val subscriptionUrl = config.getSubscriptionSummaryUrl(appaId)
     val openObligationUrl = config.getOpenObligationDataUrl(appaId, periodKey)
     val obligationUrl = config.getObligationDataUrl(appaId)
+    val obligationData = getObligationData(LocalDate.now())
   }
 }

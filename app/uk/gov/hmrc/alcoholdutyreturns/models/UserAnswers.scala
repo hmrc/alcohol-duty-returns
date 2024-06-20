@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.alcoholdutyreturns.models
 
+import play.api.libs.functional.syntax._
 import play.api.libs.json._
 import uk.gov.hmrc.mongo.play.json.formats.MongoJavatimeFormats
 
@@ -28,72 +29,70 @@ case class ReturnId(
 
 object ReturnId {
 
-  val reads: Reads[ReturnId] = {
-    import play.api.libs.functional.syntax._
-
+  val reads: Reads[ReturnId] =
     (
       (__ \ "appaId").read[String] and
         (__ \ "periodKey").read[String]
     )(ReturnId.apply _)
-  }
 
-  val writes: OWrites[ReturnId] = {
-
-    import play.api.libs.functional.syntax._
+  val writes: OWrites[ReturnId] =
     (
       (__ \ "appaId").write[String] and
         (__ \ "periodKey").write[String]
     )(unlift(ReturnId.unapply))
-  }
 
   implicit val format: OFormat[ReturnId] = OFormat(reads, writes)
 }
 
 case class UserAnswers(
-  id: ReturnId,
+  returnId: ReturnId,
   groupId: String,
   internalId: String,
+  regimes: AlcoholRegimes,
   data: JsObject = Json.obj(),
   lastUpdated: Instant = Instant.now,
   validUntil: Option[Instant] = None
 )
 
 object UserAnswers {
+  def createUserAnswers(
+    returnAndUserDetails: ReturnAndUserDetails,
+    subscriptionSummary: SubscriptionSummary,
+    obligationData: ObligationData
+  ): UserAnswers =
+    UserAnswers(
+      returnId = returnAndUserDetails.returnId,
+      groupId = returnAndUserDetails.groupId,
+      internalId = returnAndUserDetails.userId,
+      regimes = AlcoholRegimes(subscriptionSummary.regimes),
+      data = Json.obj(
+        (ObligationData.toString, Json.toJson(obligationData))
+      )
+    )
 
-  val reads: Reads[UserAnswers] = {
+  import play.api.libs.functional.syntax._
 
-    import play.api.libs.functional.syntax._
-
+  val reads: Reads[UserAnswers] =
     (
       (__ \ "_id").read[ReturnId] and
         (__ \ "groupId").read[String] and
         (__ \ "internalId").read[String] and
+        AlcoholRegimes.alcoholRegimesFormat and
         (__ \ "data").read[JsObject] and
         (__ \ "lastUpdated").read(MongoJavatimeFormats.instantFormat) and
         (__ \ "validUntil").readNullable(MongoJavatimeFormats.instantFormat)
     )(UserAnswers.apply _)
-  }
 
-  val writes: OWrites[UserAnswers] = {
-
-    import play.api.libs.functional.syntax._
-
+  val writes: OWrites[UserAnswers] =
     (
       (__ \ "_id").write[ReturnId] and
         (__ \ "groupId").write[String] and
         (__ \ "internalId").write[String] and
+        AlcoholRegimes.alcoholRegimesFormat and
         (__ \ "data").write[JsObject] and
         (__ \ "lastUpdated").write(MongoJavatimeFormats.instantFormat) and
         (__ \ "validUntil").writeNullable(MongoJavatimeFormats.instantFormat)
     )(unlift(UserAnswers.unapply))
-  }
 
   implicit val format: OFormat[UserAnswers] = OFormat(reads, writes)
-
-}
-
-case class RegimeAndObligations(alcoholRegime: Seq[AlcoholRegime], obligationData: ObligationData)
-
-object RegimeAndObligations {
-  implicit val regimeAndObligationsFormat: OFormat[RegimeAndObligations] = Json.format[RegimeAndObligations]
 }

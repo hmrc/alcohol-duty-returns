@@ -17,58 +17,36 @@
 package uk.gov.hmrc.alcoholdutyreturns.service
 
 import cats.data.EitherT
-import com.google.inject.{ImplementedBy, Inject, Singleton}
-import play.api.libs.json.Json
+import com.google.inject.{Inject, Singleton}
 import uk.gov.hmrc.alcoholdutyreturns.connector.AccountConnector
 import uk.gov.hmrc.alcoholdutyreturns.models.ApprovalStatus.{Approved, Insolvent}
 import uk.gov.hmrc.alcoholdutyreturns.models.ErrorResponse.{InvalidSubscriptionStatus, ObligationFulfilled}
 import uk.gov.hmrc.alcoholdutyreturns.models.ObligationStatus.{Fulfilled, Open}
-import uk.gov.hmrc.alcoholdutyreturns.models.{AlcoholRegime, ErrorResponse, ObligationData, ReturnId, SubscriptionSummary, UserAnswers}
+import uk.gov.hmrc.alcoholdutyreturns.models.{ErrorResponse, ObligationData, ReturnId, SubscriptionSummary}
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class AccountServiceImpl @Inject() (
+class AccountService @Inject() (
   accountConnector: AccountConnector
-) extends AccountService {
-
-  def createUserAnswers(
-    userAnswers: UserAnswers
-  )(implicit hc: HeaderCarrier, ec: ExecutionContext): EitherT[Future, ErrorResponse, UserAnswers] =
-    for {
-      subscription <- checkSubscriptionStatus(userAnswers.id.appaId)
-      obligation   <- getOpenObligation(userAnswers.id)
-    } yield addAlcoholRegimeAndObligationToUserAnswers(userAnswers, subscription.regimes, obligation)
-
-  private def addAlcoholRegimeAndObligationToUserAnswers(
-    answers: UserAnswers,
-    regimes: Seq[AlcoholRegime],
-    obligationData: ObligationData
-  ): UserAnswers = {
-    val data = Json.obj(
-      (AlcoholRegime.toString, Json.toJson(regimes)),
-      (ObligationData.toString, Json.toJson(obligationData))
-    )
-    answers.copy(data = data)
-  }
-
-  private def checkSubscriptionStatus(
+) {
+  def getSubscriptionSummaryAndCheckStatus(
     appaId: String
   )(implicit hc: HeaderCarrier, ec: ExecutionContext): EitherT[Future, ErrorResponse, SubscriptionSummary] = EitherT {
     accountConnector
       .getSubscriptionSummary(appaId)
       .fold(
         error => Left(error),
-        subscription =>
-          subscription.approvalStatus match {
-            case Approved | Insolvent => Right(subscription)
+        subscriptionSummary =>
+          subscriptionSummary.approvalStatus match {
+            case Approved | Insolvent => Right(subscriptionSummary)
             case status               => Left(InvalidSubscriptionStatus(status))
           }
       )
   }
 
-  private def getOpenObligation(
+  def getOpenObligation(
     returnId: ReturnId
   )(implicit hc: HeaderCarrier, ec: ExecutionContext): EitherT[Future, ErrorResponse, ObligationData] =
     EitherT {
@@ -90,16 +68,4 @@ class AccountServiceImpl @Inject() (
     accountConnector.getObligationData(appaId).leftFlatMap { _ =>
       EitherT.leftT[Future, Seq[ObligationData]](ErrorResponse.UnexpectedResponse)
     }
-}
-
-@ImplementedBy(classOf[AccountServiceImpl])
-trait AccountService {
-  def createUserAnswers(
-    userAnswers: UserAnswers
-  )(implicit hc: HeaderCarrier, ec: ExecutionContext): EitherT[Future, ErrorResponse, UserAnswers]
-
-  def getObligations(
-    appaId: String
-  )(implicit hc: HeaderCarrier, ec: ExecutionContext): EitherT[Future, ErrorResponse, Seq[ObligationData]]
-
 }

@@ -16,16 +16,10 @@
 
 package uk.gov.hmrc.alcoholdutyreturns.models
 
-import enumeratum.{Enum, EnumEntry, PlayJsonEnum}
+import play.api.libs.json.{Json, OFormat}
 
-sealed trait AlcoholRegime extends EnumEntry
+case class ReturnAndUserDetails(returnId: ReturnId, groupId: String, userId: String)
 
-object AlcoholRegime extends Enum[AlcoholRegime] with PlayJsonEnum[AlcoholRegime] {
-  val values = findValues
-
-  case object Beer extends AlcoholRegime
-  case object Cider extends AlcoholRegime
-  case object Wine extends AlcoholRegime
-  case object Spirits extends AlcoholRegime
-  case object OtherFermentedProduct extends AlcoholRegime
+object ReturnAndUserDetails {
+  implicit val returnAndUserDetailsFormat: OFormat[ReturnAndUserDetails] = Json.format[ReturnAndUserDetails]
 }

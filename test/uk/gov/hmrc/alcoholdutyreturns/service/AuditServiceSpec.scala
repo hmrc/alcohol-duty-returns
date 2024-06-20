@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.alcoholdutyreturns.service
 
-import helpers.TestData.{alcoholRegimes, obligationData}
 import org.mockito.ArgumentMatchers.any
 import org.scalatest.concurrent.Eventually.eventually
 import org.scalatest.concurrent.PatienceConfiguration.Timeout
@@ -52,8 +51,8 @@ class AuditServiceSpec extends SpecBase {
         periodKey = "24AC",
         governmentGatewayId = "governmentGatewayId",
         governmentGatewayGroupId = "governmentGatewayGroupId",
-        obligationData = obligationData(today),
-        alcoholRegimes = alcoholRegimes,
+        obligationData = getObligationData(today),
+        alcoholRegimes = allAlcoholRegimes.regimes,
         returnStartedTime = now,
         returnValidUntilTime = Some(now)
       )

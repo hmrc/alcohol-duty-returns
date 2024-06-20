@@ -20,42 +20,29 @@ import cats.data.EitherT
 import play.api.mvc.Result
 import uk.gov.hmrc.alcoholdutyreturns.base.SpecBase
 import uk.gov.hmrc.alcoholdutyreturns.models.{ErrorResponse, ObligationData}
-import uk.gov.hmrc.alcoholdutyreturns.models.ObligationStatus.Open
 import uk.gov.hmrc.alcoholdutyreturns.service.AccountService
 import play.api.libs.json.Json
 import org.mockito.ArgumentMatchers.any
+import org.mockito.ArgumentMatchersSugar.eqTo
 
 import java.time.LocalDate
 import scala.concurrent.Future
-class ObligationControllerSpec extends SpecBase {
-  val mockAccountService: AccountService = mock[AccountService]
 
-  val controller        = new ObligationController(fakeAuthorisedAction, mockAccountService, cc)
-  private val appaId    = appaIdGen.sample.get
-  private val periodKey = periodKeyGen.sample.get
-  val obligationData    = Seq(
-    ObligationData(
-      status = Open,
-      fromDate = LocalDate.now(),
-      toDate = LocalDate.now(),
-      dueDate = LocalDate.now(),
-      periodKey
-    )
-  )
+class ObligationControllerSpec extends SpecBase {
   "ObligationController" should {
-    "return 200 OK with obligations" in {
-      when(mockAccountService.getObligations(any())(any(), any()))
-        .thenReturn(EitherT.rightT[Future, ErrorResponse](obligationData))
+    "return 200 OK with obligations if successful" in new SetUp {
+      when(mockAccountService.getObligations(eqTo(appaId))(any(), any()))
+        .thenReturn(EitherT.rightT[Future, ErrorResponse](Seq(obligationData)))
 
       val result: Future[Result] =
         controller.getObligationDetails(appaId)(fakeRequest)
 
       status(result)        shouldBe OK
-      contentAsJson(result) shouldBe Json.toJson(obligationData)
+      contentAsJson(result) shouldBe Json.toJson(Seq(obligationData))
     }
 
-    "return 404 NOT_FOUND when there is an issue" in {
-      when(mockAccountService.getObligations(any())(any(), any()))
+    "return 404 NOT_FOUND when there is an issue" in new SetUp {
+      when(mockAccountService.getObligations(eqTo(appaId))(any(), any()))
         .thenReturn(EitherT.leftT[Future, Seq[ObligationData]](ErrorResponse.UnexpectedResponse))
 
       val result: Future[Result] =
@@ -64,5 +51,12 @@ class ObligationControllerSpec extends SpecBase {
       status(result)          shouldBe NOT_FOUND
       contentAsString(result) shouldBe "Error: {UnexpectedResponse}"
     }
+  }
+
+  class SetUp {
+    val mockAccountService: AccountService = mock[AccountService]
+
+    val controller     = new ObligationController(fakeAuthorisedAction, mockAccountService, cc)
+    val obligationData = getObligationData(LocalDate.now())
   }
 }

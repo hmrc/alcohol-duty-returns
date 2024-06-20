@@ -28,7 +28,7 @@ case class AuditReturnStarted(
   governmentGatewayId: String,
   governmentGatewayGroupId: String,
   obligationData: ObligationData,
-  alcoholRegimes: Seq[AlcoholRegime],
+  alcoholRegimes: Set[AlcoholRegime],
   returnStartedTime: Instant,
   returnValidUntilTime: Option[Instant]
 ) extends AuditEventDetail {

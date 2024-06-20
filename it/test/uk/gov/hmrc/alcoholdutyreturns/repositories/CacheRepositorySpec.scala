@@ -17,13 +17,13 @@
 package uk.gov.hmrc.alcoholdutyreturns.repositories
 
 import generators.ModelGenerators
+import helpers.TestData
 import org.mockito.MockitoSugar
 import org.mongodb.scala.model.Filters
 import org.scalatest.OptionValues
 import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
 import org.scalatest.freespec.AnyFreeSpec
 import org.scalatest.matchers.must.Matchers
-import play.api.libs.json.Json
 import uk.gov.hmrc.alcoholdutyreturns.config.AppConfig
 import uk.gov.hmrc.alcoholdutyreturns.models.{ReturnId, UserAnswers}
 import uk.gov.hmrc.mongo.test.DefaultPlayMongoRepositorySupport
@@ -40,24 +40,13 @@ class CacheRepositorySpec
     with IntegrationPatience
     with OptionValues
     with MockitoSugar
+    with TestData
     with ModelGenerators {
 
   implicit val ec: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
 
   private val instant          = Instant.now
   private val stubClock: Clock = Clock.fixed(instant, ZoneId.systemDefault)
-
-  private val appaId = appaIdGen.sample.get
-  private val periodKey = periodKeyGen.sample.get
-  private val internalId = "internalId"
-  private val groupId = "groupId"
-
-  private val userAnswers = UserAnswers(
-    id = ReturnId(appaId, periodKey),
-    internalId = internalId,
-    groupId = groupId,
-    data = Json.obj("foo" -> "bar"),
-    lastUpdated = Instant.ofEpochSecond(1))
 
   private val DB_TTL_IN_SEC = 100
 
@@ -122,7 +111,7 @@ class CacheRepositorySpec
     }
 
     "must fail to update a user answer if it wasn't previously saved" in {
-      val newUserAnswers = userAnswers.copy(id = ReturnId("new-appa-id", "new-period-key"))
+      val newUserAnswers = userAnswers.copy(returnId = ReturnId("new-appa-id", "new-period-key"))
       val setResult     = repository.set(newUserAnswers).futureValue
       setResult mustEqual UpdateFailure
     }
@@ -135,7 +124,7 @@ class CacheRepositorySpec
 
         insert(userAnswers).futureValue
 
-        val result         = repository.get(userAnswers.id).futureValue
+        val result         = repository.get(userAnswers.returnId).futureValue
         val expectedResult = userAnswers.copy(
           lastUpdated = instant,
           validUntil = Some(instant.plusSeconds(DB_TTL_IN_SEC))
@@ -162,7 +151,7 @@ class CacheRepositorySpec
 
         insert(userAnswers).futureValue
 
-        val result = repository.keepAlive(userAnswers.id).futureValue
+        val result = repository.keepAlive(userAnswers.returnId).futureValue
 
         val expectedUpdatedAnswers = userAnswers.copy(
           lastUpdated = instant,
@@ -187,7 +176,7 @@ class CacheRepositorySpec
   }
 
   def verifyUserAnswerResult(actual: UserAnswers, expected: UserAnswers) = {
-    actual.id mustEqual expected.id
+    actual.returnId mustEqual expected.returnId
     actual.groupId mustEqual expected.groupId
     actual.internalId mustEqual expected.internalId
     actual.data mustEqual expected.data

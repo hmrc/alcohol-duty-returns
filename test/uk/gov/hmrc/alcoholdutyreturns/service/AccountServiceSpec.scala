@@ -18,170 +18,104 @@ package uk.gov.hmrc.alcoholdutyreturns.service
 
 import cats.data.EitherT
 import org.mockito.ArgumentMatchers.any
-import play.api.libs.json.Json
+import org.mockito.ArgumentMatchersSugar.eqTo
 import uk.gov.hmrc.alcoholdutyreturns.base.SpecBase
 import uk.gov.hmrc.alcoholdutyreturns.connector.AccountConnector
-import uk.gov.hmrc.alcoholdutyreturns.models.AlcoholRegime.{Beer, Cider, OtherFermentedProduct, Spirits, Wine}
 import uk.gov.hmrc.alcoholdutyreturns.models.ApprovalStatus.{Approved, DeRegistered, Insolvent, Revoked, SmallCiderProducer}
-import uk.gov.hmrc.alcoholdutyreturns.models.ErrorResponse.{EntityNotFound, InvalidSubscriptionStatus, ObligationFulfilled, UnexpectedResponse}
-import uk.gov.hmrc.alcoholdutyreturns.models.ObligationStatus.{Fulfilled, Open}
-import uk.gov.hmrc.alcoholdutyreturns.models.{AlcoholRegime, ObligationData, ReturnId, SubscriptionSummary, UserAnswers}
+import uk.gov.hmrc.alcoholdutyreturns.models.ErrorResponse.{EntityNotFound, InvalidJson, InvalidSubscriptionStatus, ObligationFulfilled, UnexpectedResponse}
+import uk.gov.hmrc.alcoholdutyreturns.models.ObligationStatus.Fulfilled
+import uk.gov.hmrc.alcoholdutyreturns.models.{ApprovalStatus, ErrorResponse}
 
-import java.time.LocalDate
+import java.time.{Clock, Instant, LocalDate, ZoneId}
 
 class AccountServiceSpec extends SpecBase {
+  override def clock: Clock = Clock.fixed(Instant.ofEpochMilli(1718037305240L), ZoneId.of("UTC"))
 
-  private val appaId         = appaIdGen.sample.get
-  private val periodKey      = periodKeyGen.sample.get
-  private val groupId        = "groupId"
-  private val internalId     = "internalId"
-  private val id             = ReturnId(appaId, periodKey)
-  private val obligationData = ObligationData(
-    status = Open,
-    fromDate = LocalDate.now(),
-    toDate = LocalDate.now(),
-    dueDate = LocalDate.now(),
-    periodKey
-  )
+  "getSubscriptionSummaryAndCheckStatus" should {
+    Seq[ApprovalStatus](Approved, Insolvent).foreach { status =>
+      s"return the subscription summary if the status is ${status.entryName}" in new SetUp {
+        val ss = subscriptionSummary.copy(approvalStatus = status)
+        when(accountConnector.getSubscriptionSummary(eqTo(returnId.appaId))(any())).thenReturn(EitherT.rightT(ss))
 
-  private val fulfilledObligationData = ObligationData(
-    status = Fulfilled,
-    fromDate = LocalDate.now(),
-    toDate = LocalDate.now(),
-    dueDate = LocalDate.now(),
-    periodKey
-  )
-
-  val emptyUserAnswers: UserAnswers = UserAnswers(
-    id,
-    groupId,
-    internalId
-  )
-
-  val alcoholRegimes = Seq(Beer, Cider, Spirits, Wine, OtherFermentedProduct)
-
-  "AccountEntryService" should {
-    val accountConnector = mock[AccountConnector]
-
-    "create user answer method return a user answer if the Subscription Status is Approved and the period Obligation is open" in {
-
-      val subscriptionSummary =
-        SubscriptionSummary(Approved, alcoholRegimes)
-      when(accountConnector.getSubscriptionSummary(any())(any())).thenReturn(EitherT.rightT(subscriptionSummary))
-      when(accountConnector.getOpenObligationData(any())(any())).thenReturn(EitherT.rightT(obligationData))
-
-      val service = new AccountServiceImpl(accountConnector)
-
-      val expectedAnswer = emptyUserAnswers.copy(data =
-        Json.obj(
-          (AlcoholRegime.toString, Json.toJson(alcoholRegimes)),
-          (ObligationData.toString, Json.toJson(obligationData))
-        )
-      )
-
-      whenReady(service.createUserAnswers(emptyUserAnswers).value) { result =>
-        result shouldBe Right(expectedAnswer)
-      }
-    }
-
-    "create user answer method return a user answer if the Subscription Status is Insolvent and the period Obligation is open" in {
-
-      val subscriptionSummary =
-        SubscriptionSummary(Insolvent, alcoholRegimes)
-      when(accountConnector.getSubscriptionSummary(any())(any())).thenReturn(EitherT.rightT(subscriptionSummary))
-      when(accountConnector.getOpenObligationData(any())(any())).thenReturn(EitherT.rightT(obligationData))
-
-      val service = new AccountServiceImpl(accountConnector)
-
-      val expectedAnswer = emptyUserAnswers.copy(data =
-        Json.obj(
-          (AlcoholRegime.toString, Json.toJson(alcoholRegimes)),
-          (ObligationData.toString, Json.toJson(obligationData))
-        )
-      )
-
-      whenReady(service.createUserAnswers(emptyUserAnswers).value) { result =>
-        result shouldBe Right(expectedAnswer)
-      }
-    }
-
-    Seq(Revoked, DeRegistered, SmallCiderProducer).foreach { subStatus =>
-      s"return an error if the Subscription Summary return a status is $subStatus" in {
-        val subscriptionSummary =
-          SubscriptionSummary(subStatus, Seq.empty)
-        when(accountConnector.getSubscriptionSummary(any())(any())).thenReturn(EitherT.rightT(subscriptionSummary))
-
-        val service = new AccountServiceImpl(accountConnector)
-
-        whenReady(service.createUserAnswers(emptyUserAnswers).value) { result =>
-          result shouldBe Left(InvalidSubscriptionStatus(subStatus))
+        whenReady(accountService.getSubscriptionSummaryAndCheckStatus(returnId.appaId).value) { result =>
+          result shouldBe Right(ss)
         }
       }
     }
 
-    "return an error if the Subscription Summary return a NotFound status" in {
-      when(accountConnector.getSubscriptionSummary(any())(any())).thenReturn(EitherT.leftT(EntityNotFound))
+    Seq[ApprovalStatus](SmallCiderProducer, DeRegistered, Revoked).foreach { status =>
+      s"return InvalidSubscriptionStatus if the status is ${status.entryName}" in new SetUp {
+        val ss = subscriptionSummary.copy(approvalStatus = status)
+        when(accountConnector.getSubscriptionSummary(eqTo(returnId.appaId))(any())).thenReturn(EitherT.rightT(ss))
 
-      val service = new AccountServiceImpl(accountConnector)
-
-      whenReady(service.createUserAnswers(emptyUserAnswers).value) { result =>
-        result shouldBe Left(EntityNotFound)
+        whenReady(accountService.getSubscriptionSummaryAndCheckStatus(returnId.appaId).value) { result =>
+          result shouldBe Left(InvalidSubscriptionStatus(status))
+        }
       }
     }
 
-    "return an error if the Subscription Summary return an error" in {
-      when(accountConnector.getSubscriptionSummary(any())(any())).thenReturn(EitherT.leftT(UnexpectedResponse))
+    Seq[ErrorResponse](InvalidJson, EntityNotFound, UnexpectedResponse).foreach { error =>
+      s"return ${error.entryName} if the connector returns ${error.entryName}" in new SetUp {
+        when(accountConnector.getSubscriptionSummary(eqTo(returnId.appaId))(any())).thenReturn(EitherT.leftT(error))
 
-      val service = new AccountServiceImpl(accountConnector)
+        whenReady(accountService.getSubscriptionSummaryAndCheckStatus(returnId.appaId).value) { result =>
+          result shouldBe Left(error)
+        }
+      }
+    }
+  }
 
-      whenReady(service.createUserAnswers(emptyUserAnswers).value) { result =>
-        result shouldBe Left(UnexpectedResponse)
+  "getOpenObligationData" should {
+    "return obligation data if Open" in new SetUp {
+      when(accountConnector.getOpenObligationData(eqTo(returnId))(any()))
+        .thenReturn(EitherT.rightT(obligationData))
+
+      whenReady(accountService.getOpenObligation(returnId).value) { result =>
+        result shouldBe Right(obligationData)
       }
     }
 
-    "return an error if the subscription status is Fulfilled" in {
+    "return an error if Fulfilled" in new SetUp {
+      when(accountConnector.getOpenObligationData(eqTo(returnId))(any()))
+        .thenReturn(EitherT.rightT(obligationData.copy(status = Fulfilled)))
 
-      val subscriptionSummary =
-        SubscriptionSummary(Approved, alcoholRegimes)
-      when(accountConnector.getSubscriptionSummary(any())(any())).thenReturn(EitherT.rightT(subscriptionSummary))
-      when(accountConnector.getOpenObligationData(any())(any())).thenReturn(EitherT.rightT(fulfilledObligationData))
-
-      val service = new AccountServiceImpl(accountConnector)
-
-      whenReady(service.createUserAnswers(emptyUserAnswers).value) { result =>
+      whenReady(accountService.getOpenObligation(returnId).value) { result =>
         result shouldBe Left(ObligationFulfilled)
       }
     }
 
-    "return an error if the obligation is not found" in {
+    Seq[ErrorResponse](InvalidJson, EntityNotFound, UnexpectedResponse).foreach { error =>
+      s"return ${error.entryName} if the connector returns ${error.entryName}" in new SetUp {
+        when(accountConnector.getOpenObligationData(eqTo(returnId))(any())).thenReturn(EitherT.leftT(error))
 
-      val subscriptionSummary =
-        SubscriptionSummary(Approved, alcoholRegimes)
-      when(accountConnector.getSubscriptionSummary(any())(any())).thenReturn(EitherT.rightT(subscriptionSummary))
-      when(accountConnector.getOpenObligationData(any())(any())).thenReturn(EitherT.leftT(EntityNotFound))
-
-      val service = new AccountServiceImpl(accountConnector)
-
-      whenReady(service.createUserAnswers(emptyUserAnswers).value) { result =>
-        result shouldBe Left(EntityNotFound)
+        whenReady(accountService.getOpenObligation(returnId).value) { result =>
+          result shouldBe Left(error)
+        }
       }
     }
-    "getobligations" should {
-      "return a sequence of obligations when successful" in {
+    "getObligations" should {
+      "return a sequence of obligations when successful" in new SetUp {
         val expectedObligationData = Seq(fulfilledObligationData, obligationData)
         when(accountConnector.getObligationData(any())(any())).thenReturn(EitherT.rightT(expectedObligationData))
-        val service                = new AccountServiceImpl(accountConnector)
-        whenReady(service.getObligations(appaId).value) { result =>
+        whenReady(accountService.getObligations(appaId).value) { result =>
           result shouldBe Right(expectedObligationData)
         }
       }
-      "return a fallback error response when there is a failure" in {
+      "return a fallback error response when there is a failure" in new SetUp {
         when(accountConnector.getObligationData(any())(any())).thenReturn(EitherT.leftT(UnexpectedResponse))
-        val service = new AccountServiceImpl(accountConnector)
-        whenReady(service.getObligations(appaId).value) { result =>
+        whenReady(accountService.getObligations(appaId).value) { result =>
           result shouldBe Left(UnexpectedResponse)
         }
       }
     }
+  }
+
+  class SetUp {
+    val accountConnector = mock[AccountConnector]
+
+    val obligationData          = getObligationData(LocalDate.now(clock))
+    val fulfilledObligationData = getFulfilledObligationData(LocalDate.now(clock))
+
+    val accountService = new AccountService(accountConnector)
   }
 }
