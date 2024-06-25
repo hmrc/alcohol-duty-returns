@@ -21,7 +21,7 @@ import org.scalatest.matchers.must.Matchers.convertToAnyMustWrapper
 import org.scalatest.time.{Seconds, Span}
 import play.api.libs.json.Json
 import uk.gov.hmrc.alcoholdutyreturns.base.ISpecBase
-import uk.gov.hmrc.alcoholdutyreturns.models.ErrorResponse.{EntityNotFound, InvalidJson, UnexpectedResponse}
+import uk.gov.hmrc.alcoholdutyreturns.models.{ErrorResponse, SubscriptionSummary}
 
 import java.time.LocalDate
 
@@ -29,35 +29,37 @@ class AccountConnectorSpec extends ISpecBase {
 
   protected val endpointName = "alcohol-duty-accounts"
 
+  "getData" should {
+    "return an InvalidJson error if the call returns an invalid response" in new SetUp {
+      stubGet(dataTestUrl, OK, "invalid")
+      whenReady(connector.getData[DataTestType](dataTestUrl).value) { result =>
+        result mustBe Left(ErrorResponse.InvalidJson)
+        verifyGet(dataTestUrl)
+      }
+    }
+
+    "return a NotFound error if the call returns a 404 response" in new SetUp {
+      stubGet(dataTestUrl, NOT_FOUND, "")
+      whenReady(connector.getData[DataTestType](dataTestUrl).value) { result =>
+        result mustBe Left(ErrorResponse.EntityNotFound)
+        verifyGet(dataTestUrl)
+      }
+    }
+
+    "return a UnexpectedResponse error if the call returns a 500 response" in new SetUp {
+      stubGet(dataTestUrl, INTERNAL_SERVER_ERROR, "")
+      whenReady(connector.getData[DataTestType](dataTestUrl).value) { result =>
+        result mustBe Left(ErrorResponse.UnexpectedResponse)
+        verifyGet(dataTestUrl)
+      }
+    }
+  }
+
   "getSubscriptionSummary" should {
     "successfully get a subscription summary" in new SetUp {
       stubGet(subscriptionUrl, OK, Json.toJson(subscriptionSummary).toString())
       whenReady(connector.getSubscriptionSummary(appaId).value, timeout = Timeout(Span(3, Seconds))) { result =>
         result mustBe Right(subscriptionSummary)
-        verifyGet(subscriptionUrl)
-      }
-    }
-
-    "return an InvalidJson error if the get subscription summary call return an invalid response" in new SetUp {
-      stubGet(subscriptionUrl, OK, "invalid")
-      whenReady(connector.getSubscriptionSummary(appaId).value) { result =>
-        result mustBe Left(InvalidJson)
-        verifyGet(subscriptionUrl)
-      }
-    }
-
-    "return a NotFound error if the get subscription summary call return a 404 response" in new SetUp {
-      stubGet(subscriptionUrl, NOT_FOUND, "")
-      whenReady(connector.getSubscriptionSummary(appaId).value) { result =>
-        result mustBe Left(EntityNotFound)
-        verifyGet(subscriptionUrl)
-      }
-    }
-
-    "return a UnexpectedResponse error if the get subscription summary call return a 500 response" in new SetUp {
-      stubGet(subscriptionUrl, INTERNAL_SERVER_ERROR, "")
-      whenReady(connector.getSubscriptionSummary(appaId).value) { result =>
-        result mustBe Left(UnexpectedResponse)
         verifyGet(subscriptionUrl)
       }
     }
@@ -71,60 +73,13 @@ class AccountConnectorSpec extends ISpecBase {
         verifyGet(openObligationUrl)
       }
     }
-
-    "return a InvalidJson error if the get obligation data call return an invalid response" in new SetUp {
-      stubGet(openObligationUrl, OK, "invalid")
-      whenReady(connector.getOpenObligationData(returnId).value) { result =>
-        result mustBe Left(InvalidJson)
-        verifyGet(openObligationUrl)
-      }
-    }
-
-    "return a NotFound error if the get obligation data call return a 404 response" in new SetUp {
-      stubGet(openObligationUrl, NOT_FOUND, "")
-      whenReady(connector.getOpenObligationData(returnId).value) { result =>
-        result mustBe Left(EntityNotFound)
-        verifyGet(openObligationUrl)
-      }
-    }
-
-    "return a UnexpectedResponse error if the get obligation data call return a 500 response" in new SetUp {
-      stubGet(openObligationUrl, INTERNAL_SERVER_ERROR, "")
-      whenReady(connector.getOpenObligationData(returnId).value) { result =>
-        result mustBe Left(UnexpectedResponse)
-        verifyGet(openObligationUrl)
-      }
-    }
   }
-    "getObligationData" should {
-      "successfully get an obligation" in new SetUp {
-        stubGet(obligationUrl, OK, Json.toJson(Seq(obligationData)).toString())
-        whenReady(connector.getObligationData(appaId).value) { result =>
-          result mustBe Right(Seq(obligationData))
-          verifyGet(obligationUrl)
-        }
-      }
 
-    "return a InvalidJson error if the get obligation data call return an invalid response" in new SetUp {
-      stubGet(obligationUrl, OK, "invalid")
+  "getObligationData" should {
+    "successfully get obligations" in new SetUp {
+      stubGet(obligationUrl, OK, Json.toJson(Seq(obligationData)).toString())
       whenReady(connector.getObligationData(appaId).value) { result =>
-        result mustBe Left(InvalidJson)
-        verifyGet(obligationUrl)
-      }
-    }
-
-    "return a NotFound error if the get obligation data call return a 404 response" in new SetUp {
-      stubGet(obligationUrl, NOT_FOUND, "")
-      whenReady(connector.getObligationData(appaId).value) { result =>
-        result mustBe Left(EntityNotFound)
-        verifyGet(obligationUrl)
-      }
-    }
-
-    "return a UnexpectedResponse error if the get obligation data call return a 500 response" in new SetUp {
-      stubGet(obligationUrl, INTERNAL_SERVER_ERROR, "")
-      whenReady(connector.getObligationData(appaId).value) { result =>
-        result mustBe Left(UnexpectedResponse)
+        result mustBe Right(Seq(obligationData))
         verifyGet(obligationUrl)
       }
     }
@@ -133,8 +88,10 @@ class AccountConnectorSpec extends ISpecBase {
   class SetUp extends ConnectorFixture {
     val connector = new AccountConnector(config = config, httpClient = httpClient)
     val subscriptionUrl = config.getSubscriptionSummaryUrl(appaId)
-    val openObligationUrl = config.getOpenObligationDataUrl(appaId, periodKey)
+    val openObligationUrl = config.getOpenObligationDataUrl(returnId)
     val obligationUrl = config.getObligationDataUrl(appaId)
     val obligationData = getObligationData(LocalDate.now())
+    val dataTestUrl = subscriptionUrl
+    type DataTestType = SubscriptionSummary
   }
 }

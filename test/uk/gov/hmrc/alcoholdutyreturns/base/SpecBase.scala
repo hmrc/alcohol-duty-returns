@@ -55,7 +55,6 @@ trait SpecBase
     with BeforeAndAfterEach
     with TestData
     with ModelGenerators {
-
   def configOverrides: Map[String, Any] = Map()
 
   val additionalAppConfig: Map[String, Any] = Map(
