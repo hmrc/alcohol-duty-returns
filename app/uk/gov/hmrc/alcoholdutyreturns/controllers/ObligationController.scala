@@ -34,7 +34,7 @@ class ObligationController @Inject() (
   def getObligationDetails(appaId: String): Action[AnyContent] =
     authorise.async { implicit request =>
       accountService.getObligations(appaId).value.map {
-        case Left(errorResponse) => NotFound(s"Error: {$errorResponse}")
+        case Left(errorResponse) => NotFound(s"Error: {${errorResponse.status},${errorResponse.body}}")
         case Right(obligations)  => Ok(Json.toJson(obligations))
       }
     }

@@ -49,7 +49,7 @@ class ObligationControllerSpec extends SpecBase {
         controller.getObligationDetails(appaId)(fakeRequest)
 
       status(result)          shouldBe NOT_FOUND
-      contentAsString(result) shouldBe "Error: {UnexpectedResponse}"
+      contentAsString(result) shouldBe "Error: {500,Unexpected Response}"
     }
   }
 

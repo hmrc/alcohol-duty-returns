@@ -6,3 +6,5 @@ PUT         /cache/set                                        uk.gov.hmrc.alcoho
 POST        /cache/user-answers                               uk.gov.hmrc.alcoholdutyreturns.controllers.CacheController.createUserAnswers()
 
 GET         /obligationDetails/:appaId                        uk.gov.hmrc.alcoholdutyreturns.controllers.ObligationController.getObligationDetails(appaId)
+
+GET         /producers/:appaId/returns/:periodKey             uk.gov.hmrc.alcoholdutyreturns.controllers.ReturnsController.getReturn(appaId:String, periodKey:String)

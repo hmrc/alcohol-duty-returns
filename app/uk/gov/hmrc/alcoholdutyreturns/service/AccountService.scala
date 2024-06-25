@@ -20,7 +20,6 @@ import cats.data.EitherT
 import com.google.inject.{Inject, Singleton}
 import uk.gov.hmrc.alcoholdutyreturns.connector.AccountConnector
 import uk.gov.hmrc.alcoholdutyreturns.models.ApprovalStatus.{Approved, Insolvent}
-import uk.gov.hmrc.alcoholdutyreturns.models.ErrorResponse.{InvalidSubscriptionStatus, ObligationFulfilled}
 import uk.gov.hmrc.alcoholdutyreturns.models.ObligationStatus.{Fulfilled, Open}
 import uk.gov.hmrc.alcoholdutyreturns.models.{ErrorResponse, ObligationData, ReturnId, SubscriptionSummary}
 import uk.gov.hmrc.http.HeaderCarrier
@@ -41,7 +40,7 @@ class AccountService @Inject() (
         subscriptionSummary =>
           subscriptionSummary.approvalStatus match {
             case Approved | Insolvent => Right(subscriptionSummary)
-            case status               => Left(InvalidSubscriptionStatus(status))
+            case status               => Left(ErrorResponse.InvalidSubscriptionStatus(status))
           }
       )
   }
@@ -57,7 +56,7 @@ class AccountService @Inject() (
           obligation =>
             obligation.status match {
               case Open      => Right(obligation)
-              case Fulfilled => Left(ObligationFulfilled)
+              case Fulfilled => Left(ErrorResponse.ObligationFulfilled)
             }
         )
     }
