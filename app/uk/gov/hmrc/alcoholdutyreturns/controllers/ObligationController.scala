@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.alcoholdutyreturns.controllers
 
+import play.api.Logging
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import uk.gov.hmrc.alcoholdutyreturns.controllers.actions.AuthorisedAction
 import uk.gov.hmrc.alcoholdutyreturns.service.AccountService
@@ -30,11 +31,14 @@ class ObligationController @Inject() (
   accountService: AccountService,
   override val controllerComponents: ControllerComponents
 )(implicit executionContext: ExecutionContext)
-    extends BackendController(controllerComponents) {
+    extends BackendController(controllerComponents)
+    with Logging {
   def getObligationDetails(appaId: String): Action[AnyContent] =
     authorise.async { implicit request =>
       accountService.getObligations(appaId).value.map {
-        case Left(errorResponse) => NotFound(s"Error: {${errorResponse.status},${errorResponse.body}}")
+        case Left(errorResponse) =>
+          logger.warn(s"Unable to get obligation data for $appaId - ${errorResponse.status} ${errorResponse.body}")
+          NotFound(s"Error: {${errorResponse.status},${errorResponse.body}}")
         case Right(obligations)  => Ok(Json.toJson(obligations))
       }
     }

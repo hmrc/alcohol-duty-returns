@@ -71,13 +71,18 @@ class CacheController @Inject() (
         } yield (subscriptionSummary, obligationData)
 
         eitherAccountDetails.foldF(
-          err => Future.successful(error(err)),
+          err => {
+            logger.warn(
+              s"Unable to create userAnswers for ${returnId.appaId} ${returnId.periodKey} - ${err.status} ${err.body}"
+            )
+            Future.successful(error(err))
+          },
           accountDetails => {
             val (subscriptionSummary, obligationData) = accountDetails
             val userAnswers                           = UserAnswers.createUserAnswers(returnAndUserDetails, subscriptionSummary, obligationData)
             cacheRepository.add(userAnswers).map { userAnswers =>
               auditReturnStarted(userAnswers, obligationData)
-              Ok(Json.toJson(userAnswers))
+              Created(Json.toJson(userAnswers))
             }
           }
         )

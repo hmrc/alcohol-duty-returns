@@ -92,7 +92,7 @@ class CacheControllerSpec extends SpecBase {
   }
 
   "createUserAnswers" should {
-    "return 200 OK with the user answers that was created" when {
+    "return 201 CREATED with the user answers that was created" when {
       "the account service returns a valid UserAnswers" in {
         when(mockCacheRepository.add(any())).thenReturn(Future.successful(userAnswers))
         when(mockAccountService.getSubscriptionSummaryAndCheckStatus(eqTo(appaId))(any(), any()))
@@ -105,7 +105,7 @@ class CacheControllerSpec extends SpecBase {
             fakeRequestWithJsonBody(Json.toJson(returnAndUserDetails))
           )
 
-        status(result)        shouldBe OK
+        status(result)        shouldBe CREATED
         contentAsJson(result) shouldBe Json.toJson(userAnswers)
       }
     }
