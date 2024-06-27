@@ -81,7 +81,7 @@ trait TestData extends ModelGenerators {
   }
 
   def successfulReturnsExample(appaId: String, periodKey: String, now: Instant): ReturnDetailsSuccess = {
-    val periodDate = LocalDate.of(periodKey.take(2).toInt, periodKey.charAt(3) - 'A', 1)
+    val periodDate = LocalDate.of(periodKey.take(2).toInt + 2000, periodKey.charAt(3) - 'A' + 1, 1)
 
     ReturnDetailsSuccess(
       processingDate = now,
