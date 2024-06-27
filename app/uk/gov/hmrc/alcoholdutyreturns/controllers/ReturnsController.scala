@@ -16,31 +16,43 @@
 
 package uk.gov.hmrc.alcoholdutyreturns.controllers
 
+import org.apache.pekko.util.ByteString
 import play.api.Logging
-import play.api.mvc.{Action, AnyContent, ControllerComponents}
+import play.api.http.HttpEntity
+import play.api.libs.json.Json
+import play.api.mvc.{Action, AnyContent, ControllerComponents, ResponseHeader, Result}
+import uk.gov.hmrc.alcoholdutyreturns.connector.ReturnsConnector
 import uk.gov.hmrc.alcoholdutyreturns.controllers.actions.AuthorisedAction
-import uk.gov.hmrc.alcoholdutyreturns.service.AccountService
+import uk.gov.hmrc.alcoholdutyreturns.models.{ErrorResponse, ReturnId}
+import uk.gov.hmrc.alcoholdutyreturns.models.returns.AdrReturnDetails
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
-import play.api.libs.json._
 
 import javax.inject.Inject
 import scala.concurrent.ExecutionContext
 
-class ObligationController @Inject() (
+class ReturnsController @Inject() (
   authorise: AuthorisedAction,
-  accountService: AccountService,
+  returnsConnector: ReturnsConnector,
   override val controllerComponents: ControllerComponents
 )(implicit executionContext: ExecutionContext)
     extends BackendController(controllerComponents)
     with Logging {
-  def getObligationDetails(appaId: String): Action[AnyContent] =
+  def getReturn(appaId: String, periodKey: String): Action[AnyContent] =
     authorise.async { implicit request =>
-      accountService.getObligations(appaId).value.map {
-        case Left(errorResponse) =>
-          logger.warn(s"Unable to get obligation data for $appaId - ${errorResponse.status} ${errorResponse.body}")
-          NotFound(s"Error: {${errorResponse.status},${errorResponse.body}}")
-        case Right(obligations)  => Ok(Json.toJson(obligations))
-      }
+      returnsConnector
+        .getReturn(ReturnId(appaId, periodKey))
+        .map(AdrReturnDetails.fromReturnDetailsSuccess)
+        .fold(
+          e => {
+            logger.warn(s"Unable to get return $periodKey for $appaId: $e")
+            error(e)
+          },
+          returnDetails => Ok(Json.toJson(returnDetails))
+        )
     }
 
+  def error(errorResponse: ErrorResponse): Result = Result(
+    header = ResponseHeader(errorResponse.status),
+    body = HttpEntity.Strict(ByteString(Json.toBytes(Json.toJson(errorResponse))), Some("application/json"))
+  )
 }

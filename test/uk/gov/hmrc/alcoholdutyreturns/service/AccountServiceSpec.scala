@@ -22,15 +22,13 @@ import org.mockito.ArgumentMatchersSugar.eqTo
 import uk.gov.hmrc.alcoholdutyreturns.base.SpecBase
 import uk.gov.hmrc.alcoholdutyreturns.connector.AccountConnector
 import uk.gov.hmrc.alcoholdutyreturns.models.ApprovalStatus.{Approved, DeRegistered, Insolvent, Revoked, SmallCiderProducer}
-import uk.gov.hmrc.alcoholdutyreturns.models.ErrorResponse.{EntityNotFound, InvalidJson, InvalidSubscriptionStatus, ObligationFulfilled, UnexpectedResponse}
 import uk.gov.hmrc.alcoholdutyreturns.models.ObligationStatus.Fulfilled
-import uk.gov.hmrc.alcoholdutyreturns.models.{ApprovalStatus, ErrorResponse}
+import uk.gov.hmrc.alcoholdutyreturns.models.ApprovalStatus
+import uk.gov.hmrc.alcoholdutyreturns.models.ErrorResponse
 
-import java.time.{Clock, Instant, LocalDate, ZoneId}
+import java.time.LocalDate
 
 class AccountServiceSpec extends SpecBase {
-  override def clock: Clock = Clock.fixed(Instant.ofEpochMilli(1718037305240L), ZoneId.of("UTC"))
-
   "getSubscriptionSummaryAndCheckStatus" should {
     Seq[ApprovalStatus](Approved, Insolvent).foreach { status =>
       s"return the subscription summary if the status is ${status.entryName}" in new SetUp {
@@ -49,18 +47,17 @@ class AccountServiceSpec extends SpecBase {
         when(accountConnector.getSubscriptionSummary(eqTo(returnId.appaId))(any())).thenReturn(EitherT.rightT(ss))
 
         whenReady(accountService.getSubscriptionSummaryAndCheckStatus(returnId.appaId).value) { result =>
-          result shouldBe Left(InvalidSubscriptionStatus(status))
+          result shouldBe Left(ErrorResponse.InvalidSubscriptionStatus(status))
         }
       }
     }
 
-    Seq[ErrorResponse](InvalidJson, EntityNotFound, UnexpectedResponse).foreach { error =>
-      s"return ${error.entryName} if the connector returns ${error.entryName}" in new SetUp {
-        when(accountConnector.getSubscriptionSummary(eqTo(returnId.appaId))(any())).thenReturn(EitherT.leftT(error))
+    "return any error if the connector returns" in new SetUp {
+      when(accountConnector.getSubscriptionSummary(eqTo(returnId.appaId))(any()))
+        .thenReturn(EitherT.leftT(ErrorResponse.InvalidJson))
 
-        whenReady(accountService.getSubscriptionSummaryAndCheckStatus(returnId.appaId).value) { result =>
-          result shouldBe Left(error)
-        }
+      whenReady(accountService.getSubscriptionSummaryAndCheckStatus(returnId.appaId).value) { result =>
+        result shouldBe Left(ErrorResponse.InvalidJson)
       }
     }
   }
@@ -80,32 +77,33 @@ class AccountServiceSpec extends SpecBase {
         .thenReturn(EitherT.rightT(obligationData.copy(status = Fulfilled)))
 
       whenReady(accountService.getOpenObligation(returnId).value) { result =>
-        result shouldBe Left(ObligationFulfilled)
+        result shouldBe Left(ErrorResponse.ObligationFulfilled)
       }
     }
 
-    Seq[ErrorResponse](InvalidJson, EntityNotFound, UnexpectedResponse).foreach { error =>
-      s"return ${error.entryName} if the connector returns ${error.entryName}" in new SetUp {
-        when(accountConnector.getOpenObligationData(eqTo(returnId))(any())).thenReturn(EitherT.leftT(error))
+    "return any error if the connector returns" in new SetUp {
+      when(accountConnector.getOpenObligationData(eqTo(returnId))(any()))
+        .thenReturn(EitherT.leftT(ErrorResponse.InvalidJson))
 
-        whenReady(accountService.getOpenObligation(returnId).value) { result =>
-          result shouldBe Left(error)
-        }
+      whenReady(accountService.getOpenObligation(returnId).value) { result =>
+        result shouldBe Left(ErrorResponse.InvalidJson)
       }
     }
-    "getObligations" should {
-      "return a sequence of obligations when successful" in new SetUp {
-        val expectedObligationData = Seq(fulfilledObligationData, obligationData)
-        when(accountConnector.getObligationData(any())(any())).thenReturn(EitherT.rightT(expectedObligationData))
-        whenReady(accountService.getObligations(appaId).value) { result =>
-          result shouldBe Right(expectedObligationData)
-        }
+  }
+
+  "getObligations" should {
+    "return a sequence of obligations when successful" in new SetUp {
+      val expectedObligationData = Seq(fulfilledObligationData, obligationData)
+      when(accountConnector.getObligationData(any())(any())).thenReturn(EitherT.rightT(expectedObligationData))
+      whenReady(accountService.getObligations(appaId).value) { result =>
+        result shouldBe Right(expectedObligationData)
       }
-      "return a fallback error response when there is a failure" in new SetUp {
-        when(accountConnector.getObligationData(any())(any())).thenReturn(EitherT.leftT(UnexpectedResponse))
-        whenReady(accountService.getObligations(appaId).value) { result =>
-          result shouldBe Left(UnexpectedResponse)
-        }
+    }
+
+    "return unexpectedResponse if the connector returns an error" in new SetUp {
+      when(accountConnector.getObligationData(any())(any())).thenReturn(EitherT.leftT(ErrorResponse.InvalidJson))
+      whenReady(accountService.getObligations(appaId).value) { result =>
+        result shouldBe Left(ErrorResponse.UnexpectedResponse)
       }
     }
   }

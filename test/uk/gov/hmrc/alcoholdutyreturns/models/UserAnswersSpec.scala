@@ -19,23 +19,20 @@ package uk.gov.hmrc.alcoholdutyreturns.models
 import play.api.libs.json.Json
 import uk.gov.hmrc.alcoholdutyreturns.base.SpecBase
 
-import java.time.{Clock, Instant, LocalDate, ZoneId}
+import java.time.{Instant, LocalDate}
 
 class UserAnswersSpec extends SpecBase {
-  override def clock: Clock = Clock.fixed(Instant.ofEpochMilli(1718037305240L), ZoneId.of("UTC"))
-
   val ua = userAnswers.copy(validUntil = Some(Instant.now(clock).plusMillis(1)))
 
   "UserAnswers" should {
     val json          =
-      s"""{"_id":{"appaId":"$appaId","periodKey":"$periodKey"},"groupId":"$groupId","internalId":"$internalId","regimes":["Spirits","Wine","Cider","OtherFermentedProduct","Beer"],"data":{"obligationData":{"status":"Open","fromDate":"2024-06-10","toDate":"2024-06-11","dueDate":"2024-06-12","periodKey":"24AA"}},"lastUpdated":{"$$date":{"$$numberLong":"1718037305240"}},"validUntil":{"$$date":{"$$numberLong":"1718037305241"}}}"""
+      s"""{"_id":{"appaId":"$appaId","periodKey":"$periodKey"},"groupId":"$groupId","internalId":"$internalId","regimes":["Spirits","Wine","Cider","OtherFermentedProduct","Beer"],"data":{"obligationData":{"status":"Open","fromDate":"2024-06-11","toDate":"2024-06-12","dueDate":"2024-06-13","periodKey":"24AA"}},"lastUpdated":{"$$date":{"$$numberLong":"1718118467838"}},"validUntil":{"$$date":{"$$numberLong":"1718118467839"}}}"""
     val noRegimesJson =
-      s"""{"_id":{"appaId":"$appaId","periodKey":"$periodKey"},"groupId":"$groupId","internalId":"$internalId","regimes":[],"data":{"obligationData":{"status":"Open","fromDate":"2024-06-10","toDate":"2024-06-11","dueDate":"2024-06-12","periodKey":"24AA"}},"lastUpdated":{"$$date":{"$$numberLong":"1718037305240"}},"validUntil":{"$$date":{"$$numberLong":"1718037305241"}}}"""
+      s"""{"_id":{"appaId":"$appaId","periodKey":"$periodKey"},"groupId":"$groupId","internalId":"$internalId","regimes":[],"data":{"obligationData":{"status":"Open","fromDate":"2024-06-11","toDate":"2024-06-12","dueDate":"2024-06-13","periodKey":"24AA"}},"lastUpdated":{"$$date":{"$$numberLong":"1718118467838"}},"validUntil":{"$$date":{"$$numberLong":"1718118467839"}}}"""
 
     "serialise to json" in {
       Json.toJson(ua).toString() shouldBe json
     }
-
     "deserialise from json" in {
       Json.parse(json).as[UserAnswers] shouldBe ua
     }
