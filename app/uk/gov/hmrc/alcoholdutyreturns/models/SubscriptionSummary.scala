@@ -27,7 +27,7 @@ object ApprovalStatus extends Enum[ApprovalStatus] with PlayJsonEnum[ApprovalSta
   case object Approved extends ApprovalStatus
   case object SmallCiderProducer extends ApprovalStatus
   case object Insolvent extends ApprovalStatus
-  case object DeRegistered extends ApprovalStatus
+  case object Deregistered extends ApprovalStatus
   case object Revoked extends ApprovalStatus
 }
 
