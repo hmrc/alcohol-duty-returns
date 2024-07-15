@@ -17,7 +17,8 @@
 package uk.gov.hmrc.alcoholdutyreturns.connector
 
 import cats.data.EitherT
-import play.api.http.Status.{NOT_FOUND, OK}
+import play.api.Logging
+import play.api.http.Status.NOT_FOUND
 import play.api.libs.json.Reads
 import uk.gov.hmrc.alcoholdutyreturns.config.AppConfig
 import uk.gov.hmrc.alcoholdutyreturns.models.{ErrorResponse, ObligationData, ReturnId, SubscriptionSummary}
@@ -31,7 +32,8 @@ class AccountConnector @Inject() (
   config: AppConfig,
   implicit val httpClient: HttpClient
 )(implicit ec: ExecutionContext)
-    extends HttpReadsInstances {
+    extends HttpReadsInstances
+    with Logging {
 
   private[connector] def getData[T](
     url: String
@@ -40,11 +42,15 @@ class AccountConnector @Inject() (
       httpClient
         .GET[Either[UpstreamErrorResponse, HttpResponse]](url = url)
         .map {
-          case Right(response) if response.status == OK                     =>
+          case Right(response)                                              =>
             Try(response.json.as[T]).toOption
               .fold[Either[ErrorResponse, T]](Left(ErrorResponse.InvalidJson))(Right(_))
           case Left(errorResponse) if errorResponse.statusCode == NOT_FOUND => Left(ErrorResponse.EntityNotFound)
-          case _                                                            => Left(ErrorResponse.UnexpectedResponse)
+          case Left(errorResponse)                                          =>
+            logger.warn(
+              s"Received unexpected response from accounts API: ${errorResponse.statusCode} ${errorResponse.message}"
+            )
+            Left(ErrorResponse.UnexpectedResponse)
         }
     )
 

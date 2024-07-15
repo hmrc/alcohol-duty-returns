@@ -65,6 +65,8 @@ class ReturnsControllerSpec extends SpecBase {
     val returnDetails = successfulReturnsExample(
       appaId,
       periodKey,
+      submissionId,
+      chargeReference,
       Instant.now(clock)
     )
 

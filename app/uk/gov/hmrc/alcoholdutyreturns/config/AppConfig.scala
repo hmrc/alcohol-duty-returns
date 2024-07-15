@@ -20,11 +20,11 @@ import play.api.Configuration
 import uk.gov.hmrc.alcoholdutyreturns.models.ReturnId
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
+import java.text.MessageFormat
 import javax.inject.{Inject, Singleton}
 
 @Singleton
 class AppConfig @Inject() (config: Configuration, servicesConfig: ServicesConfig) {
-
   val appName: String = config.get[String]("appName")
 
   private lazy val adrAccountHost: String =
@@ -32,6 +32,10 @@ class AppConfig @Inject() (config: Configuration, servicesConfig: ServicesConfig
 
   private lazy val returnsHost: String =
     servicesConfig.baseUrl("returns")
+
+  lazy val returnsClientId           = getConfStringAndThrowIfNotFound("returns.clientId")
+  lazy val returnsSecret             = getConfStringAndThrowIfNotFound("returns.secret")
+  lazy val returnsGetReturnUrlFormat = new MessageFormat(getConfStringAndThrowIfNotFound("returns.url.getReturn"))
 
   val dbTimeToLiveInSeconds: Int = config.get[Int]("mongodb.timeToLiveInSeconds")
 
@@ -44,10 +48,15 @@ class AppConfig @Inject() (config: Configuration, servicesConfig: ServicesConfig
   def getObligationDataUrl(appaId: String): String =
     s"$adrAccountHost/alcohol-duty-account/obligationDetails/$appaId"
 
-  def getReturnsUrl(returnId: ReturnId): String =
-    s"$returnsHost/RESTAdapter/EXCISE/Return/$regime/${returnId.appaId}/${returnId.periodKey}"
+  def getReturnsUrl(returnId: ReturnId): String = {
+    val url = returnsGetReturnUrlFormat.format(Array(regime.toLowerCase, returnId.appaId, returnId.periodKey))
+    s"$returnsHost$url"
+  }
 
   val enrolmentServiceName: String = config.get[String]("enrolment.serviceName")
 
   val regime: String = config.get[String]("downstream-apis.regimeType")
+
+  private def getConfStringAndThrowIfNotFound(key: String) =
+    servicesConfig.getConfString(key, throw new RuntimeException(s"Could not find services config key '$key'"))
 }

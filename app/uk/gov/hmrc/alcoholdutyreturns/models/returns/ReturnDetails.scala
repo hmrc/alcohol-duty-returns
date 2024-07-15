@@ -16,9 +16,11 @@
 
 package uk.gov.hmrc.alcoholdutyreturns.models.returns
 
-import play.api.libs.json.{Json, OFormat}
+import play.api.libs.json.{JsError, JsString, JsSuccess, Json, OFormat, Reads, Writes}
 import ai.x.play.json.Jsonx
 import ai.x.play.json.Encoders._
+import enumeratum.{Enum, EnumEntry}
+import uk.gov.hmrc.alcoholdutyreturns.models.JsonHelpers
 
 import java.time.{Instant, LocalDate}
 
@@ -60,9 +62,12 @@ object ChargeDetails {
   implicit val chargeDetailsFormat: OFormat[ChargeDetails] = Json.format[ChargeDetails]
 }
 
-case class AlcoholProducts(alcoholProductsProducedFilled: String, regularReturn: Option[Seq[RegularReturnDetails]])
+case class AlcoholProducts(alcoholProductsProducedFilled: Boolean, regularReturn: Option[Seq[RegularReturnDetails]])
 
 object AlcoholProducts {
+  import JsonHelpers.booleanReads
+  import JsonHelpers.booleanWrites
+
   implicit val alcoholProductsFormat: OFormat[AlcoholProducts] = Json.format[AlcoholProducts]
 }
 
@@ -80,34 +85,46 @@ object RegularReturnDetails {
 }
 
 case class OverDeclaration(
-  overDeclFilled: String,
+  overDeclFilled: Boolean,
   reasonForOverDecl: Option[String],
-  overDeclaration: Option[Seq[ReturnDetails]]
+  overDeclarationProducts: Seq[ReturnDetails]
 )
 
 object OverDeclaration {
+  import JsonHelpers.booleanReads
+  import JsonHelpers.booleanWrites
+
   implicit val overDeclarationFormat: OFormat[OverDeclaration] = Json.format[OverDeclaration]
 }
 
 case class UnderDeclaration(
-  underDeclFilled: String,
+  underDeclFilled: Boolean,
   reasonForUnderDecl: Option[String],
-  underDeclaration: Option[Seq[ReturnDetails]]
+  underDeclarationProducts: Seq[ReturnDetails]
 )
 
 object UnderDeclaration {
+  import JsonHelpers.booleanReads
+  import JsonHelpers.booleanWrites
+
   implicit val underDeclarationFormat: OFormat[UnderDeclaration] = Json.format[UnderDeclaration]
 }
 
-case class SpoiltProduct(spoiltProdFilled: String, spoiltProduct: Option[Seq[ReturnDetails]])
+case class SpoiltProduct(spoiltProdFilled: Boolean, spoiltProductProducts: Seq[ReturnDetails])
 
 object SpoiltProduct {
+  import JsonHelpers.booleanReads
+  import JsonHelpers.booleanWrites
+
   implicit val spoiltProductFormat: OFormat[SpoiltProduct] = Json.format[SpoiltProduct]
 }
 
-case class Drawback(drawbackFilled: String, drawbackProducts: Option[Seq[ReturnDetails]])
+case class Drawback(drawbackFilled: Boolean, drawbackProducts: Seq[ReturnDetails])
 
 object Drawback {
+  import JsonHelpers.booleanReads
+  import JsonHelpers.booleanWrites
+
   implicit val drawbackFormat: OFormat[Drawback] = Json.format[Drawback]
 }
 
@@ -125,9 +142,12 @@ object ReturnDetails {
   implicit val returnDetailsFormat: OFormat[ReturnDetails] = Json.format[ReturnDetails]
 }
 
-case class RepackagedDraught(repDraughtFilled: String, repackagedDraughtProducts: Option[Seq[RepackagedDraughtProduct]])
+case class RepackagedDraught(repDraughtFilled: Boolean, repackagedDraughtProducts: Seq[RepackagedDraughtProduct])
 
 object RepackagedDraught {
+  import JsonHelpers.booleanReads
+  import JsonHelpers.booleanWrites
+
   implicit val repackagedDraughtsFormat: OFormat[RepackagedDraught] = Json.format[RepackagedDraught]
 }
 
@@ -146,8 +166,8 @@ case class RepackagedDraughtProduct(
     ReturnDetails(
       returnPeriodAffected = returnPeriodAffected,
       taxType = newTaxType,
-      dutyRate = dutyRate,
-      litresProduced = BigDecimal(0),
+      dutyRate = dutyRate, // Duty is to be paid on the difference between original and new rate, but display the new
+      litresProduced = BigDecimal(0), // Not used in returns display
       litresOfPureAlcohol = litresOfPureAlcohol,
       dutyDue = dutyDue,
       productName = productName
@@ -179,11 +199,14 @@ object TotalDutyDue {
 }
 
 case class NetDutySuspension(
-  netDutySuspensionFilled: String,
+  netDutySuspensionFilled: Boolean,
   netDutySuspensionProducts: Option[NetDutySuspensionProducts]
 )
 
 object NetDutySuspension {
+  import JsonHelpers.booleanReads
+  import JsonHelpers.booleanWrites
+
   implicit val netDutySuspensionFormat: OFormat[NetDutySuspension] = Json.format[NetDutySuspension]
 }
 
@@ -205,9 +228,72 @@ object NetDutySuspensionProducts {
     Json.format[NetDutySuspensionProducts]
 }
 
-case class SpiritsProduced(spiritsProdFilled: String, spiritsProduced: Option[SpiritsProducedDetails])
+sealed trait TypeOfSpiritType extends EnumEntry
+
+object TypeOfSpiritType extends Enum[TypeOfSpiritType] {
+  val values = findValues
+
+  case object MaltSpirit extends TypeOfSpiritType
+  case object GrainSpirit extends TypeOfSpiritType
+  case object NeutralSpiritAgricultural extends TypeOfSpiritType
+  case object NeutralSpiritIndustrial extends TypeOfSpiritType
+  case object BeerBased extends TypeOfSpiritType
+  case object WineMadeWineBased extends TypeOfSpiritType
+  case object CiderPerryBased extends TypeOfSpiritType
+  case object Other extends TypeOfSpiritType
+
+  implicit val typeOfSpiritTypeReads: Reads[TypeOfSpiritType] = {
+    case JsString("01") => JsSuccess(MaltSpirit)
+    case JsString("02") => JsSuccess(GrainSpirit)
+    case JsString("03") => JsSuccess(NeutralSpiritAgricultural)
+    case JsString("04") => JsSuccess(NeutralSpiritIndustrial)
+    case JsString("05") => JsSuccess(BeerBased)
+    case JsString("06") => JsSuccess(WineMadeWineBased)
+    case JsString("07") => JsSuccess(CiderPerryBased)
+    case JsString("08") => JsSuccess(Other)
+    case s: JsString    => JsError(s"$s is not a valid TypeOfSpiritType")
+    case v              => JsError(s"got $v was expecting a string representing a TypeOfSpiritType")
+  }
+
+  implicit val typeOfSpiritTypeWrites: Writes[TypeOfSpiritType] = {
+    case MaltSpirit                => JsString("01")
+    case GrainSpirit               => JsString("02")
+    case NeutralSpiritAgricultural => JsString("03")
+    case NeutralSpiritIndustrial   => JsString("04")
+    case BeerBased                 => JsString("05")
+    case WineMadeWineBased         => JsString("06")
+    case CiderPerryBased           => JsString("07")
+    case Other                     => JsString("08")
+  }
+}
+
+sealed trait OtherMaterialsUomType extends EnumEntry
+
+object OtherMaterialsUomType extends Enum[OtherMaterialsUomType] {
+  val values = findValues
+
+  case object Tonnes extends OtherMaterialsUomType
+  case object Litres extends OtherMaterialsUomType
+
+  implicit val otherMaterialsUomTypeReads: Reads[OtherMaterialsUomType] = {
+    case JsString("01") => JsSuccess(Tonnes)
+    case JsString("02") => JsSuccess(Litres)
+    case s: JsString    => JsError(s"$s is not a valid OtherMaterialsUomType")
+    case v              => JsError(s"got $v was expecting a string representing a OtherMaterialsUomType")
+  }
+
+  implicit val otherMaterialsUomTypeWrites: Writes[OtherMaterialsUomType] = {
+    case Tonnes => JsString("01")
+    case Litres => JsString("02")
+  }
+}
+
+case class SpiritsProduced(spiritsProdFilled: Boolean, spiritsProduced: Option[SpiritsProducedDetails])
 
 object SpiritsProduced {
+  import JsonHelpers.booleanReads
+  import JsonHelpers.booleanWrites
+
   implicit val spiritsProducedFormat: OFormat[SpiritsProduced] = Json.format[SpiritsProduced]
 }
 
@@ -215,10 +301,10 @@ case class SpiritsProducedDetails(
   totalSpirits: BigDecimal,
   scotchWhiskey: BigDecimal,
   irishWhisky: BigDecimal,
-  typeOfSpirit: Seq[String],
+  typeOfSpirit: Seq[TypeOfSpiritType],
   typeOfSpiritOther: Option[String],
   code1MaltedBarley: Option[BigDecimal],
-  code2Other: Option[String],
+  code2Other: Option[Boolean],
   maltedGrainQuantity: Option[BigDecimal],
   maltedGrainType: Option[String],
   code3Wheat: Option[BigDecimal],
@@ -231,13 +317,16 @@ case class SpiritsProducedDetails(
   code10Wine: Option[BigDecimal],
   code11MadeWine: Option[BigDecimal],
   code12CiderOrPerry: Option[BigDecimal],
-  code13Other: Option[String],
+  code13Other: Option[Boolean],
   otherMaterialsQuantity: Option[BigDecimal],
-  otherMaterialUom: Option[String],
+  otherMaterialUom: Option[OtherMaterialsUomType],
   otherMaterialsType: Option[String]
 )
 
 object SpiritsProducedDetails {
+  import JsonHelpers.booleanReads
+  import JsonHelpers.booleanWrites
+
   implicit val spiritsProducedDetailsFormat: OFormat[SpiritsProducedDetails] =
     Jsonx.formatCaseClass[SpiritsProducedDetails]
 }

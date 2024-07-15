@@ -100,25 +100,43 @@ object AdrReturnAdjustments {
   val spoiltKey            = "spoilt"
   val drawbackKey          = "drawback"
 
+  val isOwedToHmrcMap: Map[String, Boolean] =
+    Map(
+      underDeclaredKey     -> true,
+      overDeclaredKey      -> false,
+      repackagedDraughtKey -> true,
+      spoiltKey            -> false,
+      drawbackKey          -> false
+    )
+
+  def isOwedToHmrc(key: String) = isOwedToHmrcMap.getOrElse(
+    key,
+    throw new IllegalArgumentException("Bad adjustment key when checking if amount is owed to HMRC")
+  )
+
   def fromReturnDetailsSuccess(returnDetailsSuccess: ReturnDetailsSuccess): AdrReturnAdjustments = {
     val allAdjustmentRows = Seq(
-      returnDetailsSuccess.underDeclaration.underDeclaration.map((underDeclaredKey, _)),
-      returnDetailsSuccess.overDeclaration.overDeclaration.map((overDeclaredKey, _)),
-      returnDetailsSuccess.repackagedDraught.repackagedDraughtProducts.map(rpd =>
-        (repackagedDraughtKey, rpd.map(_.toReturnDetailsForAdjustment()))
+      returnDetailsSuccess.underDeclaration.underDeclarationProducts.map(
+        AdrReturnAdjustmentsRow.fromReturnDetails(underDeclaredKey, _)
       ),
-      returnDetailsSuccess.spoiltProduct.spoiltProduct.map((spoiltKey, _)),
-      returnDetailsSuccess.drawback.drawbackProducts.map((drawbackKey, _))
-    ).flatten.flatMap { case (key, returnDetails) =>
-      returnDetails.map(returnDetailsEntry => AdrReturnAdjustmentsRow.fromReturnDetails(key, returnDetailsEntry))
-    }
+      returnDetailsSuccess.overDeclaration.overDeclarationProducts.map(
+        AdrReturnAdjustmentsRow.fromReturnDetails(overDeclaredKey, _)
+      ),
+      returnDetailsSuccess.repackagedDraught.repackagedDraughtProducts.map(rpd =>
+        AdrReturnAdjustmentsRow.fromReturnDetails(repackagedDraughtKey, rpd.toReturnDetailsForAdjustment())
+      ),
+      returnDetailsSuccess.spoiltProduct.spoiltProductProducts.map(
+        AdrReturnAdjustmentsRow.fromReturnDetails(spoiltKey, _)
+      ),
+      returnDetailsSuccess.drawback.drawbackProducts.map(AdrReturnAdjustmentsRow.fromReturnDetails(drawbackKey, _))
+    ).flatten
 
     AdrReturnAdjustments(
       adjustmentDetails = if (allAdjustmentRows.isEmpty) None else Some(allAdjustmentRows),
-      total = returnDetailsSuccess.totalDutyDue.totalDutyUnderDeclaration +
+      total = returnDetailsSuccess.totalDutyDue.totalDutyUnderDeclaration -
         returnDetailsSuccess.totalDutyDue.totalDutyOverDeclaration +
-        returnDetailsSuccess.totalDutyDue.totalDutyRepDraughtProducts +
-        returnDetailsSuccess.totalDutyDue.totalDutySpoiltProduct +
+        returnDetailsSuccess.totalDutyDue.totalDutyRepDraughtProducts -
+        returnDetailsSuccess.totalDutyDue.totalDutySpoiltProduct -
         returnDetailsSuccess.totalDutyDue.totalDutyDrawback
     )
   }
@@ -141,7 +159,7 @@ object AdrReturnAdjustmentsRow {
       taxType = returnDetails.taxType,
       litresOfPureAlcohol = returnDetails.litresOfPureAlcohol,
       dutyRate = returnDetails.dutyRate,
-      dutyValue = returnDetails.dutyDue
+      dutyValue = if (AdrReturnAdjustments.isOwedToHmrc(key)) returnDetails.dutyDue else -returnDetails.dutyDue
     )
 
   implicit val adrReturnAdjustmentsRowFormat: OFormat[AdrReturnAdjustmentsRow] = Json.format[AdrReturnAdjustmentsRow]

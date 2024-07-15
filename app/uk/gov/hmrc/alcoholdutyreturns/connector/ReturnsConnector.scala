@@ -17,8 +17,10 @@
 package uk.gov.hmrc.alcoholdutyreturns.connector
 
 import cats.data.EitherT
-import play.api.http.Status.{OK, UNPROCESSABLE_ENTITY}
+import play.api.Logging
+import play.api.http.Status.{BAD_REQUEST, NOT_FOUND}
 import uk.gov.hmrc.alcoholdutyreturns.config.AppConfig
+import uk.gov.hmrc.alcoholdutyreturns.connector.helpers.HIPHeaders
 import uk.gov.hmrc.alcoholdutyreturns.models.{ErrorResponse, ReturnId}
 import uk.gov.hmrc.alcoholdutyreturns.models.returns.ReturnDetailsSuccess
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReadsInstances, HttpResponse, UpstreamErrorResponse}
@@ -29,24 +31,33 @@ import scala.util.Try
 
 class ReturnsConnector @Inject() (
   config: AppConfig,
+  headers: HIPHeaders,
   implicit val httpClient: HttpClient
 )(implicit ec: ExecutionContext)
-    extends HttpReadsInstances {
+    extends HttpReadsInstances
+    with Logging {
 
   def getReturn(returnId: ReturnId)(implicit
     hc: HeaderCarrier
   ): EitherT[Future, ErrorResponse, ReturnDetailsSuccess] = EitherT(
     httpClient
       .GET[Either[UpstreamErrorResponse, HttpResponse]](
-        url = config.getReturnsUrl(returnId)
+        url = config.getReturnsUrl(returnId),
+        headers = headers.returnsHeaders()
       )
       .map {
-        case Right(response) if response.status == OK                                =>
+        case Right(response)                                                =>
           Try(response.json.as[ReturnDetailsSuccess]).toOption
             .fold[Either[ErrorResponse, ReturnDetailsSuccess]](Left(ErrorResponse.InvalidJson))(Right(_))
-        case Left(errorResponse) if errorResponse.statusCode == UNPROCESSABLE_ENTITY =>
+        case Left(errorResponse) if errorResponse.statusCode == BAD_REQUEST =>
+          Left(ErrorResponse.BadRequest)
+        case Left(errorResponse) if errorResponse.statusCode == NOT_FOUND   =>
           Left(ErrorResponse.EntityNotFound)
-        case _                                                                       => Left(ErrorResponse.UnexpectedResponse)
+        case Left(errorResponse)                                            =>
+          logger.warn(
+            s"Received unexpected response from returns API: ${errorResponse.statusCode} ${errorResponse.message}"
+          )
+          Left(ErrorResponse.UnexpectedResponse)
       }
   )
 }

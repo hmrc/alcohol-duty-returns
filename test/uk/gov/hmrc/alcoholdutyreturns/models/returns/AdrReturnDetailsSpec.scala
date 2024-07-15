@@ -45,6 +45,8 @@ class AdrReturnDetailsSpec extends SpecBase {
     val returnDetails = successfulReturnsExample(
       appaId,
       periodKey,
+      submissionId,
+      chargeReference,
       Instant.now(clock)
     )
 
