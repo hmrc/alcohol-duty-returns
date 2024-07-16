@@ -17,9 +17,10 @@
 package uk.gov.hmrc.alcoholdutyreturns.connector
 
 import cats.data.EitherT
-import play.api.http.Status.{NOT_FOUND, OK}
+import play.api.Logging
+import play.api.http.Status.NOT_FOUND
+import play.api.libs.json.Reads
 import uk.gov.hmrc.alcoholdutyreturns.config.AppConfig
-import uk.gov.hmrc.alcoholdutyreturns.models.ErrorResponse.{EntityNotFound, InvalidJson, UnexpectedResponse}
 import uk.gov.hmrc.alcoholdutyreturns.models.{ErrorResponse, ObligationData, ReturnId, SubscriptionSummary}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReadsInstances, HttpResponse, UpstreamErrorResponse}
 
@@ -31,54 +32,40 @@ class AccountConnector @Inject() (
   config: AppConfig,
   implicit val httpClient: HttpClient
 )(implicit ec: ExecutionContext)
-    extends HttpReadsInstances {
+    extends HttpReadsInstances
+    with Logging {
+
+  private[connector] def getData[T](
+    url: String
+  )(implicit hc: HeaderCarrier, reads: Reads[T]): EitherT[Future, ErrorResponse, T] =
+    EitherT(
+      httpClient
+        .GET[Either[UpstreamErrorResponse, HttpResponse]](url = url)
+        .map {
+          case Right(response)                                              =>
+            Try(response.json.as[T]).toOption
+              .fold[Either[ErrorResponse, T]](Left(ErrorResponse.InvalidJson))(Right(_))
+          case Left(errorResponse) if errorResponse.statusCode == NOT_FOUND => Left(ErrorResponse.EntityNotFound)
+          case Left(errorResponse)                                          =>
+            logger.warn(
+              s"Received unexpected response from accounts API: ${errorResponse.statusCode} ${errorResponse.message}"
+            )
+            Left(ErrorResponse.UnexpectedResponse)
+        }
+    )
 
   def getSubscriptionSummary(appaId: String)(implicit
     hc: HeaderCarrier
-  ): EitherT[Future, ErrorResponse, SubscriptionSummary] = EitherT(
-    httpClient
-      .GET[Either[UpstreamErrorResponse, HttpResponse]](
-        url = config.getSubscriptionSummaryUrl(appaId)
-      )
-      .map {
-        case Right(response) if response.status == OK                     =>
-          Try(response.json.as[SubscriptionSummary]).toOption
-            .fold[Either[ErrorResponse, SubscriptionSummary]](Left(InvalidJson))(Right(_))
-        case Left(errorResponse) if errorResponse.statusCode == NOT_FOUND => Left(EntityNotFound)
-        case _                                                            => Left(UnexpectedResponse)
-      }
-  )
+  ): EitherT[Future, ErrorResponse, SubscriptionSummary] =
+    getData(config.getSubscriptionSummaryUrl(appaId))
 
   def getOpenObligationData(returnId: ReturnId)(implicit
     hc: HeaderCarrier
-  ): EitherT[Future, ErrorResponse, ObligationData] = EitherT(
-    httpClient
-      .GET[Either[UpstreamErrorResponse, HttpResponse]](
-        url = config.getOpenObligationDataUrl(returnId.appaId, returnId.periodKey)
-      )
-      .map {
-        case Right(response) if response.status == OK                     =>
-          Try(response.json.as[ObligationData]).toOption
-            .fold[Either[ErrorResponse, ObligationData]](Left(InvalidJson))(Right(_))
-        case Left(errorResponse) if errorResponse.statusCode == NOT_FOUND => Left(EntityNotFound)
-        case _                                                            => Left(UnexpectedResponse)
-      }
-  )
+  ): EitherT[Future, ErrorResponse, ObligationData] =
+    getData(config.getOpenObligationDataUrl(returnId))
 
   def getObligationData(appaId: String)(implicit
     hc: HeaderCarrier
-  ): EitherT[Future, ErrorResponse, Seq[ObligationData]] = EitherT(
-    httpClient
-      .GET[Either[UpstreamErrorResponse, HttpResponse]](
-        url = config.getObligationDataUrl(appaId)
-      )
-      .map {
-        case Right(response) if response.status == OK                     =>
-          Try(response.json.as[Seq[ObligationData]]).toOption
-            .fold[Either[ErrorResponse, Seq[ObligationData]]](Left(InvalidJson))(Right(_))
-        case Left(errorResponse) if errorResponse.statusCode == NOT_FOUND => Left(EntityNotFound)
-        case _                                                            => Left(UnexpectedResponse)
-      }
-  )
-
+  ): EitherT[Future, ErrorResponse, Seq[ObligationData]] =
+    getData(config.getObligationDataUrl(appaId))
 }
