@@ -21,7 +21,7 @@ import org.mockito.ArgumentMatchers.any
 import org.mockito.ArgumentMatchersSugar.eqTo
 import uk.gov.hmrc.alcoholdutyreturns.base.SpecBase
 import uk.gov.hmrc.alcoholdutyreturns.connector.AccountConnector
-import uk.gov.hmrc.alcoholdutyreturns.models.ApprovalStatus.{Approved, Deregistered, Insolvent, Revoked, SmallCiderProducer}
+import uk.gov.hmrc.alcoholdutyreturns.models.ApprovalStatus.{Approved, DeRegistered, Insolvent, Revoked, SmallCiderProducer}
 import uk.gov.hmrc.alcoholdutyreturns.models.ErrorResponse.{EntityNotFound, InvalidJson, InvalidSubscriptionStatus, ObligationFulfilled, UnexpectedResponse}
 import uk.gov.hmrc.alcoholdutyreturns.models.ObligationStatus.Fulfilled
 import uk.gov.hmrc.alcoholdutyreturns.models.{ApprovalStatus, ErrorResponse}
@@ -43,7 +43,7 @@ class AccountServiceSpec extends SpecBase {
       }
     }
 
-    Seq[ApprovalStatus](SmallCiderProducer, Deregistered, Revoked).foreach { status =>
+    Seq[ApprovalStatus](SmallCiderProducer, DeRegistered, Revoked).foreach { status =>
       s"return InvalidSubscriptionStatus if the status is ${status.entryName}" in new SetUp {
         val ss = subscriptionSummary.copy(approvalStatus = status)
         when(accountConnector.getSubscriptionSummary(eqTo(returnId.appaId))(any())).thenReturn(EitherT.rightT(ss))
