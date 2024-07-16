@@ -17,6 +17,7 @@
 package uk.gov.hmrc.alcoholdutyreturns.controllers.actions
 
 import com.google.inject.Inject
+import play.api.Logging
 import play.api.http.Status.UNAUTHORIZED
 import play.api.libs.json.Json
 import play.api.mvc.Results.Unauthorized
@@ -44,7 +45,8 @@ class BaseAuthorisedAction @Inject() (
 )(implicit val executionContext: ExecutionContext)
     extends AuthorisedAction
     with BackendHeaderCarrierProvider
-    with AuthorisedFunctions {
+    with AuthorisedFunctions
+    with Logging {
 
   override def invokeBlock[A](request: Request[A], block: Request[A] => Future[Result]): Future[Result] = {
     implicit val headerCarrier: HeaderCarrier = hc(request)
@@ -58,6 +60,7 @@ class BaseAuthorisedAction @Inject() (
     ) {
       block(request)
     } recover { case e: AuthorisationException =>
+      logger.debug(s"Got AuthorisationException: $e")
       Unauthorized(
         Json.toJson(
           ErrorResponse(

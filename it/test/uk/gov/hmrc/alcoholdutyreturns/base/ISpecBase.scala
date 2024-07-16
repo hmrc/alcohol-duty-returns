@@ -48,8 +48,5 @@ trait ISpecBase extends AnyWordSpec
     with ConnectorTestHelpers
     with TestData
     with ModelGenerators {
-
-
   implicit def ec: ExecutionContext = global
-
 }

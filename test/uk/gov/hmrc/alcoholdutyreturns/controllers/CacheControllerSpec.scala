@@ -23,16 +23,14 @@ import org.mockito.ArgumentMatchersSugar.eqTo
 import play.api.libs.json.Json
 import play.api.mvc.Result
 import uk.gov.hmrc.alcoholdutyreturns.base.SpecBase
-import uk.gov.hmrc.alcoholdutyreturns.models.ErrorResponse
+import uk.gov.hmrc.alcoholdutyreturns.models.{ApprovalStatus, ErrorResponse}
 import uk.gov.hmrc.alcoholdutyreturns.repositories.{CacheRepository, UpdateFailure, UpdateSuccess}
 import uk.gov.hmrc.alcoholdutyreturns.service.{AccountService, AuditService}
 
-import java.time.{Clock, Instant, LocalDate, ZoneId}
+import java.time.LocalDate
 import scala.concurrent.Future
 
 class CacheControllerSpec extends SpecBase {
-  override def clock: Clock = Clock.fixed(Instant.ofEpochMilli(1718037305240L), ZoneId.of("UTC"))
-
   val mockCacheRepository: CacheRepository = mock[CacheRepository]
   val mockAccountService: AccountService   = mock[AccountService]
   val mockAuditService: AuditService       = mock[AuditService]
@@ -94,7 +92,7 @@ class CacheControllerSpec extends SpecBase {
   }
 
   "createUserAnswers" should {
-    "return 200 OK with the user answers that was created" when {
+    "return 201 CREATED with the user answers that was created" when {
       "the account service returns a valid UserAnswers" in {
         when(mockCacheRepository.add(any())).thenReturn(Future.successful(userAnswers))
         when(mockAccountService.getSubscriptionSummaryAndCheckStatus(eqTo(appaId))(any(), any()))
@@ -107,13 +105,18 @@ class CacheControllerSpec extends SpecBase {
             fakeRequestWithJsonBody(Json.toJson(returnAndUserDetails))
           )
 
-        status(result)        shouldBe OK
+        status(result)        shouldBe CREATED
         contentAsJson(result) shouldBe Json.toJson(userAnswers)
       }
     }
 
-    ErrorResponse.values.foreach { errorResponse =>
-      s"return the status ${errorResponse.status} if the account service returns the error ${errorResponse.entryName} when getting the subscription summary" in {
+    Seq(
+      ("EntityNotFound", ErrorResponse.EntityNotFound),
+      ("InvalidJson", ErrorResponse.InvalidJson),
+      ("UnexpectedResponse", ErrorResponse.UnexpectedResponse),
+      ("InvalidSubscriptionStatus(Insolvent)", ErrorResponse.InvalidSubscriptionStatus(ApprovalStatus.Insolvent))
+    ).foreach { case (errorName, errorResponse) =>
+      s"return status ${errorResponse.status} if the account service returns the error $errorName when getting the subscription summary" in {
         when(mockCacheRepository.add(any())).thenReturn(Future.successful(userAnswers))
         when(mockAccountService.getSubscriptionSummaryAndCheckStatus(eqTo(appaId))(any(), any()))
           .thenReturn(EitherT.leftT(errorResponse))
@@ -128,8 +131,14 @@ class CacheControllerSpec extends SpecBase {
       }
     }
 
-    ErrorResponse.values.foreach { errorResponse =>
-      s"return the status ${errorResponse.status} if the account service returns the error ${errorResponse.entryName} when getting the open obligations" in {
+    Seq(
+      ("EntityNotFound", ErrorResponse.EntityNotFound),
+      ("InvalidJson", ErrorResponse.InvalidJson),
+      ("UnexpectedResponse", ErrorResponse.UnexpectedResponse),
+      ("ObligationFulfilled", ErrorResponse.ObligationFulfilled),
+      ("InvalidSubscriptionStatus(Insolvent)", ErrorResponse.InvalidSubscriptionStatus(ApprovalStatus.Insolvent))
+    ).foreach { case (errorName, errorResponse) =>
+      s"return the status ${errorResponse.status} if the account service returns the error $errorName when getting the open obligations" in {
         when(mockCacheRepository.add(any())).thenReturn(Future.successful(userAnswers))
         when(mockAccountService.getSubscriptionSummaryAndCheckStatus(eqTo(appaId))(any(), any()))
           .thenReturn(EitherT.rightT(subscriptionSummary))
@@ -146,5 +155,4 @@ class CacheControllerSpec extends SpecBase {
       }
     }
   }
-
 }
