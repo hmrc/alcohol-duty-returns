@@ -41,7 +41,7 @@ class ReturnsController @Inject() (
     authorise.async { implicit request =>
       returnsConnector
         .getReturn(ReturnId(appaId, periodKey))
-        .map(AdrReturnDetails.fromReturnDetailsSuccess)
+        .map(AdrReturnDetails.fromGetReturnDetails)
         .fold(
           e => {
             logger.warn(s"Unable to get return $periodKey for $appaId: $e")

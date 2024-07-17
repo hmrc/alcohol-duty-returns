@@ -33,7 +33,7 @@ class ReturnsConnectorSpec extends ISpecBase {
     "successfully get a return" in new SetUp {
       stubGet(returnsUrl, OK, Json.toJson(returnsData).toString())
       whenReady(connector.getReturn(returnId).value, timeout = Timeout(Span(3, Seconds))) { result =>
-        result mustBe Right(returnsData)
+        result mustBe Right(returnsData.success)
         verifyGet(returnsUrl)
       }
     }

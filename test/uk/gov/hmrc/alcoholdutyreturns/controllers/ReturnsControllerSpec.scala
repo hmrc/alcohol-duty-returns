@@ -23,7 +23,7 @@ import play.api.libs.json.Json
 import play.api.mvc.Result
 import uk.gov.hmrc.alcoholdutyreturns.base.SpecBase
 import uk.gov.hmrc.alcoholdutyreturns.connector.ReturnsConnector
-import uk.gov.hmrc.alcoholdutyreturns.models.returns.ReturnDetailsSuccess
+import uk.gov.hmrc.alcoholdutyreturns.models.returns.GetReturnDetails
 import uk.gov.hmrc.alcoholdutyreturns.models.ErrorResponse
 
 import java.time.Instant
@@ -34,7 +34,7 @@ class ReturnsControllerSpec extends SpecBase {
     "calling getReturn" should {
       "return 200 OK and the return" in new SetUp {
         when(mockReturnsConnector.getReturn(eqTo(returnId.copy(periodKey = periodKey)))(any()))
-          .thenReturn(EitherT.rightT[Future, ErrorResponse](returnDetails))
+          .thenReturn(EitherT.rightT[Future, ErrorResponse](returnDetails.success))
 
         val result: Future[Result] =
           controller.getReturn(appaId, periodKey)(fakeRequest)
@@ -45,7 +45,7 @@ class ReturnsControllerSpec extends SpecBase {
 
       "return 404 NOT_FOUND when there is an issue" in new SetUp {
         when(mockReturnsConnector.getReturn(eqTo(returnId.copy(periodKey = periodKey)))(any()))
-          .thenReturn(EitherT.leftT[Future, ReturnDetailsSuccess](ErrorResponse.EntityNotFound))
+          .thenReturn(EitherT.leftT[Future, GetReturnDetails](ErrorResponse.EntityNotFound))
 
         val result: Future[Result] =
           controller.getReturn(appaId, periodKey)(fakeRequest)

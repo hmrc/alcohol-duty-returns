@@ -22,6 +22,5 @@ import javax.inject.Singleton
 
 @Singleton
 class RandomUUIDGenerator() {
-  def uuid: String              = UUID.randomUUID().toString
-  def uuidHyphenTrimmed: String = uuid.replaceAll("-", "")
+  def uuid: String = UUID.randomUUID().toString
 }
