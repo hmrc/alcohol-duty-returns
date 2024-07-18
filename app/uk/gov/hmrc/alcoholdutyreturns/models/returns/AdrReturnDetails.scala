@@ -31,7 +31,7 @@ case class AdrReturnDetails(
 )
 
 object AdrReturnDetails {
-  def fromReturnDetailsSuccess(returnDetailsSuccess: ReturnDetailsSuccess): AdrReturnDetails =
+  def fromGetReturnDetails(returnDetailsSuccess: GetReturnDetails): AdrReturnDetails =
     AdrReturnDetails(
       identification = AdrReturnDetailsIdentification.fromReturnDetailsSuccess(returnDetailsSuccess),
       alcoholDeclared = AdrReturnAlcoholDeclared.fromReturnDetailsSuccess(returnDetailsSuccess),
@@ -45,7 +45,7 @@ object AdrReturnDetails {
 case class AdrReturnDetailsIdentification(periodKey: String, submittedTime: Instant)
 
 object AdrReturnDetailsIdentification {
-  def fromReturnDetailsSuccess(returnDetailsSuccess: ReturnDetailsSuccess): AdrReturnDetailsIdentification =
+  def fromReturnDetailsSuccess(returnDetailsSuccess: GetReturnDetails): AdrReturnDetailsIdentification =
     AdrReturnDetailsIdentification(
       periodKey = returnDetailsSuccess.chargeDetails.periodKey,
       submittedTime = returnDetailsSuccess.chargeDetails.receiptDate
@@ -58,7 +58,7 @@ object AdrReturnDetailsIdentification {
 case class AdrReturnAlcoholDeclared(alcoholDeclaredDetails: Option[Seq[AdrReturnAlcoholDeclaredRow]], total: BigDecimal)
 
 object AdrReturnAlcoholDeclared {
-  def fromReturnDetailsSuccess(returnDetailsSuccess: ReturnDetailsSuccess): AdrReturnAlcoholDeclared =
+  def fromReturnDetailsSuccess(returnDetailsSuccess: GetReturnDetails): AdrReturnAlcoholDeclared =
     AdrReturnAlcoholDeclared(
       returnDetailsSuccess.alcoholProducts.regularReturn.map(
         _.map(
@@ -114,7 +114,7 @@ object AdrReturnAdjustments {
     throw new IllegalArgumentException("Bad adjustment key when checking if amount is owed to HMRC")
   )
 
-  def fromReturnDetailsSuccess(returnDetailsSuccess: ReturnDetailsSuccess): AdrReturnAdjustments = {
+  def fromReturnDetailsSuccess(returnDetailsSuccess: GetReturnDetails): AdrReturnAdjustments = {
     val allAdjustmentRows = Seq(
       returnDetailsSuccess.underDeclaration.underDeclarationProducts.map(
         AdrReturnAdjustmentsRow.fromReturnDetails(underDeclaredKey, _)
@@ -168,7 +168,7 @@ object AdrReturnAdjustmentsRow {
 case class AdrReturnTotalDutyDue(totalDue: BigDecimal)
 
 object AdrReturnTotalDutyDue {
-  def fromReturnDetailsSuccess(returnDetailsSuccess: ReturnDetailsSuccess): AdrReturnTotalDutyDue =
+  def fromReturnDetailsSuccess(returnDetailsSuccess: GetReturnDetails): AdrReturnTotalDutyDue =
     AdrReturnTotalDutyDue(
       totalDue = returnDetailsSuccess.totalDutyDue.totalDutyDue
     )

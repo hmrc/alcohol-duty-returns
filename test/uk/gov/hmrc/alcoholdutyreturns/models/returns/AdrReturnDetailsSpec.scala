@@ -32,7 +32,7 @@ class AdrReturnDetailsSpec extends SpecBase {
     }
 
     "should convert ReturnDetails to AdrReturnDetails" in new SetUp {
-      AdrReturnDetails.fromReturnDetailsSuccess(returnDetails) shouldBe convertedReturnDetails(
+      AdrReturnDetails.fromGetReturnDetails(returnDetails.success) shouldBe convertedReturnDetails(
         periodKey,
         Instant.now(clock)
       )

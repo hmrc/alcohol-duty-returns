@@ -24,7 +24,14 @@ import uk.gov.hmrc.alcoholdutyreturns.models.JsonHelpers
 
 import java.time.{Instant, LocalDate}
 
-case class ReturnDetailsSuccess(
+final case class GetReturnDetailsSuccess(success: GetReturnDetails)
+
+object GetReturnDetailsSuccess {
+  implicit val getReturnDetailsSuccessFormat: OFormat[GetReturnDetailsSuccess] =
+    Json.format[GetReturnDetailsSuccess]
+}
+
+case class GetReturnDetails(
   processingDate: Instant,
   idDetails: IdDetails,
   chargeDetails: ChargeDetails,
@@ -40,8 +47,8 @@ case class ReturnDetailsSuccess(
   spiritsProduced: Option[SpiritsProduced]
 )
 
-object ReturnDetailsSuccess {
-  implicit val returnDetailsSuccessFormat: OFormat[ReturnDetailsSuccess] = Json.format[ReturnDetailsSuccess]
+object GetReturnDetails {
+  implicit val getReturnDetailsFormat: OFormat[GetReturnDetails] = Json.format[GetReturnDetails]
 }
 
 case class IdDetails(adReference: String, submissionID: String)

@@ -24,7 +24,7 @@ import uk.gov.hmrc.alcoholdutyreturns.models.{AlcoholRegimes, ObligationData, Re
 import uk.gov.hmrc.alcoholdutyreturns.models.ObligationStatus.{Fulfilled, Open}
 import uk.gov.hmrc.alcoholdutyreturns.models.returns.OtherMaterialsUomType.Tonnes
 import uk.gov.hmrc.alcoholdutyreturns.models.returns.TypeOfSpiritType.NeutralSpiritAgricultural
-import uk.gov.hmrc.alcoholdutyreturns.models.returns.{AdrReturnAdjustments, AdrReturnAdjustmentsRow, AdrReturnAlcoholDeclared, AdrReturnAlcoholDeclaredRow, AdrReturnDetails, AdrReturnDetailsIdentification, AdrReturnTotalDutyDue, AlcoholProducts, ChargeDetails, Drawback, IdDetails, NetDutySuspension, NetDutySuspensionProducts, OverDeclaration, RegularReturnDetails, RepackagedDraught, RepackagedDraughtProduct, ReturnDetails, ReturnDetailsSuccess, SpiritsProduced, SpiritsProducedDetails, SpoiltProduct, TotalDutyDue, TotalDutyDuebyTaxType, UnderDeclaration}
+import uk.gov.hmrc.alcoholdutyreturns.models.returns.{AdrReturnAdjustments, AdrReturnAdjustmentsRow, AdrReturnAlcoholDeclared, AdrReturnAlcoholDeclaredRow, AdrReturnDetails, AdrReturnDetailsIdentification, AdrReturnTotalDutyDue, AlcoholProducts, ChargeDetails, Drawback, GetReturnDetails, GetReturnDetailsSuccess, IdDetails, NetDutySuspension, NetDutySuspensionProducts, OverDeclaration, RegularReturnDetails, RepackagedDraught, RepackagedDraughtProduct, ReturnDetails, SpiritsProduced, SpiritsProducedDetails, SpoiltProduct, TotalDutyDue, TotalDutyDuebyTaxType, UnderDeclaration}
 
 import java.time.{Clock, Instant, LocalDate, YearMonth, ZoneId}
 
@@ -89,164 +89,166 @@ trait TestData extends ModelGenerators {
     submissionId: String,
     chargeReference: String,
     now: Instant
-  ): ReturnDetailsSuccess = {
+  ): GetReturnDetailsSuccess = {
     val periodDate = LocalDate.of(periodKey.take(2).toInt + 2000, periodKey.charAt(3) - 'A' + 1, 1)
 
-    ReturnDetailsSuccess(
-      processingDate = now,
-      idDetails = IdDetails(adReference = appaId, submissionID = submissionId),
-      chargeDetails = ChargeDetails(
-        periodKey = periodKey,
-        chargeReference = Some(chargeReference),
-        periodFrom = periodDate,
-        periodTo = YearMonth.from(periodDate).atEndOfMonth(),
-        receiptDate = now
-      ),
-      alcoholProducts = AlcoholProducts(
-        alcoholProductsProducedFilled = true,
-        regularReturn = Some(
-          Seq(
-            RegularReturnDetails(
-              taxType = "301",
-              dutyRate = BigDecimal("5.27"),
-              litresProduced = BigDecimal("240000.02"),
-              litresOfPureAlcohol = BigDecimal("12041.00"),
-              dutyDue = BigDecimal("63456.07"),
+    GetReturnDetailsSuccess(
+      GetReturnDetails(
+        processingDate = now,
+        idDetails = IdDetails(adReference = appaId, submissionID = submissionId),
+        chargeDetails = ChargeDetails(
+          periodKey = periodKey,
+          chargeReference = Some(chargeReference),
+          periodFrom = periodDate,
+          periodTo = YearMonth.from(periodDate).atEndOfMonth(),
+          receiptDate = now
+        ),
+        alcoholProducts = AlcoholProducts(
+          alcoholProductsProducedFilled = true,
+          regularReturn = Some(
+            Seq(
+              RegularReturnDetails(
+                taxType = "301",
+                dutyRate = BigDecimal("5.27"),
+                litresProduced = BigDecimal("240000.02"),
+                litresOfPureAlcohol = BigDecimal("12041.00"),
+                dutyDue = BigDecimal("63456.07"),
+                productName = None
+              )
+            )
+          )
+        ),
+        overDeclaration = OverDeclaration(
+          overDeclFilled = true,
+          reasonForOverDecl = Some("Why over-declared"),
+          overDeclarationProducts = Seq(
+            ReturnDetails(
+              returnPeriodAffected = periodKeyFromDate(periodFrom(1, periodDate)),
+              taxType = "302",
+              dutyRate = BigDecimal("3.56"),
+              litresProduced = BigDecimal("5000.79"),
+              litresOfPureAlcohol = BigDecimal("100.58"),
+              dutyDue = BigDecimal("358.07"),
               productName = None
             )
           )
-        )
-      ),
-      overDeclaration = OverDeclaration(
-        overDeclFilled = true,
-        reasonForOverDecl = Some("Why over-declared"),
-        overDeclarationProducts = Seq(
-          ReturnDetails(
-            returnPeriodAffected = periodKeyFromDate(periodFrom(1, periodDate)),
-            taxType = "302",
-            dutyRate = BigDecimal("3.56"),
-            litresProduced = BigDecimal("5000.79"),
-            litresOfPureAlcohol = BigDecimal("100.58"),
-            dutyDue = BigDecimal("358.07"),
-            productName = None
+        ),
+        underDeclaration = UnderDeclaration(
+          underDeclFilled = true,
+          reasonForUnderDecl = Some("Why under-declared"),
+          underDeclarationProducts = Seq(
+            ReturnDetails(
+              returnPeriodAffected = periodKeyFromDate(periodFrom(2, periodDate)),
+              taxType = "301",
+              dutyRate = BigDecimal("5.27"),
+              litresProduced = BigDecimal("49000.78"),
+              litresOfPureAlcohol = BigDecimal("989"),
+              dutyDue = BigDecimal("5212.03"),
+              productName = None
+            )
           )
-        )
-      ),
-      underDeclaration = UnderDeclaration(
-        underDeclFilled = true,
-        reasonForUnderDecl = Some("Why under-declared"),
-        underDeclarationProducts = Seq(
-          ReturnDetails(
-            returnPeriodAffected = periodKeyFromDate(periodFrom(2, periodDate)),
-            taxType = "301",
-            dutyRate = BigDecimal("5.27"),
-            litresProduced = BigDecimal("49000.78"),
-            litresOfPureAlcohol = BigDecimal("989"),
-            dutyDue = BigDecimal("5212.03"),
-            productName = None
+        ),
+        spoiltProduct = SpoiltProduct(
+          spoiltProdFilled = true,
+          spoiltProductProducts = Seq(
+            ReturnDetails(
+              returnPeriodAffected = periodKeyFromDate(periodFrom(3, periodDate)),
+              taxType = "305",
+              dutyRate = BigDecimal("1.75"),
+              litresProduced = BigDecimal("50000.69"),
+              litresOfPureAlcohol = BigDecimal("1000.94"),
+              dutyDue = BigDecimal("1751.65"),
+              productName = None
+            )
           )
-        )
-      ),
-      spoiltProduct = SpoiltProduct(
-        spoiltProdFilled = true,
-        spoiltProductProducts = Seq(
-          ReturnDetails(
-            returnPeriodAffected = periodKeyFromDate(periodFrom(3, periodDate)),
-            taxType = "305",
-            dutyRate = BigDecimal("1.75"),
-            litresProduced = BigDecimal("50000.69"),
-            litresOfPureAlcohol = BigDecimal("1000.94"),
-            dutyDue = BigDecimal("1751.65"),
-            productName = None
+        ),
+        drawback = Drawback(
+          drawbackFilled = true,
+          drawbackProducts = Seq(
+            ReturnDetails(
+              returnPeriodAffected = periodKeyFromDate(periodFrom(4, periodDate)),
+              taxType = "309",
+              dutyRate = BigDecimal("5.12"),
+              litresProduced = BigDecimal("60000.02"),
+              litresOfPureAlcohol = BigDecimal("1301.11"),
+              dutyDue = BigDecimal("6661.69"),
+              productName = None
+            )
           )
-        )
-      ),
-      drawback = Drawback(
-        drawbackFilled = true,
-        drawbackProducts = Seq(
-          ReturnDetails(
-            returnPeriodAffected = periodKeyFromDate(periodFrom(4, periodDate)),
-            taxType = "309",
-            dutyRate = BigDecimal("5.12"),
-            litresProduced = BigDecimal("60000.02"),
-            litresOfPureAlcohol = BigDecimal("1301.11"),
-            dutyDue = BigDecimal("6661.69"),
-            productName = None
+        ),
+        repackagedDraught = RepackagedDraught(
+          repDraughtFilled = true,
+          repackagedDraughtProducts = Seq(
+            RepackagedDraughtProduct(
+              returnPeriodAffected = periodKeyFromDate(periodFrom(5, periodDate)),
+              originaltaxType = "300",
+              originaldutyRate = BigDecimal("0.64"),
+              newTaxType = "304",
+              dutyRate = BigDecimal("12.76"),
+              litresOfRepackaging = BigDecimal("5000.97"),
+              litresOfPureAlcohol = BigDecimal("100.81"),
+              dutyDue = BigDecimal("1221.82"),
+              productName = None
+            )
           )
-        )
-      ),
-      repackagedDraught = RepackagedDraught(
-        repDraughtFilled = true,
-        repackagedDraughtProducts = Seq(
-          RepackagedDraughtProduct(
-            returnPeriodAffected = periodKeyFromDate(periodFrom(5, periodDate)),
-            originaltaxType = "300",
-            originaldutyRate = BigDecimal("0.64"),
-            newTaxType = "304",
-            dutyRate = BigDecimal("12.76"),
-            litresOfRepackaging = BigDecimal("5000.97"),
-            litresOfPureAlcohol = BigDecimal("100.81"),
-            dutyDue = BigDecimal("1221.82"),
-            productName = None
+        ),
+        totalDutyDuebyTaxType =
+          Some(Seq(TotalDutyDuebyTaxType(taxType = "301", totalDutyDueTaxType = BigDecimal("1.0")))),
+        totalDutyDue = TotalDutyDue(
+          totalDutyDueAlcoholProducts = BigDecimal("63456.07"),
+          totalDutyOverDeclaration = BigDecimal("358.07"),
+          totalDutyUnderDeclaration = BigDecimal("5212.03"),
+          totalDutySpoiltProduct = BigDecimal("1751.65"),
+          totalDutyDrawback = BigDecimal("6661.69"),
+          totalDutyRepDraughtProducts = BigDecimal("1221.82"),
+          totalDutyDue = BigDecimal("61118.51")
+        ),
+        netDutySuspension = NetDutySuspension(
+          netDutySuspensionFilled = true,
+          netDutySuspensionProducts = Some(
+            NetDutySuspensionProducts(
+              totalLtsBeer = Some(BigDecimal("0.15")),
+              totalLtsWine = Some(BigDecimal("0.44")),
+              totalLtsCider = Some(BigDecimal("0.38")),
+              totalLtsSpirit = Some(BigDecimal("0.02")),
+              totalLtsOtherFermented = Some(BigDecimal("0.02")),
+              totalLtsPureAlcoholBeer = Some(BigDecimal("0.4248")),
+              totalLtsPureAlcoholWine = Some(BigDecimal("0.5965")),
+              totalLtsPureAlcoholCider = Some(BigDecimal("0.0379")),
+              totalLtsPureAlcoholSpirit = Some(BigDecimal("0.2492")),
+              totalLtsPureAlcoholOtherFermented = Some(BigDecimal("0.1894"))
+            )
           )
-        )
-      ),
-      totalDutyDuebyTaxType =
-        Some(Seq(TotalDutyDuebyTaxType(taxType = "301", totalDutyDueTaxType = BigDecimal("1.0")))),
-      totalDutyDue = TotalDutyDue(
-        totalDutyDueAlcoholProducts = BigDecimal("63456.07"),
-        totalDutyOverDeclaration = BigDecimal("358.07"),
-        totalDutyUnderDeclaration = BigDecimal("5212.03"),
-        totalDutySpoiltProduct = BigDecimal("1751.65"),
-        totalDutyDrawback = BigDecimal("6661.69"),
-        totalDutyRepDraughtProducts = BigDecimal("1221.82"),
-        totalDutyDue = BigDecimal("61118.51")
-      ),
-      netDutySuspension = NetDutySuspension(
-        netDutySuspensionFilled = true,
-        netDutySuspensionProducts = Some(
-          NetDutySuspensionProducts(
-            totalLtsBeer = Some(BigDecimal("0.15")),
-            totalLtsWine = Some(BigDecimal("0.44")),
-            totalLtsCider = Some(BigDecimal("0.38")),
-            totalLtsSpirit = Some(BigDecimal("0.02")),
-            totalLtsOtherFermented = Some(BigDecimal("0.02")),
-            totalLtsPureAlcoholBeer = Some(BigDecimal("0.4248")),
-            totalLtsPureAlcoholWine = Some(BigDecimal("0.5965")),
-            totalLtsPureAlcoholCider = Some(BigDecimal("0.0379")),
-            totalLtsPureAlcoholSpirit = Some(BigDecimal("0.2492")),
-            totalLtsPureAlcoholOtherFermented = Some(BigDecimal("0.1894"))
-          )
-        )
-      ),
-      spiritsProduced = Some(
-        SpiritsProduced(
-          spiritsProdFilled = true,
-          spiritsProduced = Some(
-            SpiritsProducedDetails(
-              totalSpirits = BigDecimal("0.05"),
-              scotchWhiskey = BigDecimal("0.26"),
-              irishWhisky = BigDecimal("0.16"),
-              typeOfSpirit = Seq(NeutralSpiritAgricultural),
-              typeOfSpiritOther = Some("Coco Pops Vodka"),
-              code1MaltedBarley = Some(BigDecimal("0.17")),
-              code2Other = Some(true),
-              maltedGrainQuantity = Some(BigDecimal("0.55")),
-              maltedGrainType = Some("wheat"),
-              code3Wheat = Some(BigDecimal("0.8")),
-              code4Maize = Some(BigDecimal("0.67")),
-              code5Rye = Some(BigDecimal("0.13")),
-              code6UnmaltedGrain = Some(BigDecimal("0.71")),
-              code7EthyleneGas = Some(BigDecimal("0.45")),
-              code8Molassess = Some(BigDecimal("0.31")),
-              code9Beer = Some(BigDecimal("0.37")),
-              code10Wine = Some(BigDecimal("0.76")),
-              code11MadeWine = Some(BigDecimal("0.6")),
-              code12CiderOrPerry = Some(BigDecimal("0.04")),
-              code13Other = Some(true),
-              otherMaterialsQuantity = Some(BigDecimal("0.26")),
-              otherMaterialUom = Some(Tonnes),
-              otherMaterialsType = Some("Coco Pops")
+        ),
+        spiritsProduced = Some(
+          SpiritsProduced(
+            spiritsProdFilled = true,
+            spiritsProduced = Some(
+              SpiritsProducedDetails(
+                totalSpirits = BigDecimal("0.05"),
+                scotchWhiskey = BigDecimal("0.26"),
+                irishWhisky = BigDecimal("0.16"),
+                typeOfSpirit = Seq(NeutralSpiritAgricultural),
+                typeOfSpiritOther = Some("Coco Pops Vodka"),
+                code1MaltedBarley = Some(BigDecimal("0.17")),
+                code2Other = Some(true),
+                maltedGrainQuantity = Some(BigDecimal("0.55")),
+                maltedGrainType = Some("wheat"),
+                code3Wheat = Some(BigDecimal("0.8")),
+                code4Maize = Some(BigDecimal("0.67")),
+                code5Rye = Some(BigDecimal("0.13")),
+                code6UnmaltedGrain = Some(BigDecimal("0.71")),
+                code7EthyleneGas = Some(BigDecimal("0.45")),
+                code8Molassess = Some(BigDecimal("0.31")),
+                code9Beer = Some(BigDecimal("0.37")),
+                code10Wine = Some(BigDecimal("0.76")),
+                code11MadeWine = Some(BigDecimal("0.6")),
+                code12CiderOrPerry = Some(BigDecimal("0.04")),
+                code13Other = Some(true),
+                otherMaterialsQuantity = Some(BigDecimal("0.26")),
+                otherMaterialUom = Some(Tonnes),
+                otherMaterialsType = Some("Coco Pops")
+              )
             )
           )
         )
