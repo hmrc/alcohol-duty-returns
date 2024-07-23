@@ -22,15 +22,14 @@ import uk.gov.hmrc.alcoholdutyreturns.models.AlcoholRegime.{Beer, Cider, OtherFe
 import uk.gov.hmrc.alcoholdutyreturns.models.ApprovalStatus.Approved
 import uk.gov.hmrc.alcoholdutyreturns.models.{AlcoholRegimes, ObligationData, ReturnAndUserDetails, ReturnId, SubscriptionSummary, UserAnswers}
 import uk.gov.hmrc.alcoholdutyreturns.models.ObligationStatus.{Fulfilled, Open}
-import uk.gov.hmrc.alcoholdutyreturns.models.returns.OtherMaterialsUomType.Tonnes
-import uk.gov.hmrc.alcoholdutyreturns.models.returns.TypeOfSpiritType.NeutralSpiritAgricultural
-import uk.gov.hmrc.alcoholdutyreturns.models.returns.{AdrReturnAdjustments, AdrReturnAdjustmentsRow, AdrReturnAlcoholDeclared, AdrReturnAlcoholDeclaredRow, AdrReturnDetails, AdrReturnDetailsIdentification, AdrReturnTotalDutyDue, AlcoholProducts, ChargeDetails, Drawback, GetReturnDetails, GetReturnDetailsSuccess, IdDetails, NetDutySuspension, NetDutySuspensionProducts, OverDeclaration, RegularReturnDetails, RepackagedDraught, RepackagedDraughtProduct, ReturnDetails, SpiritsProduced, SpiritsProducedDetails, SpoiltProduct, TotalDutyDue, TotalDutyDuebyTaxType, UnderDeclaration}
+import uk.gov.hmrc.alcoholdutyreturns.models.returns.{AdrAdjustmentItem, AdrAdjustments, AdrAlcoholQuantity, AdrDuty, AdrDutyDeclared, AdrDutyDeclaredItem, AdrDutySuspended, AdrDutySuspendedAlcoholRegime, AdrDutySuspendedProduct, AdrOtherIngredient, AdrRepackagedDraughtAdjustmentItem, AdrReturnAdjustments, AdrReturnAdjustmentsRow, AdrReturnAlcoholDeclared, AdrReturnAlcoholDeclaredRow, AdrReturnDetails, AdrReturnDetailsIdentification, AdrReturnTotalDutyDue, AdrReturnsSubmission, AdrSpirits, AdrSpiritsGrainsQuantities, AdrSpiritsIngredientsVolumes, AdrSpiritsProduced, AdrSpiritsVolumes, AdrTotals, AdrTypeOfSpirit, AdrUnitOfMeasure, AlcoholProducts, ChargeDetails, Drawback, GetReturnDetails, GetReturnDetailsSuccess, IdDetails, NetDutySuspension, NetDutySuspensionProducts, OtherMaterialsUomType, OverDeclaration, RegularReturnDetails, RepackagedDraught, RepackagedDraughtProduct, ReturnCreate, ReturnCreatedDetails, ReturnCreatedSuccess, ReturnDetails, SpiritsProduced, SpiritsProducedDetails, SpoiltProduct, TotalDutyDue, TotalDutyDuebyTaxType, TypeOfSpiritType, UnderDeclaration}
 
 import java.time.{Clock, Instant, LocalDate, YearMonth, ZoneId}
 
 trait TestData extends ModelGenerators {
   val clock = Clock.fixed(Instant.ofEpochMilli(1718118467838L), ZoneId.of("UTC"))
 
+  val regime: String          = "AD"
   val appaId: String          = appaIdGen.sample.get
   val periodKey: String       = periodKeyGen.sample.get
   val groupId: String         = "groupId"
@@ -83,7 +82,7 @@ trait TestData extends ModelGenerators {
     newDate.withDayOfMonth(adrPeriodStartDay)
   }
 
-  def successfulReturnsExample(
+  def successfulReturnExample(
     appaId: String,
     periodKey: String,
     submissionId: String,
@@ -228,7 +227,7 @@ trait TestData extends ModelGenerators {
                 totalSpirits = BigDecimal("0.05"),
                 scotchWhiskey = BigDecimal("0.26"),
                 irishWhisky = BigDecimal("0.16"),
-                typeOfSpirit = Seq(NeutralSpiritAgricultural),
+                typeOfSpirit = Set(TypeOfSpiritType.NeutralSpiritAgricultural),
                 typeOfSpiritOther = Some("Coco Pops Vodka"),
                 code1MaltedBarley = Some(BigDecimal("0.17")),
                 code2Other = Some(true),
@@ -239,14 +238,14 @@ trait TestData extends ModelGenerators {
                 code5Rye = Some(BigDecimal("0.13")),
                 code6UnmaltedGrain = Some(BigDecimal("0.71")),
                 code7EthyleneGas = Some(BigDecimal("0.45")),
-                code8Molassess = Some(BigDecimal("0.31")),
+                code8Molasses = Some(BigDecimal("0.31")),
                 code9Beer = Some(BigDecimal("0.37")),
                 code10Wine = Some(BigDecimal("0.76")),
                 code11MadeWine = Some(BigDecimal("0.6")),
                 code12CiderOrPerry = Some(BigDecimal("0.04")),
                 code13Other = Some(true),
                 otherMaterialsQuantity = Some(BigDecimal("0.26")),
-                otherMaterialUom = Some(Tonnes),
+                otherMaterialsUom = Some(OtherMaterialsUomType.Tonnes),
                 otherMaterialsType = Some("Coco Pops")
               )
             )
@@ -439,5 +438,383 @@ trait TestData extends ModelGenerators {
         total = BigDecimal("-19434")
       ),
       totalDutyDue = AdrReturnTotalDutyDue(totalDue = BigDecimal("55815"))
+    )
+
+  val exampleReturnsSubmissionRequest: AdrReturnsSubmission = AdrReturnsSubmission(
+    dutyDeclared = AdrDutyDeclared(
+      declared = true,
+      dutyDeclaredItems = Seq(
+        AdrDutyDeclaredItem(
+          quantityDeclared = AdrAlcoholQuantity(
+            litres = BigDecimal("1000.10"),
+            lpa = BigDecimal("100.1010")
+          ),
+          dutyDue = AdrDuty(
+            taxCode = "331",
+            dutyRate = BigDecimal("1.27"),
+            dutyDue = BigDecimal("127.12")
+          )
+        ),
+        AdrDutyDeclaredItem(
+          quantityDeclared = AdrAlcoholQuantity(
+            litres = BigDecimal("2000.21"),
+            lpa = BigDecimal("200.2022")
+          ),
+          dutyDue = AdrDuty(
+            taxCode = "332",
+            dutyRate = BigDecimal("1.57"),
+            dutyDue = BigDecimal("314.31")
+          )
+        )
+      )
+    ),
+    adjustments = AdrAdjustments(
+      overDeclarationDeclared = true,
+      reasonForOverDeclaration = Some("Submitted too much"),
+      overDeclarationProducts = Seq(
+        AdrAdjustmentItem(
+          returnPeriod = "24AD",
+          adjustmentQuantity = AdrAlcoholQuantity(
+            litres = BigDecimal("400.04"),
+            lpa = BigDecimal("40.0404")
+          ),
+          dutyDue = AdrDuty(
+            taxCode = "352",
+            dutyRate = BigDecimal("1.32"),
+            dutyDue = BigDecimal("-52.85")
+          )
+        )
+      ),
+      underDeclarationDeclared = true,
+      reasonForUnderDeclaration = Some("Submitted too little"),
+      underDeclarationProducts = Seq(
+        AdrAdjustmentItem(
+          returnPeriod = "24AC",
+          adjustmentQuantity = AdrAlcoholQuantity(
+            litres = BigDecimal("300.03"),
+            lpa = BigDecimal("30.0303")
+          ),
+          dutyDue = AdrDuty(
+            taxCode = "351",
+            dutyRate = BigDecimal("2.32"),
+            dutyDue = BigDecimal("69.67")
+          )
+        )
+      ),
+      spoiltProductDeclared = true,
+      spoiltProducts = Seq(
+        AdrAdjustmentItem(
+          returnPeriod = "24AE",
+          adjustmentQuantity = AdrAlcoholQuantity(
+            litres = BigDecimal("500.05"),
+            lpa = BigDecimal("50.0505")
+          ),
+          dutyDue = AdrDuty(
+            taxCode = "353",
+            dutyRate = BigDecimal("1.82"),
+            dutyDue = BigDecimal("-91.09")
+          )
+        )
+      ),
+      drawbackDeclared = true,
+      drawbackProducts = Seq(
+        AdrAdjustmentItem(
+          returnPeriod = "24AF",
+          adjustmentQuantity = AdrAlcoholQuantity(
+            litres = BigDecimal("600.06"),
+            lpa = BigDecimal("60.0606")
+          ),
+          dutyDue = AdrDuty(
+            taxCode = "361",
+            dutyRate = BigDecimal("2.21"),
+            dutyDue = BigDecimal("-132.73")
+          )
+        )
+      ),
+      repackagedDraughtDeclared = true,
+      repackagedDraughtProducts = Seq(
+        AdrRepackagedDraughtAdjustmentItem(
+          returnPeriod = "24AG",
+          originalTaxCode = "371",
+          originalDutyRate = BigDecimal("0.27"),
+          newTaxCode = "331",
+          newDutyRate = BigDecimal("1.27"),
+          repackagedQuantity = AdrAlcoholQuantity(
+            litres = BigDecimal("700.07"),
+            lpa = BigDecimal("70.0707")
+          ),
+          dutyAdjustment = BigDecimal("70.07")
+        )
+      )
+    ),
+    dutySuspended = AdrDutySuspended(
+      declared = true,
+      dutySuspendedProducts = Set(
+        AdrDutySuspendedProduct(
+          regime = AdrDutySuspendedAlcoholRegime.Beer,
+          suspendedQuantity = AdrAlcoholQuantity(
+            litres = BigDecimal("101.10"),
+            lpa = BigDecimal("1010.1011")
+          )
+        ),
+        AdrDutySuspendedProduct(
+          regime = AdrDutySuspendedAlcoholRegime.Wine,
+          suspendedQuantity = AdrAlcoholQuantity(
+            litres = BigDecimal("202.20"),
+            lpa = BigDecimal("2020.2022")
+          )
+        ),
+        AdrDutySuspendedProduct(
+          regime = AdrDutySuspendedAlcoholRegime.Cider,
+          suspendedQuantity = AdrAlcoholQuantity(
+            litres = BigDecimal("303.30"),
+            lpa = BigDecimal("3030.3033")
+          )
+        ),
+        AdrDutySuspendedProduct(
+          regime = AdrDutySuspendedAlcoholRegime.Spirits,
+          suspendedQuantity = AdrAlcoholQuantity(
+            litres = BigDecimal("404.40"),
+            lpa = BigDecimal("4040.4044")
+          )
+        ),
+        AdrDutySuspendedProduct(
+          regime = AdrDutySuspendedAlcoholRegime.OtherFermentedProduct,
+          suspendedQuantity = AdrAlcoholQuantity(
+            litres = BigDecimal("505.50"),
+            lpa = BigDecimal("5050.5055")
+          )
+        )
+      )
+    ),
+    spirits = Some(
+      AdrSpirits(
+        spiritsDeclared = true,
+        spiritsProduced = Some(
+          AdrSpiritsProduced(
+            spiritsVolumes = AdrSpiritsVolumes(
+              totalSpirits = BigDecimal("123.45"),
+              scotchWhiskey = BigDecimal("234.56"),
+              irishWhisky = BigDecimal("345.67")
+            ),
+            typesOfSpirit = Set(AdrTypeOfSpirit.Malt, AdrTypeOfSpirit.Beer, AdrTypeOfSpirit.Other),
+            otherSpiritTypeName = Some("MaltyBeer"),
+            hasOtherMaltedGrain = true,
+            grainsQuantities = AdrSpiritsGrainsQuantities(
+              maltedBarley = Some(BigDecimal("10.00")),
+              otherMaltedGrain = Some(BigDecimal("11.11")),
+              wheat = Some(BigDecimal("22.22")),
+              maize = Some(BigDecimal("33.33")),
+              rye = Some(BigDecimal("44.44")),
+              unmaltedGrain = Some(BigDecimal("55.55"))
+            ),
+            otherMaltedGrainType = Some("Smarties"),
+            ingredientsVolumes = AdrSpiritsIngredientsVolumes(
+              ethylene = Some(BigDecimal("10.10")),
+              molasses = Some(BigDecimal("20.20")),
+              beer = Some(BigDecimal("30.30")),
+              wine = Some(BigDecimal("40.40")),
+              madeWine = Some(BigDecimal("50.50")),
+              ciderOrPerry = Some(BigDecimal("60.60"))
+            ),
+            otherIngredient = Some(
+              AdrOtherIngredient(
+                quantity = BigDecimal("70.70"),
+                unitOfMeasure = AdrUnitOfMeasure.Tonnes,
+                ingredientName = "Coco Pops"
+              )
+            )
+          )
+        )
+      )
+    ),
+    totals = AdrTotals(
+      declaredDutyDue = BigDecimal("441.53"),
+      overDeclaration = BigDecimal("-52.85"),
+      underDeclaration = BigDecimal("69.67"),
+      spoiltProduct = BigDecimal("-91.09"),
+      drawback = BigDecimal("-132.73"),
+      repackagedDraught = BigDecimal("70.07"),
+      totalDutyDue = BigDecimal("304.60")
+    )
+  )
+
+  def returnCreateSubmission(periodKey: String): ReturnCreate =
+    ReturnCreate(
+      periodKey = periodKey,
+      alcoholProducts = AlcoholProducts(
+        alcoholProductsProducedFilled = true,
+        regularReturn = Some(
+          List(
+            RegularReturnDetails(
+              taxType = "331",
+              dutyRate = BigDecimal("1.27"),
+              litresProduced = BigDecimal("1000.10"),
+              litresOfPureAlcohol = BigDecimal("100.1010"),
+              dutyDue = BigDecimal("127.12"),
+              productName = None
+            ),
+            RegularReturnDetails(
+              taxType = "332",
+              dutyRate = BigDecimal("1.57"),
+              litresProduced = BigDecimal("2000.21"),
+              litresOfPureAlcohol = BigDecimal("200.2022"),
+              dutyDue = BigDecimal("314.31"),
+              productName = None
+            )
+          )
+        )
+      ),
+      overDeclaration = OverDeclaration(
+        overDeclFilled = true,
+        reasonForOverDecl = Some("Submitted too much"),
+        overDeclarationProducts = List(
+          ReturnDetails(
+            returnPeriodAffected = "24AD",
+            taxType = "352",
+            dutyRate = BigDecimal("1.32"),
+            litresProduced = BigDecimal("400.04"),
+            litresOfPureAlcohol = BigDecimal("40.0404"),
+            dutyDue = BigDecimal("52.85"),
+            productName = None
+          )
+        )
+      ),
+      underDeclaration = UnderDeclaration(
+        underDeclFilled = true,
+        reasonForUnderDecl = Some("Submitted too little"),
+        underDeclarationProducts = List(
+          ReturnDetails(
+            returnPeriodAffected = "24AC",
+            taxType = "351",
+            dutyRate = BigDecimal("2.32"),
+            litresProduced = BigDecimal("300.03"),
+            litresOfPureAlcohol = BigDecimal("30.0303"),
+            dutyDue = BigDecimal("69.67"),
+            productName = None
+          )
+        )
+      ),
+      spoiltProduct = SpoiltProduct(
+        spoiltProdFilled = true,
+        spoiltProductProducts = List(
+          ReturnDetails(
+            returnPeriodAffected = "24AE",
+            taxType = "353",
+            dutyRate = BigDecimal("1.82"),
+            litresProduced = BigDecimal("500.05"),
+            litresOfPureAlcohol = BigDecimal("50.0505"),
+            dutyDue = BigDecimal("91.09"),
+            productName = None
+          )
+        )
+      ),
+      drawback = Drawback(
+        drawbackFilled = true,
+        drawbackProducts = List(
+          ReturnDetails(
+            returnPeriodAffected = "24AF",
+            taxType = "361",
+            dutyRate = BigDecimal("2.21"),
+            litresProduced = BigDecimal("600.06"),
+            litresOfPureAlcohol = BigDecimal("60.0606"),
+            dutyDue = BigDecimal("132.73"),
+            productName = None
+          )
+        )
+      ),
+      repackagedDraught = RepackagedDraught(
+        repDraughtFilled = true,
+        repackagedDraughtProducts = List(
+          RepackagedDraughtProduct(
+            returnPeriodAffected = "24AG",
+            originaltaxType = "371",
+            originaldutyRate = BigDecimal("0.27"),
+            newTaxType = "331",
+            dutyRate = BigDecimal("1.27"),
+            litresOfRepackaging = BigDecimal("700.07"),
+            litresOfPureAlcohol = BigDecimal("70.0707"),
+            dutyDue = BigDecimal("70.07"),
+            productName = None
+          )
+        )
+      ),
+      totalDutyDuebyTaxType = None,
+      totalDutyDue = TotalDutyDue(
+        totalDutyDueAlcoholProducts = BigDecimal("441.53"),
+        totalDutyOverDeclaration = BigDecimal("52.85"),
+        totalDutyUnderDeclaration = BigDecimal("69.67"),
+        totalDutySpoiltProduct = BigDecimal("91.09"),
+        totalDutyDrawback = BigDecimal("132.73"),
+        totalDutyRepDraughtProducts = BigDecimal("70.07"),
+        totalDutyDue = BigDecimal("304.60")
+      ),
+      netDutySuspension = NetDutySuspension(
+        netDutySuspensionFilled = true,
+        netDutySuspensionProducts = Some(
+          NetDutySuspensionProducts(
+            totalLtsBeer = Some(BigDecimal("101.10")),
+            totalLtsWine = Some(BigDecimal("202.20")),
+            totalLtsCider = Some(BigDecimal("303.30")),
+            totalLtsSpirit = Some(BigDecimal("404.40")),
+            totalLtsOtherFermented = Some(BigDecimal("505.50")),
+            totalLtsPureAlcoholBeer = Some(BigDecimal("1010.1011")),
+            totalLtsPureAlcoholWine = Some(BigDecimal("2020.2022")),
+            totalLtsPureAlcoholCider = Some(BigDecimal("3030.3033")),
+            totalLtsPureAlcoholSpirit = Some(BigDecimal("4040.4044")),
+            totalLtsPureAlcoholOtherFermented = Some(BigDecimal("5050.5055"))
+          )
+        )
+      ),
+      spiritsProduced = Some(
+        SpiritsProduced(
+          spiritsProdFilled = true,
+          spiritsProduced = Some(
+            SpiritsProducedDetails(
+              totalSpirits = BigDecimal("123.45"),
+              scotchWhiskey = BigDecimal("234.56"),
+              irishWhisky = BigDecimal("345.67"),
+              typeOfSpirit = Set(TypeOfSpiritType.MaltSpirit, TypeOfSpiritType.BeerBased, TypeOfSpiritType.Other),
+              typeOfSpiritOther = Some("MaltyBeer"),
+              code1MaltedBarley = Some(BigDecimal("10.00")),
+              code2Other = Some(true),
+              maltedGrainQuantity = Some(BigDecimal("11.11")),
+              maltedGrainType = Some("Smarties"),
+              code3Wheat = Some(BigDecimal("22.22")),
+              code4Maize = Some(BigDecimal("33.33")),
+              code5Rye = Some(BigDecimal("44.44")),
+              code6UnmaltedGrain = Some(BigDecimal("55.55")),
+              code7EthyleneGas = Some(BigDecimal("10.10")),
+              code8Molasses = Some(BigDecimal("20.20")),
+              code9Beer = Some(BigDecimal("30.30")),
+              code10Wine = Some(BigDecimal("40.40")),
+              code11MadeWine = Some(BigDecimal("50.50")),
+              code12CiderOrPerry = Some(BigDecimal("60.60")),
+              code13Other = Some(true),
+              otherMaterialsQuantity = Some(BigDecimal("70.70")),
+              otherMaterialsUom = Some(OtherMaterialsUomType.Tonnes),
+              otherMaterialsType = Some("Coco Pops")
+            )
+          )
+        )
+      )
+    )
+
+  private val dueDate = 25
+
+  def returnCreatedSuccessfulResponse(
+    periodKey: String,
+    total: BigDecimal,
+    now: Instant
+  ): ReturnCreatedSuccess =
+    ReturnCreatedSuccess(
+      ReturnCreatedDetails(
+        processingDate = now,
+        adReference = appaId,
+        amount = total,
+        chargeReference = if (total > 0) Some(chargeReference) else None,
+        paymentDueDate = PeriodKey.toYearMonth(periodKey).plusMonths(1).atDay(dueDate),
+        submissionID = Some(submissionId)
+      )
     )
 }

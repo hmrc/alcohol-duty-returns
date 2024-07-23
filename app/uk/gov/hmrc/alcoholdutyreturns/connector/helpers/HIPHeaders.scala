@@ -29,17 +29,28 @@ class HIPHeaders @Inject() (randomUUIDGenerator: RandomUUIDGenerator, appConfig:
   private val xOriginatingSystemHeader: String  = "X-Originating-System"
   private val xReceiptDateHeader: String        = "X-Receipt-Date"
   private val xTransmittingSystemHeader: String = "X-Transmitting-System"
+  private val xZAD: String                      = "X-ZAD"
 
   private val mdtp = "MDTP"
   private val hip  = "HIP"
 
-  def returnsHeaders(): Seq[(String, String)] =
+  def getReturnsHeaders: Seq[(String, String)] =
     Seq(
       (HeaderNames.AUTHORIZATION, authorization()),
       (correlationIdHeader, randomUUIDGenerator.uuid),
       (xOriginatingSystemHeader, mdtp),
       (xReceiptDateHeader, DateTimeHelper.formatISOInstantSeconds(Instant.now(clock))),
       (xTransmittingSystemHeader, hip)
+    )
+
+  def submitReturnHeaders: Seq[(String, String)] =
+    Seq(
+      (HeaderNames.AUTHORIZATION, authorization()),
+      (correlationIdHeader, randomUUIDGenerator.uuid),
+      (xOriginatingSystemHeader, mdtp),
+      (xReceiptDateHeader, DateTimeHelper.formatISOInstantSeconds(Instant.now(clock))),
+      (xTransmittingSystemHeader, hip),
+      (xZAD, appConfig.regime)
     )
 
   private def authorization(): String = {

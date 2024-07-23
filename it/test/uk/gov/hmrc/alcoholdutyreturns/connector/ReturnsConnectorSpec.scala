@@ -29,54 +29,101 @@ import java.time.Instant
 class ReturnsConnectorSpec extends ISpecBase {
   protected val endpointName = "returns"
 
-  "Returns Connector accounts" should {
-    "successfully get a return" in new SetUp {
-      stubGet(returnsUrl, OK, Json.toJson(returnsData).toString())
-      whenReady(connector.getReturn(returnId).value, timeout = Timeout(Span(3, Seconds))) { result =>
-        result mustBe Right(returnsData.success)
-        verifyGet(returnsUrl)
+  "Returns Connector" when {
+    "getReturn is called" should {
+      "successfully get a return" in new SetUp {
+        stubGet(getReturnUrl, OK, Json.toJson(returnData).toString())
+        whenReady(connector.getReturn(returnId).value, timeout = Timeout(Span(3, Seconds))) { result =>
+          result mustBe Right(returnData.success)
+          verifyGet(getReturnUrl)
+        }
+      }
+
+      "return an InvalidJson error if the call returns an invalid response" in new SetUp {
+        stubGet(getReturnUrl, OK, "invalid")
+        whenReady(connector.getReturn(returnId).value, timeout = Timeout(Span(3, Seconds))) { result =>
+          result mustBe Left(ErrorResponse.InvalidJson)
+          verifyGet(getReturnUrl)
+        }
+      }
+
+      "return a BadRequest error if the call returns a 400 response" in new SetUp {
+        stubGet(getReturnUrl, BAD_REQUEST, Json.toJson(processingError(now)).toString())
+        whenReady(connector.getReturn(returnId).value, timeout = Timeout(Span(3, Seconds))) { result =>
+          result mustBe Left(ErrorResponse.BadRequest)
+          verifyGet(getReturnUrl)
+        }
+      }
+
+      "return a NotFound error if the call returns a 404 response" in new SetUp {
+        stubGet(getReturnUrl, NOT_FOUND, "")
+        whenReady(connector.getReturn(returnId).value, timeout = Timeout(Span(3, Seconds))) { result =>
+          result mustBe Left(ErrorResponse.EntityNotFound)
+          verifyGet(getReturnUrl)
+        }
+      }
+
+      "return a UnexpectedResponse error if the call return a 500 response" in new SetUp {
+        stubGet(getReturnUrl, INTERNAL_SERVER_ERROR, Json.toJson(internalServerError).toString())
+        whenReady(connector.getReturn(returnId).value) { result =>
+          result mustBe Left(ErrorResponse.UnexpectedResponse)
+          verifyGet(getReturnUrl)
+        }
       }
     }
 
-    "return an InvalidJson error if the get subscription summary call returns an invalid response" in new SetUp {
-      stubGet(returnsUrl, OK, "invalid")
-      whenReady(connector.getReturn(returnId).value, timeout = Timeout(Span(3, Seconds))) { result =>
-        result mustBe Left(ErrorResponse.InvalidJson)
-        verifyGet(returnsUrl)
+    "submitReturn is called" should {
+      "successfully submit a return" in new SetUp {
+        stubPost(submitReturnUrl, CREATED, Json.toJson(returnSubmission).toString(), Json.toJson(returnCreated).toString())
+        whenReady(connector.submitReturn(returnSubmission).value, timeout = Timeout(Span(3, Seconds))) { result =>
+          result mustBe Right(returnCreated.success)
+          verifyPost(submitReturnUrl)
+        }
       }
-    }
 
-    "return a BadRequest error if the get subscription summary call returns a 400 response" in new SetUp {
-      stubGet(returnsUrl, BAD_REQUEST, Json.toJson(processingError(now)).toString())
-      whenReady(connector.getReturn(returnId).value, timeout = Timeout(Span(3, Seconds))) { result =>
-        result mustBe Left(ErrorResponse.BadRequest)
-        verifyGet(returnsUrl)
+      "return an InvalidJson error if the call returns an invalid response" in new SetUp {
+        stubPost(submitReturnUrl, CREATED, Json.toJson(returnSubmission).toString(), "invalid")
+        whenReady(connector.submitReturn(returnSubmission).value, timeout = Timeout(Span(3, Seconds))) { result =>
+          result mustBe Left(ErrorResponse.InvalidJson)
+          verifyPost(submitReturnUrl)
+        }
       }
-    }
 
-    "return a NotFound error if the get subscription summary call returns a 404 response" in new SetUp {
-      stubGet(returnsUrl, NOT_FOUND, "")
-      whenReady(connector.getReturn(returnId).value, timeout = Timeout(Span(3, Seconds))) { result =>
-        result mustBe Left(ErrorResponse.EntityNotFound)
-        verifyGet(returnsUrl)
+      "return a BadRequest error if the call returns a 400 response" in new SetUp {
+        stubPost(submitReturnUrl, BAD_REQUEST, Json.toJson(returnSubmission).toString(), Json.toJson(processingError(now)).toString())
+        whenReady(connector.submitReturn(returnSubmission).value, timeout = Timeout(Span(3, Seconds))) { result =>
+          result mustBe Left(ErrorResponse.BadRequest)
+          verifyPost(submitReturnUrl)
+        }
       }
-    }
 
-    "return a UnexpectedResponse error if the get subscription summary call return a 500 response" in new SetUp {
-      stubGet(returnsUrl, INTERNAL_SERVER_ERROR, Json.toJson(internalServerError).toString())
-      whenReady(connector.getReturn(returnId).value) { result =>
-        result mustBe Left(ErrorResponse.UnexpectedResponse)
-        verifyGet(returnsUrl)
+      "return a NotFound error if the call returns a 404 response" in new SetUp {
+        stubPost(submitReturnUrl, NOT_FOUND, Json.toJson(returnSubmission).toString(), "")
+        whenReady(connector.submitReturn(returnSubmission).value, timeout = Timeout(Span(3, Seconds))) { result =>
+          result mustBe Left(ErrorResponse.EntityNotFound)
+          verifyPost(submitReturnUrl)
+        }
+      }
+
+      "return a UnexpectedResponse error if the call returns a 500 response" in new SetUp {
+        stubPost(submitReturnUrl, INTERNAL_SERVER_ERROR, Json.toJson(returnSubmission).toString(), Json.toJson(internalServerError).toString())
+        whenReady(connector.submitReturn(returnSubmission).value) { result =>
+          result mustBe Left(ErrorResponse.UnexpectedResponse)
+          verifyPost(submitReturnUrl)
+        }
       }
     }
   }
 
   class SetUp extends ConnectorFixture {
     val connector = new ReturnsConnector(config = config, httpClient = httpClient, headers = new HIPHeaders(new RandomUUIDGenerator(), config, clock))
-    val returnsUrl = config.getReturnsUrl(returnId)
+    val getReturnUrl = config.getReturnUrl(returnId)
+    val submitReturnUrl = config.submitReturnUrl()
     val periodKey = "24AC"
 
     val now = Instant.now()
-    val returnsData = successfulReturnsExample(appaId, periodKey, submissionId, chargeReference, now)
+    val returnData = successfulReturnExample(appaId, periodKey, submissionId, chargeReference, now)
+    val returnSubmission = returnCreateSubmission(periodKey)
+    val returnCreated = returnCreatedSuccessfulResponse(periodKey, returnSubmission.totalDutyDue.totalDutyDue, now)
   }
 }

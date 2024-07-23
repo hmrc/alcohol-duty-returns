@@ -62,7 +62,7 @@ class ReturnsControllerSpec extends SpecBase {
 
     val periodKey: String = "24AC"
 
-    val returnDetails = successfulReturnsExample(
+    val returnDetails = successfulReturnExample(
       appaId,
       periodKey,
       submissionId,

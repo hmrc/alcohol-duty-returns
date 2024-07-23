@@ -33,9 +33,10 @@ class AppConfig @Inject() (config: Configuration, servicesConfig: ServicesConfig
   private lazy val returnsHost: String =
     servicesConfig.baseUrl("returns")
 
-  lazy val returnsClientId           = getConfStringAndThrowIfNotFound("returns.clientId")
-  lazy val returnsSecret             = getConfStringAndThrowIfNotFound("returns.secret")
-  lazy val returnsGetReturnUrlFormat = new MessageFormat(getConfStringAndThrowIfNotFound("returns.url.getReturn"))
+  lazy val returnsClientId              = getConfStringAndThrowIfNotFound("returns.clientId")
+  lazy val returnsSecret                = getConfStringAndThrowIfNotFound("returns.secret")
+  lazy val returnsGetReturnUrlFormat    = new MessageFormat(getConfStringAndThrowIfNotFound("returns.url.getReturn"))
+  lazy val returnsSubmitReturnUrlFormat = new MessageFormat(getConfStringAndThrowIfNotFound("returns.url.submitReturn"))
 
   val dbTimeToLiveInSeconds: Int = config.get[Int]("mongodb.timeToLiveInSeconds")
 
@@ -48,8 +49,13 @@ class AppConfig @Inject() (config: Configuration, servicesConfig: ServicesConfig
   def getObligationDataUrl(appaId: String): String =
     s"$adrAccountHost/alcohol-duty-account/obligationDetails/$appaId"
 
-  def getReturnsUrl(returnId: ReturnId): String = {
+  def getReturnUrl(returnId: ReturnId): String = {
     val url = returnsGetReturnUrlFormat.format(Array(regime.toLowerCase, returnId.appaId, returnId.periodKey))
+    s"$returnsHost$url"
+  }
+
+  def submitReturnUrl(): String = {
+    val url = returnsSubmitReturnUrlFormat.format(Array(regime.toLowerCase))
     s"$returnsHost$url"
   }
 

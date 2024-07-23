@@ -42,7 +42,7 @@ class AdrReturnDetailsSpec extends SpecBase {
   class SetUp {
     val periodKey: String = "24AC"
 
-    val returnDetails = successfulReturnsExample(
+    val returnDetails = successfulReturnExample(
       appaId,
       periodKey,
       submissionId,
