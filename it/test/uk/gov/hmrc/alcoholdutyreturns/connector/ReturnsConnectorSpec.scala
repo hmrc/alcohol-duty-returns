@@ -75,7 +75,7 @@ class ReturnsConnectorSpec extends ISpecBase {
     "submitReturn is called" should {
       "successfully submit a return" in new SetUp {
         stubPost(submitReturnUrl, CREATED, Json.toJson(returnSubmission).toString(), Json.toJson(returnCreated).toString())
-        whenReady(connector.submitReturn(returnSubmission).value, timeout = Timeout(Span(3, Seconds))) { result =>
+        whenReady(connector.submitReturn(returnSubmission, appaId).value, timeout = Timeout(Span(3, Seconds))) { result =>
           result mustBe Right(returnCreated.success)
           verifyPost(submitReturnUrl)
         }
@@ -83,7 +83,7 @@ class ReturnsConnectorSpec extends ISpecBase {
 
       "return an InvalidJson error if the call returns an invalid response" in new SetUp {
         stubPost(submitReturnUrl, CREATED, Json.toJson(returnSubmission).toString(), "invalid")
-        whenReady(connector.submitReturn(returnSubmission).value, timeout = Timeout(Span(3, Seconds))) { result =>
+        whenReady(connector.submitReturn(returnSubmission, id).value, timeout = Timeout(Span(3, Seconds))) { result =>
           result mustBe Left(ErrorResponse.InvalidJson)
           verifyPost(submitReturnUrl)
         }
@@ -91,7 +91,7 @@ class ReturnsConnectorSpec extends ISpecBase {
 
       "return a BadRequest error if the call returns a 400 response" in new SetUp {
         stubPost(submitReturnUrl, BAD_REQUEST, Json.toJson(returnSubmission).toString(), Json.toJson(processingError(now)).toString())
-        whenReady(connector.submitReturn(returnSubmission).value, timeout = Timeout(Span(3, Seconds))) { result =>
+        whenReady(connector.submitReturn(returnSubmission, id).value, timeout = Timeout(Span(3, Seconds))) { result =>
           result mustBe Left(ErrorResponse.BadRequest)
           verifyPost(submitReturnUrl)
         }
@@ -99,7 +99,7 @@ class ReturnsConnectorSpec extends ISpecBase {
 
       "return a NotFound error if the call returns a 404 response" in new SetUp {
         stubPost(submitReturnUrl, NOT_FOUND, Json.toJson(returnSubmission).toString(), "")
-        whenReady(connector.submitReturn(returnSubmission).value, timeout = Timeout(Span(3, Seconds))) { result =>
+        whenReady(connector.submitReturn(returnSubmission, id).value, timeout = Timeout(Span(3, Seconds))) { result =>
           result mustBe Left(ErrorResponse.EntityNotFound)
           verifyPost(submitReturnUrl)
         }
@@ -107,7 +107,7 @@ class ReturnsConnectorSpec extends ISpecBase {
 
       "return a UnexpectedResponse error if the call returns a 500 response" in new SetUp {
         stubPost(submitReturnUrl, INTERNAL_SERVER_ERROR, Json.toJson(returnSubmission).toString(), Json.toJson(internalServerError).toString())
-        whenReady(connector.submitReturn(returnSubmission).value) { result =>
+        whenReady(connector.submitReturn(returnSubmission, id).value) { result =>
           result mustBe Left(ErrorResponse.UnexpectedResponse)
           verifyPost(submitReturnUrl)
         }
@@ -119,11 +119,15 @@ class ReturnsConnectorSpec extends ISpecBase {
     val connector = new ReturnsConnector(config = config, httpClient = httpClient, headers = new HIPHeaders(new RandomUUIDGenerator(), config, clock))
     val getReturnUrl = config.getReturnUrl(returnId)
     val submitReturnUrl = config.submitReturnUrl()
-    val periodKey = "24AC"
 
+    val periodKey = "24AC"
+    val id = appaId
     val now = Instant.now()
-    val returnData = successfulReturnExample(appaId, periodKey, submissionId, chargeReference, now)
+    val chargeRef = chargeReference
+    val submitId = submissionId
+
+    val returnData = successfulReturnExample(id, periodKey, submissionId, chargeReference, now)
     val returnSubmission = returnCreateSubmission(periodKey)
-    val returnCreated = returnCreatedSuccessfulResponse(periodKey, returnSubmission.totalDutyDue.totalDutyDue, now)
+    val returnCreated = exampleReturnCreatedSuccessfulResponse(periodKey, returnSubmission.totalDutyDue.totalDutyDue, now, chargeRef, submitId)
   }
 }

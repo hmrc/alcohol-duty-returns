@@ -19,12 +19,13 @@ package uk.gov.hmrc.alcoholdutyreturns.controllers
 import org.apache.pekko.util.ByteString
 import play.api.Logging
 import play.api.http.HttpEntity
-import play.api.libs.json.Json
+import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{Action, AnyContent, ControllerComponents, ResponseHeader, Result}
 import uk.gov.hmrc.alcoholdutyreturns.connector.ReturnsConnector
 import uk.gov.hmrc.alcoholdutyreturns.controllers.actions.AuthorisedAction
 import uk.gov.hmrc.alcoholdutyreturns.models.{ErrorResponse, ReturnId}
-import uk.gov.hmrc.alcoholdutyreturns.models.returns.AdrReturnDetails
+import uk.gov.hmrc.alcoholdutyreturns.models.returns.{AdrReturnCreatedDetails, AdrReturnDetails, AdrReturnSubmission}
+import uk.gov.hmrc.alcoholdutyreturns.service.ReturnsService
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import javax.inject.Inject
@@ -32,6 +33,7 @@ import scala.concurrent.ExecutionContext
 
 class ReturnsController @Inject() (
   authorise: AuthorisedAction,
+  returnsService: ReturnsService,
   returnsConnector: ReturnsConnector,
   override val controllerComponents: ControllerComponents
 )(implicit executionContext: ExecutionContext)
@@ -49,6 +51,22 @@ class ReturnsController @Inject() (
           },
           returnDetails => Ok(Json.toJson(returnDetails))
         )
+    }
+
+  def submitReturn(appaId: String, periodKey: String): Action[JsValue] =
+    authorise(parse.json).async { implicit request =>
+      withJsonBody[AdrReturnSubmission] { returnSubmission =>
+        returnsService
+          .submitReturn(returnSubmission, ReturnId(appaId, periodKey))
+          .map(AdrReturnCreatedDetails.fromReturnCreatedDetails)
+          .fold(
+            e => {
+              logger.warn(s"Unable to submit return $periodKey for $appaId: $e")
+              error(e)
+            },
+            returnCreatedDetails => Created(Json.toJson(returnCreatedDetails))
+          )
+      }
     }
 
   def error(errorResponse: ErrorResponse): Result = Result(

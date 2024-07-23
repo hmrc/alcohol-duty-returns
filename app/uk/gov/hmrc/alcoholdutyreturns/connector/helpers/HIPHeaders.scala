@@ -43,14 +43,14 @@ class HIPHeaders @Inject() (randomUUIDGenerator: RandomUUIDGenerator, appConfig:
       (xTransmittingSystemHeader, hip)
     )
 
-  def submitReturnHeaders: Seq[(String, String)] =
+  def submitReturnHeaders(appaId: String): Seq[(String, String)] =
     Seq(
       (HeaderNames.AUTHORIZATION, authorization()),
       (correlationIdHeader, randomUUIDGenerator.uuid),
       (xOriginatingSystemHeader, mdtp),
       (xReceiptDateHeader, DateTimeHelper.formatISOInstantSeconds(Instant.now(clock))),
       (xTransmittingSystemHeader, hip),
-      (xZAD, appConfig.regime)
+      (xZAD, appaId)
     )
 
   private def authorization(): String = {

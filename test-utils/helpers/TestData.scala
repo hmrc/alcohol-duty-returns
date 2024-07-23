@@ -22,7 +22,7 @@ import uk.gov.hmrc.alcoholdutyreturns.models.AlcoholRegime.{Beer, Cider, OtherFe
 import uk.gov.hmrc.alcoholdutyreturns.models.ApprovalStatus.Approved
 import uk.gov.hmrc.alcoholdutyreturns.models.{AlcoholRegimes, ObligationData, ReturnAndUserDetails, ReturnId, SubscriptionSummary, UserAnswers}
 import uk.gov.hmrc.alcoholdutyreturns.models.ObligationStatus.{Fulfilled, Open}
-import uk.gov.hmrc.alcoholdutyreturns.models.returns.{AdrAdjustmentItem, AdrAdjustments, AdrAlcoholQuantity, AdrDuty, AdrDutyDeclared, AdrDutyDeclaredItem, AdrDutySuspended, AdrDutySuspendedAlcoholRegime, AdrDutySuspendedProduct, AdrOtherIngredient, AdrRepackagedDraughtAdjustmentItem, AdrReturnAdjustments, AdrReturnAdjustmentsRow, AdrReturnAlcoholDeclared, AdrReturnAlcoholDeclaredRow, AdrReturnDetails, AdrReturnDetailsIdentification, AdrReturnTotalDutyDue, AdrReturnsSubmission, AdrSpirits, AdrSpiritsGrainsQuantities, AdrSpiritsIngredientsVolumes, AdrSpiritsProduced, AdrSpiritsVolumes, AdrTotals, AdrTypeOfSpirit, AdrUnitOfMeasure, AlcoholProducts, ChargeDetails, Drawback, GetReturnDetails, GetReturnDetailsSuccess, IdDetails, NetDutySuspension, NetDutySuspensionProducts, OtherMaterialsUomType, OverDeclaration, RegularReturnDetails, RepackagedDraught, RepackagedDraughtProduct, ReturnCreate, ReturnCreatedDetails, ReturnCreatedSuccess, ReturnDetails, SpiritsProduced, SpiritsProducedDetails, SpoiltProduct, TotalDutyDue, TotalDutyDuebyTaxType, TypeOfSpiritType, UnderDeclaration}
+import uk.gov.hmrc.alcoholdutyreturns.models.returns.{AdrAdjustmentItem, AdrAdjustments, AdrAlcoholQuantity, AdrDuty, AdrDutyDeclared, AdrDutyDeclaredItem, AdrDutySuspended, AdrDutySuspendedAlcoholRegime, AdrDutySuspendedProduct, AdrOtherIngredient, AdrRepackagedDraughtAdjustmentItem, AdrReturnAdjustments, AdrReturnAdjustmentsRow, AdrReturnAlcoholDeclared, AdrReturnAlcoholDeclaredRow, AdrReturnCreatedDetails, AdrReturnDetails, AdrReturnDetailsIdentification, AdrReturnSubmission, AdrReturnTotalDutyDue, AdrSpirits, AdrSpiritsGrainsQuantities, AdrSpiritsIngredientsVolumes, AdrSpiritsProduced, AdrSpiritsVolumes, AdrTotals, AdrTypeOfSpirit, AdrUnitOfMeasure, AlcoholProducts, ChargeDetails, Drawback, GetReturnDetails, GetReturnDetailsSuccess, IdDetails, NetDutySuspension, NetDutySuspensionProducts, OtherMaterialsUomType, OverDeclaration, RegularReturnDetails, RepackagedDraught, RepackagedDraughtProduct, ReturnCreate, ReturnCreatedDetails, ReturnCreatedSuccess, ReturnDetails, SpiritsProduced, SpiritsProducedDetails, SpoiltProduct, TotalDutyDue, TotalDutyDuebyTaxType, TypeOfSpiritType, UnderDeclaration}
 
 import java.time.{Clock, Instant, LocalDate, YearMonth, ZoneId}
 
@@ -440,7 +440,7 @@ trait TestData extends ModelGenerators {
       totalDutyDue = AdrReturnTotalDutyDue(totalDue = BigDecimal("55815"))
     )
 
-  val exampleReturnsSubmissionRequest: AdrReturnsSubmission = AdrReturnsSubmission(
+  val exampleReturnSubmissionRequest: AdrReturnSubmission = AdrReturnSubmission(
     dutyDeclared = AdrDutyDeclared(
       declared = true,
       dutyDeclaredItems = Seq(
@@ -802,10 +802,12 @@ trait TestData extends ModelGenerators {
 
   private val dueDate = 25
 
-  def returnCreatedSuccessfulResponse(
+  def exampleReturnCreatedSuccessfulResponse(
     periodKey: String,
     total: BigDecimal,
-    now: Instant
+    now: Instant,
+    chargeReference: String,
+    submissionId: String
   ): ReturnCreatedSuccess =
     ReturnCreatedSuccess(
       ReturnCreatedDetails(
@@ -816,5 +818,18 @@ trait TestData extends ModelGenerators {
         paymentDueDate = PeriodKey.toYearMonth(periodKey).plusMonths(1).atDay(dueDate),
         submissionID = Some(submissionId)
       )
+    )
+
+  def exampleReturnCreatedDetails(
+    periodKey: String,
+    total: BigDecimal,
+    now: Instant,
+    chargeReference: String
+  ): AdrReturnCreatedDetails =
+    AdrReturnCreatedDetails(
+      processingDate = now,
+      amount = total,
+      chargeReference = if (total > 0) Some(chargeReference) else None,
+      paymentDueDate = PeriodKey.toYearMonth(periodKey).plusMonths(1).atDay(dueDate)
     )
 }

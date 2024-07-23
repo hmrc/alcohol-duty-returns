@@ -551,19 +551,19 @@ case class ReturnCreate(
 object ReturnCreate {
   implicit val returnCreateFormat: OFormat[ReturnCreate] = Json.format[ReturnCreate]
 
-  def fromAdrReturnsSubmission(adrReturnsSubmission: AdrReturnsSubmission, periodKey: String): ReturnCreate =
+  def fromAdrReturnSubmission(adrReturnSubmission: AdrReturnSubmission, periodKey: String): ReturnCreate =
     ReturnCreate(
       periodKey = periodKey,
-      alcoholProducts = AlcoholProducts.fromAdrDutyDeclared(adrReturnsSubmission.dutyDeclared),
-      overDeclaration = OverDeclaration.fromAdrAdjustments(adrReturnsSubmission.adjustments),
-      underDeclaration = UnderDeclaration.fromAdrAdjustments(adrReturnsSubmission.adjustments),
-      spoiltProduct = SpoiltProduct.fromAdrAdjustments(adrReturnsSubmission.adjustments),
-      drawback = Drawback.fromAdrAdjustments(adrReturnsSubmission.adjustments),
-      repackagedDraught = RepackagedDraught.fromAdrAdjustments(adrReturnsSubmission.adjustments),
+      alcoholProducts = AlcoholProducts.fromAdrDutyDeclared(adrReturnSubmission.dutyDeclared),
+      overDeclaration = OverDeclaration.fromAdrAdjustments(adrReturnSubmission.adjustments),
+      underDeclaration = UnderDeclaration.fromAdrAdjustments(adrReturnSubmission.adjustments),
+      spoiltProduct = SpoiltProduct.fromAdrAdjustments(adrReturnSubmission.adjustments),
+      drawback = Drawback.fromAdrAdjustments(adrReturnSubmission.adjustments),
+      repackagedDraught = RepackagedDraught.fromAdrAdjustments(adrReturnSubmission.adjustments),
       totalDutyDuebyTaxType = None, // TODO Add a method to populate this from calculated values
-      totalDutyDue = TotalDutyDue.fromAdrTotals(adrReturnsSubmission.totals),
-      netDutySuspension = NetDutySuspension.fromAdrDutySuspended(adrReturnsSubmission.dutySuspended),
-      spiritsProduced = adrReturnsSubmission.spirits.map(SpiritsProduced.fromAdrSpirits)
+      totalDutyDue = TotalDutyDue.fromAdrTotals(adrReturnSubmission.totals),
+      netDutySuspension = NetDutySuspension.fromAdrDutySuspended(adrReturnSubmission.dutySuspended),
+      spiritsProduced = adrReturnSubmission.spirits.map(SpiritsProduced.fromAdrSpirits)
     )
 }
 

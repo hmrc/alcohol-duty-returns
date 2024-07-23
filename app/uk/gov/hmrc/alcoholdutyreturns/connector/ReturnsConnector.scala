@@ -63,14 +63,14 @@ class ReturnsConnector @Inject() (
       }
   )
 
-  def submitReturn(returnCreate: ReturnCreate)(implicit
+  def submitReturn(returnToSubmit: ReturnCreate, appaId: String)(implicit
     hc: HeaderCarrier
   ): EitherT[Future, ErrorResponse, ReturnCreatedDetails] = EitherT(
     httpClient
       .POST[ReturnCreate, Either[UpstreamErrorResponse, HttpResponse]](
         url = config.submitReturnUrl(),
-        body = returnCreate,
-        headers = headers.submitReturnHeaders
+        body = returnToSubmit,
+        headers = headers.submitReturnHeaders(appaId)
       )
       .map {
         case Right(response)                                                =>
