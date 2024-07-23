@@ -123,11 +123,9 @@ class ReturnsConnectorSpec extends ISpecBase {
     val periodKey = "24AC"
     val id = appaId
     val now = Instant.now()
-    val chargeRef = chargeReference
-    val submitId = submissionId
 
     val returnData = successfulReturnExample(id, periodKey, submissionId, chargeReference, now)
     val returnSubmission = returnCreateSubmission(periodKey)
-    val returnCreated = exampleReturnCreatedSuccessfulResponse(periodKey, returnSubmission.totalDutyDue.totalDutyDue, now, chargeRef, submitId)
+    val returnCreated = exampleReturnCreatedSuccessfulResponse(periodKey, returnSubmission.totalDutyDue.totalDutyDue, now, chargeReference, submissionId)
   }
 }

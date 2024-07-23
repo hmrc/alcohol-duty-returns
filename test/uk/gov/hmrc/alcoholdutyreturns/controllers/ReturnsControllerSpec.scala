@@ -144,8 +144,6 @@ class ReturnsControllerSpec extends SpecBase {
     val periodKey: String = "24AC"
     val total             = BigDecimal("12345.67")
     val now               = Instant.now()
-    val chargeRef         = chargeReference
-    val submitId          = submissionId
 
     val returnDetails = successfulReturnExample(
       appaId,
@@ -160,7 +158,7 @@ class ReturnsControllerSpec extends SpecBase {
     val adrReturnsSubmission = exampleReturnSubmissionRequest
 
     val returnCreatedDetails    =
-      exampleReturnCreatedSuccessfulResponse(periodKey, total, now, chargeRef, submitId).success
-    val adrReturnCreatedDetails = exampleReturnCreatedDetails(periodKey, total, now, chargeRef)
+      exampleReturnCreatedSuccessfulResponse(periodKey, total, now, chargeReference, submissionId).success
+    val adrReturnCreatedDetails = exampleReturnCreatedDetails(periodKey, total, now, chargeReference)
   }
 }

@@ -54,13 +54,11 @@ class ReturnsServiceSpec extends SpecBase {
     val retId     = returnId.copy(periodKey = periodKey)
     val total     = BigDecimal("12345.67")
     val now       = Instant.now()
-    val chargeRef = chargeReference
-    val submitId  = submissionId
 
     val adrReturnSubmission = exampleReturnSubmissionRequest
     val returnSubmission    = returnCreateSubmission(periodKey)
 
     val returnCreatedDetails =
-      exampleReturnCreatedSuccessfulResponse(periodKey, total, now, chargeRef, submitId).success
+      exampleReturnCreatedSuccessfulResponse(periodKey, total, now, chargeReference, submissionId).success
   }
 }
