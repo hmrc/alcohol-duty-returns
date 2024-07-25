@@ -43,6 +43,7 @@ class ReturnDetailsSpec extends SpecBase {
   "ReturnCreate" should {
     "should be obtained from the submission data" in new SetUp {
       ReturnCreate.fromAdrReturnSubmission(submissionData, periodKey) shouldBe returnCreateSubmissionData
+        .copy(totalDutyDuebyTaxType = None)
     }
   }
 
@@ -106,6 +107,106 @@ class ReturnDetailsSpec extends SpecBase {
     }
   }
 
+  "AlcoholProducts" should {
+    "convert from AdrDutyDeclared" in new SetUp {
+      AlcoholProducts.fromAdrDutyDeclared(
+        submissionData.dutyDeclared
+      ) shouldBe returnCreateSubmissionData.alcoholProducts
+    }
+
+    "not convert when not declared" in new SetUp {
+      AlcoholProducts.fromAdrDutyDeclared(
+        exampleNilSubmissionRequest.dutyDeclared
+      ) shouldBe nilReturnDetails.alcoholProducts
+    }
+  }
+
+  "OverDeclaration" should {
+    "convert from AdrAdjustments" in new SetUp {
+      OverDeclaration.fromAdrAdjustments(submissionData.adjustments) shouldBe returnCreateSubmissionData.overDeclaration
+    }
+
+    "not convert when not declared" in new SetUp {
+      OverDeclaration.fromAdrAdjustments(
+        exampleNilSubmissionRequest.adjustments
+      ) shouldBe nilReturnDetails.overDeclaration
+    }
+  }
+
+  "UnderDeclaration" should {
+    "convert from AdrAdjustments" in new SetUp {
+      UnderDeclaration.fromAdrAdjustments(
+        submissionData.adjustments
+      ) shouldBe returnCreateSubmissionData.underDeclaration
+    }
+
+    "not convert when not declared" in new SetUp {
+      UnderDeclaration.fromAdrAdjustments(
+        exampleNilSubmissionRequest.adjustments
+      ) shouldBe nilReturnDetails.underDeclaration
+    }
+  }
+
+  "SpoiltProduct" should {
+    "convert from AdrAdjustments" in new SetUp {
+      SpoiltProduct.fromAdrAdjustments(submissionData.adjustments) shouldBe returnCreateSubmissionData.spoiltProduct
+    }
+
+    "not convert when not declared" in new SetUp {
+      SpoiltProduct.fromAdrAdjustments(exampleNilSubmissionRequest.adjustments) shouldBe nilReturnDetails.spoiltProduct
+    }
+  }
+
+  "Drawback" should {
+    "convert from AdrAdjustments" in new SetUp {
+      Drawback.fromAdrAdjustments(submissionData.adjustments) shouldBe returnCreateSubmissionData.drawback
+    }
+
+    "not convert when not declared" in new SetUp {
+      Drawback.fromAdrAdjustments(exampleNilSubmissionRequest.adjustments) shouldBe nilReturnDetails.drawback
+    }
+  }
+
+  "RepackagedDraught" should {
+    "convert from AdrAdjustments" in new SetUp {
+      RepackagedDraught.fromAdrAdjustments(
+        submissionData.adjustments
+      ) shouldBe returnCreateSubmissionData.repackagedDraught
+    }
+
+    "not convert when not declared" in new SetUp {
+      RepackagedDraught.fromAdrAdjustments(
+        exampleNilSubmissionRequest.adjustments
+      ) shouldBe nilReturnDetails.repackagedDraught
+    }
+  }
+
+  "TotalDutyDue" should {
+    "convert from AdrTotals" in new SetUp {
+      TotalDutyDue.fromAdrTotals(submissionData.totals) shouldBe returnCreateSubmissionData.totalDutyDue
+    }
+  }
+
+  "NetDutySuspension" should {
+    "convert from AdrDutySuspended" in new SetUp {
+      NetDutySuspension.fromAdrDutySuspended(
+        submissionData.dutySuspended
+      ) shouldBe returnCreateSubmissionData.netDutySuspension
+    }
+
+    "not convert when not declared" in new SetUp {
+      NetDutySuspension.fromAdrDutySuspended(
+        exampleNilSubmissionRequest.dutySuspended
+      ) shouldBe nilReturnDetails.netDutySuspension
+    }
+  }
+
+  "SpiritsProduced" should {
+    "convert from AdrSpirits" in new SetUp {
+      SpiritsProduced.fromAdrSpirits(submissionData.spirits.get) shouldBe returnCreateSubmissionData.spiritsProduced.get
+    }
+  }
+
   class SetUp {
     val periodKey: String = "24AC"
     val json              =
@@ -113,5 +214,6 @@ class ReturnDetailsSpec extends SpecBase {
 
     val submissionData             = exampleReturnSubmissionRequest
     val returnCreateSubmissionData = returnCreateSubmission(periodKey)
+    val nilReturnDetails           = nilReturnExample(appaId, periodKey, submissionId, Instant.now()).success
   }
 }

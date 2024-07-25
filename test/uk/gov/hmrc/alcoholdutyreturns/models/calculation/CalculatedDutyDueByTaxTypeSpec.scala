@@ -28,10 +28,17 @@ class CalculatedDutyDueByTaxTypeSpec extends SpecBase {
     "deserialise from json" in new SetUp {
       Json.parse(json).as[CalculatedDutyDueByTaxType] shouldBe calculatedDutyDueByTaxType
     }
+
+    "convert to TotalDutyDuebyTaxType" in new SetUp {
+      calculatedDutyDueByTaxTypeForExampleSubmission
+        .convertToTotalDutyDuebyTaxType() shouldBe createSubmission.totalDutyDuebyTaxType.get
+    }
   }
 
   class SetUp {
     val json =
       """{"totalDutyDueByTaxType":[{"taxType":"332","totalDutyDue":567.67},{"taxType":"331","totalDutyDue":123.23}]}"""
+
+    val createSubmission = returnCreateSubmission(periodKey)
   }
 }

@@ -177,10 +177,13 @@ class CacheRepositorySpec
   ".clearUserAnswersById" - {
     "must clear down existing user answers" in {
       insert(userAnswers).futureValue
+      repository.get(userAnswers.returnId).futureValue.isEmpty mustBe false
       repository.clearUserAnswersById(userAnswers.returnId).futureValue mustBe ()
+      repository.get(userAnswers.returnId).futureValue.isEmpty mustBe true
     }
 
     "must not fail if user answers doesn't exist" in {
+      repository.get(userAnswers.returnId).futureValue.isEmpty mustBe true
       repository.clearUserAnswersById(userAnswers.returnId).futureValue mustBe ()
     }
   }

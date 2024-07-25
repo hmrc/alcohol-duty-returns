@@ -62,7 +62,7 @@ class AppConfig @Inject() (config: Configuration, servicesConfig: ServicesConfig
     s"$returnsHost$url"
   }
 
-  def submitReturnUrl(): String = {
+  def submitReturnUrl: String = {
     val url = returnsSubmitReturnUrlFormat.format(Array(regime.toLowerCase))
     s"$returnsHost$url"
   }

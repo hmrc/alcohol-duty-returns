@@ -46,7 +46,7 @@ class AppConfigSpec extends SpecBaseWithConfigOverrides {
     }
 
     "get the submitReturn url" in {
-      appConfig.submitReturnUrl() shouldBe s"http://host:12345/etmp/RESTAdapter/excise/${regime.toLowerCase}/return"
+      appConfig.submitReturnUrl shouldBe s"http://host:12345/etmp/RESTAdapter/excise/${regime.toLowerCase}/return"
     }
   }
 }

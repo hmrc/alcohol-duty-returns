@@ -256,6 +256,70 @@ trait TestData extends ModelGenerators {
     )
   }
 
+  def nilReturnExample(
+    appaId: String,
+    periodKey: String,
+    submissionId: String,
+    now: Instant
+  ): GetReturnDetailsSuccess = {
+    val periodDate = LocalDate.of(periodKey.take(2).toInt + 2000, periodKey.charAt(3) - 'A' + 1, 1)
+
+    GetReturnDetailsSuccess(
+      GetReturnDetails(
+        processingDate = now,
+        idDetails = IdDetails(adReference = appaId, submissionID = submissionId),
+        chargeDetails = ChargeDetails(
+          periodKey = periodKey,
+          chargeReference = None,
+          periodFrom = periodDate,
+          periodTo = YearMonth.from(periodDate).atEndOfMonth(),
+          receiptDate = now
+        ),
+        alcoholProducts = AlcoholProducts(
+          alcoholProductsProducedFilled = true,
+          regularReturn = None
+        ),
+        overDeclaration = OverDeclaration(
+          overDeclFilled = true,
+          reasonForOverDecl = None,
+          overDeclarationProducts = Seq.empty
+        ),
+        underDeclaration = UnderDeclaration(
+          underDeclFilled = true,
+          reasonForUnderDecl = None,
+          underDeclarationProducts = Seq.empty
+        ),
+        spoiltProduct = SpoiltProduct(
+          spoiltProdFilled = true,
+          spoiltProductProducts = Seq.empty
+        ),
+        drawback = Drawback(
+          drawbackFilled = true,
+          drawbackProducts = Seq.empty
+        ),
+        repackagedDraught = RepackagedDraught(
+          repDraughtFilled = true,
+          repackagedDraughtProducts = Seq.empty
+        ),
+        totalDutyDuebyTaxType = None,
+        totalDutyDue = TotalDutyDue(
+          totalDutyDueAlcoholProducts = BigDecimal(0),
+          totalDutyOverDeclaration = BigDecimal(0),
+          totalDutyUnderDeclaration = BigDecimal(0),
+          totalDutySpoiltProduct = BigDecimal(0),
+          totalDutyDrawback = BigDecimal(0),
+          totalDutyRepDraughtProducts = BigDecimal(0),
+          totalDutyDue = BigDecimal(0)
+        ),
+        netDutySuspension = NetDutySuspension(
+          netDutySuspensionFilled = true,
+          netDutySuspensionProducts = None
+        ),
+        spiritsProduced = None
+      )
+    )
+  }
+
   def processingError(processingDate: Instant): ReturnDetailsProcessingError =
     ReturnDetailsProcessingError(
       ReturnDetailsProcessingErrorInternal(processingDate, "003", "Request could not be processed.")
@@ -439,6 +503,20 @@ trait TestData extends ModelGenerators {
         total = BigDecimal("-19434")
       ),
       totalDutyDue = AdrReturnTotalDutyDue(totalDue = BigDecimal("55815"))
+    )
+
+  def nilReturnDetails(periodKey: String, now: Instant): AdrReturnDetails =
+    AdrReturnDetails(
+      identification = AdrReturnDetailsIdentification(periodKey = periodKey, submittedTime = now),
+      alcoholDeclared = AdrReturnAlcoholDeclared(
+        alcoholDeclaredDetails = None,
+        total = BigDecimal(0)
+      ),
+      adjustments = AdrReturnAdjustments(
+        adjustmentDetails = None,
+        total = BigDecimal(0)
+      ),
+      totalDutyDue = AdrReturnTotalDutyDue(totalDue = BigDecimal(0))
     )
 
   val exampleReturnSubmissionRequest: AdrReturnSubmission = AdrReturnSubmission(
@@ -640,6 +718,41 @@ trait TestData extends ModelGenerators {
     )
   )
 
+  val exampleNilSubmissionRequest: AdrReturnSubmission = AdrReturnSubmission(
+    dutyDeclared = AdrDutyDeclared(
+      declared = true,
+      dutyDeclaredItems = Seq.empty
+    ),
+    adjustments = AdrAdjustments(
+      overDeclarationDeclared = true,
+      reasonForOverDeclaration = None,
+      overDeclarationProducts = Seq.empty,
+      underDeclarationDeclared = true,
+      reasonForUnderDeclaration = None,
+      underDeclarationProducts = Seq.empty,
+      spoiltProductDeclared = true,
+      spoiltProducts = Seq.empty,
+      drawbackDeclared = true,
+      drawbackProducts = Seq.empty,
+      repackagedDraughtDeclared = true,
+      repackagedDraughtProducts = Seq.empty
+    ),
+    dutySuspended = AdrDutySuspended(
+      declared = true,
+      dutySuspendedProducts = Seq.empty
+    ),
+    spirits = None,
+    totals = AdrTotals(
+      declaredDutyDue = BigDecimal(0),
+      overDeclaration = BigDecimal(0),
+      underDeclaration = BigDecimal(0),
+      spoiltProduct = BigDecimal(0),
+      drawback = BigDecimal(0),
+      repackagedDraught = BigDecimal(0),
+      totalDutyDue = BigDecimal(0)
+    )
+  )
+
   def returnCreateSubmission(periodKey: String): ReturnCreate =
     ReturnCreate(
       periodKey = periodKey,
@@ -744,11 +857,27 @@ trait TestData extends ModelGenerators {
         Seq(
           TotalDutyDuebyTaxType(
             taxType = "332",
-            totalDutyDueTaxType = BigDecimal("567.67")
+            totalDutyDueTaxType = BigDecimal("314.31")
+          ),
+          TotalDutyDuebyTaxType(
+            taxType = "351",
+            totalDutyDueTaxType = BigDecimal("69.67")
+          ),
+          TotalDutyDuebyTaxType(
+            taxType = "361",
+            totalDutyDueTaxType = BigDecimal("-132.73")
+          ),
+          TotalDutyDuebyTaxType(
+            taxType = "353",
+            totalDutyDueTaxType = BigDecimal("-91.09")
+          ),
+          TotalDutyDuebyTaxType(
+            taxType = "352",
+            totalDutyDueTaxType = BigDecimal("-52.85")
           ),
           TotalDutyDuebyTaxType(
             taxType = "331",
-            totalDutyDueTaxType = BigDecimal("123.23")
+            totalDutyDueTaxType = BigDecimal("197.19")
           )
         )
       ),
@@ -877,6 +1006,70 @@ trait TestData extends ModelGenerators {
         CalculatedDutyDueByTaxTypeItem(
           taxType = "331",
           totalDutyDue = BigDecimal("123.23")
+        )
+      )
+    )
+
+  val calculateDutyDueByTaxTypeRequestForExampleSubmission =
+    CalculateDutyDueByTaxTypeRequest(
+      declarationOrAdjustmentItems = Seq(
+        CalculateDutyDueByTaxTypeRequestItem(
+          taxType = "331",
+          dutyDue = BigDecimal("127.12")
+        ),
+        CalculateDutyDueByTaxTypeRequestItem(
+          taxType = "332",
+          dutyDue = BigDecimal("314.31")
+        ),
+        CalculateDutyDueByTaxTypeRequestItem(
+          taxType = "352",
+          dutyDue = BigDecimal("-52.85")
+        ),
+        CalculateDutyDueByTaxTypeRequestItem(
+          taxType = "351",
+          dutyDue = BigDecimal("69.67")
+        ),
+        CalculateDutyDueByTaxTypeRequestItem(
+          taxType = "353",
+          dutyDue = BigDecimal("-91.09")
+        ),
+        CalculateDutyDueByTaxTypeRequestItem(
+          taxType = "361",
+          dutyDue = BigDecimal("-132.73")
+        ),
+        CalculateDutyDueByTaxTypeRequestItem(
+          taxType = "331",
+          dutyDue = BigDecimal("70.07")
+        )
+      )
+    )
+
+  val calculatedDutyDueByTaxTypeForExampleSubmission =
+    CalculatedDutyDueByTaxType(
+      totalDutyDueByTaxType = Seq(
+        CalculatedDutyDueByTaxTypeItem(
+          taxType = "332",
+          totalDutyDue = BigDecimal("314.31")
+        ),
+        CalculatedDutyDueByTaxTypeItem(
+          taxType = "351",
+          totalDutyDue = BigDecimal("69.67")
+        ),
+        CalculatedDutyDueByTaxTypeItem(
+          taxType = "361",
+          totalDutyDue = BigDecimal("-132.73")
+        ),
+        CalculatedDutyDueByTaxTypeItem(
+          taxType = "353",
+          totalDutyDue = BigDecimal("-91.09")
+        ),
+        CalculatedDutyDueByTaxTypeItem(
+          taxType = "352",
+          totalDutyDue = BigDecimal("-52.85")
+        ),
+        CalculatedDutyDueByTaxTypeItem(
+          taxType = "331",
+          totalDutyDue = BigDecimal("197.19")
         )
       )
     )

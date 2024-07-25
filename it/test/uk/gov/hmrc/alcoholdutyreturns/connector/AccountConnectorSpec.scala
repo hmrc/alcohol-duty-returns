@@ -27,8 +27,6 @@ import java.time.LocalDate
 
 class AccountConnectorSpec extends ISpecBase {
 
-  protected val endpointName = "alcohol-duty-accounts"
-
   "getData" should {
     "return an InvalidJson error if the call returns an invalid response" in new SetUp {
       stubGet(dataTestUrl, OK, "invalid")
@@ -85,13 +83,14 @@ class AccountConnectorSpec extends ISpecBase {
     }
   }
 
-  class SetUp extends ConnectorFixture {
-    val connector = new AccountConnector(config = config, httpClient = httpClient)
+  class SetUp {
+    val connector = app.injector.instanceOf[AccountConnector]
     val subscriptionUrl = config.getSubscriptionSummaryUrl(appaId)
     val openObligationUrl = config.getOpenObligationDataUrl(returnId)
     val obligationUrl = config.getObligationDataUrl(appaId)
     val obligationData = getObligationData(LocalDate.now())
     val dataTestUrl = subscriptionUrl
+
     type DataTestType = SubscriptionSummary
   }
 }

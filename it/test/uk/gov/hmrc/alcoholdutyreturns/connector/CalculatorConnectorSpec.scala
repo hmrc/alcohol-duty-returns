@@ -21,14 +21,9 @@ import org.scalatest.matchers.must.Matchers.convertToAnyMustWrapper
 import org.scalatest.time.{Seconds, Span}
 import play.api.libs.json.Json
 import uk.gov.hmrc.alcoholdutyreturns.base.ISpecBase
-import uk.gov.hmrc.alcoholdutyreturns.connector.helpers.{HIPHeaders, RandomUUIDGenerator}
 import uk.gov.hmrc.alcoholdutyreturns.models.ErrorResponse
 
-import java.time.Instant
-
 class CalculatorConnectorSpec extends ISpecBase {
-  protected val endpointName = "alcohol-duty-calculator"
-
   "Calculator Connector" when {
     "calculateDutyDueByTaxType is called" should {
       "successfully calculate duty due by tax type" in new SetUp {
@@ -65,8 +60,8 @@ class CalculatorConnectorSpec extends ISpecBase {
     }
   }
 
-  class SetUp extends ConnectorFixture {
-    val connector = new CalculatorConnector(config = config, httpClient = httpClient)
+  class SetUp {
+    val connector = app.injector.instanceOf[CalculatorConnector]
     val calculateDutyDueByTaxTypeUrl = config.getCalculateDutyDueByTaxTypeUrl
   }
 }

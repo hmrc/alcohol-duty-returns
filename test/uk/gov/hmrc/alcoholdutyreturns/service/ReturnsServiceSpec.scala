@@ -35,7 +35,7 @@ class ReturnsServiceSpec extends SpecBase {
         .thenReturn(EitherT.rightT[Future, ErrorResponse](returnCreatedDetails))
 
       when(mockCalculatorConnector.calculateDutyDueByTaxType(any())(any()))
-        .thenReturn(EitherT.right[ErrorResponse](Future.successful(calculatedDutyDueByTaxType)))
+        .thenReturn(EitherT.right[ErrorResponse](Future.successful(calculatedDutyDueByTaxTypeForExampleSubmission)))
 
       when(mockCacheRespository.clearUserAnswersById(retId)).thenReturn(Future.unit)
 
@@ -64,7 +64,7 @@ class ReturnsServiceSpec extends SpecBase {
 
     "return any error from the returns connector if failure" in new SetUp {
       when(mockCalculatorConnector.calculateDutyDueByTaxType(any())(any()))
-        .thenReturn(EitherT.right[ErrorResponse](Future.successful(calculatedDutyDueByTaxType)))
+        .thenReturn(EitherT.right[ErrorResponse](Future.successful(calculatedDutyDueByTaxTypeForExampleSubmission)))
 
       when(mockReturnsConnector.submitReturn(returnSubmission, retId.appaId))
         .thenReturn(EitherT.leftT[Future, ReturnCreatedDetails](ErrorResponse.EntityNotFound))
@@ -76,7 +76,7 @@ class ReturnsServiceSpec extends SpecBase {
 
     "return a failed failure if the returns connector fails" in new SetUp {
       when(mockCalculatorConnector.calculateDutyDueByTaxType(any())(any()))
-        .thenReturn(EitherT.right[ErrorResponse](Future.successful(calculatedDutyDueByTaxType)))
+        .thenReturn(EitherT.right[ErrorResponse](Future.successful(calculatedDutyDueByTaxTypeForExampleSubmission)))
 
       when(mockReturnsConnector.submitReturn(returnSubmission, retId.appaId))
         .thenReturn(EitherT.left[ReturnCreatedDetails](Future.failed(new RuntimeException("Fail!"))))
@@ -88,10 +88,7 @@ class ReturnsServiceSpec extends SpecBase {
 
     "return any error if the cache repository couldn't clear user answers" in new SetUp {
       when(mockCalculatorConnector.calculateDutyDueByTaxType(any())(any()))
-        .thenReturn(EitherT.right[ErrorResponse](Future.successful(calculatedDutyDueByTaxType)))
-
-      when(mockCalculatorConnector.calculateDutyDueByTaxType(any())(any()))
-        .thenReturn(EitherT.right[ErrorResponse](Future.successful(calculatedDutyDueByTaxType)))
+        .thenReturn(EitherT.right[ErrorResponse](Future.successful(calculatedDutyDueByTaxTypeForExampleSubmission)))
 
       when(mockCacheRespository.clearUserAnswersById(retId)).thenReturn(Future.failed(new RuntimeException("Fail!")))
 

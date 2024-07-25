@@ -68,7 +68,7 @@ class ReturnsConnector @Inject() (
   ): EitherT[Future, ErrorResponse, ReturnCreatedDetails] = EitherT(
     httpClient
       .POST[ReturnCreate, Either[UpstreamErrorResponse, HttpResponse]](
-        url = config.submitReturnUrl(),
+        url = config.submitReturnUrl,
         body = returnToSubmit,
         headers = headers.submitReturnHeaders(appaId)
       )

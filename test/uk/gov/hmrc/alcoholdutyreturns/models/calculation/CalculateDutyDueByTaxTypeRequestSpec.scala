@@ -16,4 +16,28 @@
 
 package uk.gov.hmrc.alcoholdutyreturns.models.calculation
 
-class CalculateDutyDueByTaxTypeRequestSpec {}
+import play.api.libs.json.Json
+import uk.gov.hmrc.alcoholdutyreturns.base.SpecBase
+
+class CalculateDutyDueByTaxTypeRequestSpec extends SpecBase {
+  "CalculatedDutyDueByTaxType" should {
+    "serialise to json" in new SetUp {
+      Json.toJson(calculateDutyDueByTaxTypeRequest).toString shouldBe json
+    }
+
+    "populate data from a returns submission when data is present" in {
+      CalculateDutyDueByTaxTypeRequest.fromReturnsSubmission(exampleReturnSubmissionRequest) shouldBe Some(
+        calculateDutyDueByTaxTypeRequestForExampleSubmission
+      )
+    }
+
+    "not populate data from a returns submission when a nil return" in {
+      CalculateDutyDueByTaxTypeRequest.fromReturnsSubmission(exampleNilSubmissionRequest) shouldBe None
+    }
+  }
+
+  class SetUp {
+    val json =
+      """{"declarationOrAdjustmentItems":[{"taxType":"331","dutyDue":115.11},{"taxType":"332","dutyDue":321.88},{"taxType":"332","dutyDue":245.79},{"taxType":"331","dutyDue":8.12}]}"""
+  }
+}

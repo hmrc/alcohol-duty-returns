@@ -81,7 +81,7 @@ object AlcoholProducts {
     AlcoholProducts(
       alcoholProductsProducedFilled = adrDutyDeclared.declared,
       regularReturn =
-        if (adrDutyDeclared.declared)
+        if (adrDutyDeclared.dutyDeclaredItems.nonEmpty)
           Some(adrDutyDeclared.dutyDeclaredItems.map(RegularReturnDetails.fromAdrDutyDeclaredItem))
         else None
     )
@@ -309,7 +309,7 @@ object NetDutySuspension {
     NetDutySuspension(
       netDutySuspensionFilled = adrDutySuspended.declared,
       netDutySuspensionProducts =
-        if (adrDutySuspended.declared)
+        if (adrDutySuspended.dutySuspendedProducts.nonEmpty)
           Some(NetDutySuspensionProducts.fromAdrDutySuspendedProducts(adrDutySuspended.dutySuspendedProducts))
         else None
     )
@@ -560,7 +560,7 @@ object ReturnCreate {
       spoiltProduct = SpoiltProduct.fromAdrAdjustments(adrReturnSubmission.adjustments),
       drawback = Drawback.fromAdrAdjustments(adrReturnSubmission.adjustments),
       repackagedDraught = RepackagedDraught.fromAdrAdjustments(adrReturnSubmission.adjustments),
-      totalDutyDuebyTaxType = None, // TODO Add a method to populate this from calculated values
+      totalDutyDuebyTaxType = None, // This is populated from data received from a calculator call
       totalDutyDue = TotalDutyDue.fromAdrTotals(adrReturnSubmission.totals),
       netDutySuspension = NetDutySuspension.fromAdrDutySuspended(adrReturnSubmission.dutySuspended),
       spiritsProduced = adrReturnSubmission.spirits.map(SpiritsProduced.fromAdrSpirits)

@@ -21,14 +21,11 @@ import org.scalatest.matchers.must.Matchers.convertToAnyMustWrapper
 import org.scalatest.time.{Seconds, Span}
 import play.api.libs.json.Json
 import uk.gov.hmrc.alcoholdutyreturns.base.ISpecBase
-import uk.gov.hmrc.alcoholdutyreturns.connector.helpers.{HIPHeaders, RandomUUIDGenerator}
 import uk.gov.hmrc.alcoholdutyreturns.models.ErrorResponse
 
 import java.time.Instant
 
 class ReturnsConnectorSpec extends ISpecBase {
-  protected val endpointName = "returns"
-
   "Returns Connector" when {
     "getReturn is called" should {
       "successfully get a return" in new SetUp {
@@ -115,10 +112,10 @@ class ReturnsConnectorSpec extends ISpecBase {
     }
   }
 
-  class SetUp extends ConnectorFixture {
-    val connector = new ReturnsConnector(config = config, httpClient = httpClient, headers = new HIPHeaders(new RandomUUIDGenerator(), config, clock))
+  class SetUp {
+    val connector = app.injector.instanceOf[ReturnsConnector]
     val getReturnUrl = config.getReturnUrl(returnId)
-    val submitReturnUrl = config.submitReturnUrl()
+    val submitReturnUrl = config.submitReturnUrl
 
     val periodKey = "24AC"
     val id = appaId
