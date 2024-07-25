@@ -169,9 +169,19 @@ class CacheRepositorySpec
     "when there is no record for this id" - {
 
       "must return true" in {
-
         repository.keepAlive(ReturnId("APPA id that does not exist", "period key that does not exist")).futureValue mustEqual true
       }
+    }
+  }
+
+  ".clearUserAnswersById" - {
+    "must clear down existing user answers" in {
+      insert(userAnswers).futureValue
+      repository.clearUserAnswersById(userAnswers.returnId).futureValue mustBe ()
+    }
+
+    "must not fail if user answers doesn't exist" in {
+      repository.clearUserAnswersById(userAnswers.returnId).futureValue mustBe ()
     }
   }
 

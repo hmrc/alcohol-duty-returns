@@ -13,7 +13,7 @@ object AppDependencies {
     "ai.x"              %% "play-json-extensions"      % "0.42.0",
     "uk.gov.hmrc.mongo" %% "hmrc-mongo-play-30"        % hmrcMongoVersion,
     "org.typelevel"     %% "cats-core"                 % "2.10.0",
-    "com.beachape"      %% "enumeratum-play-json"      % "1.8.0"
+    "com.beachape"      %% "enumeratum-play"           % "1.8.0"
   )
 
   val test = Seq(

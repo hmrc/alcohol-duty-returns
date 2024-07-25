@@ -16,24 +16,46 @@
 
 package uk.gov.hmrc.alcoholdutyreturns.service
 
+import cats.implicits._
 import cats.data.EitherT
 import com.google.inject.{Inject, Singleton}
-import uk.gov.hmrc.alcoholdutyreturns.connector.ReturnsConnector
+import uk.gov.hmrc.alcoholdutyreturns.connector.{CalculatorConnector, ReturnsConnector}
+import uk.gov.hmrc.alcoholdutyreturns.models.calculation.CalculateDutyDueByTaxTypeRequest
 import uk.gov.hmrc.alcoholdutyreturns.models.{ErrorResponse, ReturnId}
-import uk.gov.hmrc.alcoholdutyreturns.models.returns.{AdrReturnSubmission, ReturnCreate, ReturnCreatedDetails}
+import uk.gov.hmrc.alcoholdutyreturns.models.returns.{AdrReturnSubmission, ReturnCreate, ReturnCreatedDetails, TotalDutyDuebyTaxType}
+import uk.gov.hmrc.alcoholdutyreturns.repositories.CacheRepository
 import uk.gov.hmrc.http.HeaderCarrier
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class ReturnsService @Inject() (returnsConnector: ReturnsConnector) {
+class ReturnsService @Inject() (
+  returnsConnector: ReturnsConnector,
+  calculatorConnector: CalculatorConnector,
+  cacheRepository: CacheRepository
+)(implicit
+  ec: ExecutionContext
+) {
+  def calculateTotalDutyDueByTaxType(
+    returnSubmission: AdrReturnSubmission
+  )(implicit hc: HeaderCarrier): EitherT[Future, ErrorResponse, Option[Seq[TotalDutyDuebyTaxType]]] =
+    CalculateDutyDueByTaxTypeRequest
+      .fromReturnsSubmission(returnSubmission)
+      .map(calculatorConnector.calculateDutyDueByTaxType)
+      .traverse(_.map(_.convertToTotalDutyDuebyTaxType()))
+
   def submitReturn(returnSubmission: AdrReturnSubmission, returnId: ReturnId)(implicit
     hc: HeaderCarrier
   ): EitherT[Future, ErrorResponse, ReturnCreatedDetails] = {
     val returnToSubmit = ReturnCreate.fromAdrReturnSubmission(returnSubmission, returnId.periodKey)
 
-    // TODO Go to calculator to calculate totalDutyDuebyTaxType
-
-    returnsConnector.submitReturn(returnToSubmit, returnId.appaId)
+    for {
+      maybeTotalDutyDueByTaxType <- calculateTotalDutyDueByTaxType(returnSubmission)
+      returnCreatedDetails       <- returnsConnector.submitReturn(
+                                      returnToSubmit.copy(totalDutyDuebyTaxType = maybeTotalDutyDueByTaxType),
+                                      returnId.appaId
+                                    )
+      _                          <- EitherT.right[ErrorResponse](cacheRepository.clearUserAnswersById(returnId))
+    } yield returnCreatedDetails
   }
 }

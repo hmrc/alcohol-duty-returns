@@ -107,4 +107,7 @@ class CacheRepository @Inject() (
       .toFuture()
       .map(_ => updatedAnswers)
   }
+
+  def clearUserAnswersById(returnId: ReturnId): Future[Unit] =
+    collection.deleteOne(filter = byId(returnId)).toFuture().map(_ => ())
 }

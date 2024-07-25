@@ -22,6 +22,7 @@ import uk.gov.hmrc.alcoholdutyreturns.models.AlcoholRegime.{Beer, Cider, OtherFe
 import uk.gov.hmrc.alcoholdutyreturns.models.ApprovalStatus.Approved
 import uk.gov.hmrc.alcoholdutyreturns.models.{AlcoholRegimes, ObligationData, ReturnAndUserDetails, ReturnId, SubscriptionSummary, UserAnswers}
 import uk.gov.hmrc.alcoholdutyreturns.models.ObligationStatus.{Fulfilled, Open}
+import uk.gov.hmrc.alcoholdutyreturns.models.calculation.{CalculateDutyDueByTaxTypeRequest, CalculateDutyDueByTaxTypeRequestItem, CalculatedDutyDueByTaxType, CalculatedDutyDueByTaxTypeItem}
 import uk.gov.hmrc.alcoholdutyreturns.models.returns.{AdrAdjustmentItem, AdrAdjustments, AdrAlcoholQuantity, AdrDuty, AdrDutyDeclared, AdrDutyDeclaredItem, AdrDutySuspended, AdrDutySuspendedAlcoholRegime, AdrDutySuspendedProduct, AdrOtherIngredient, AdrRepackagedDraughtAdjustmentItem, AdrReturnAdjustments, AdrReturnAdjustmentsRow, AdrReturnAlcoholDeclared, AdrReturnAlcoholDeclaredRow, AdrReturnCreatedDetails, AdrReturnDetails, AdrReturnDetailsIdentification, AdrReturnSubmission, AdrReturnTotalDutyDue, AdrSpirits, AdrSpiritsGrainsQuantities, AdrSpiritsIngredientsVolumes, AdrSpiritsProduced, AdrSpiritsVolumes, AdrTotals, AdrTypeOfSpirit, AdrUnitOfMeasure, AlcoholProducts, ChargeDetails, Drawback, GetReturnDetails, GetReturnDetailsSuccess, IdDetails, NetDutySuspension, NetDutySuspensionProducts, OtherMaterialsUomType, OverDeclaration, RegularReturnDetails, RepackagedDraught, RepackagedDraughtProduct, ReturnCreate, ReturnCreatedDetails, ReturnCreatedSuccess, ReturnDetails, SpiritsProduced, SpiritsProducedDetails, SpoiltProduct, TotalDutyDue, TotalDutyDuebyTaxType, TypeOfSpiritType, UnderDeclaration}
 
 import java.time.{Clock, Instant, LocalDate, YearMonth, ZoneId}
@@ -549,7 +550,7 @@ trait TestData extends ModelGenerators {
     ),
     dutySuspended = AdrDutySuspended(
       declared = true,
-      dutySuspendedProducts = Set(
+      dutySuspendedProducts = Seq(
         AdrDutySuspendedProduct(
           regime = AdrDutySuspendedAlcoholRegime.Beer,
           suspendedQuantity = AdrAlcoholQuantity(
@@ -739,7 +740,18 @@ trait TestData extends ModelGenerators {
           )
         )
       ),
-      totalDutyDuebyTaxType = None,
+      totalDutyDuebyTaxType = Some(
+        Seq(
+          TotalDutyDuebyTaxType(
+            taxType = "332",
+            totalDutyDueTaxType = BigDecimal("567.67")
+          ),
+          TotalDutyDuebyTaxType(
+            taxType = "331",
+            totalDutyDueTaxType = BigDecimal("123.23")
+          )
+        )
+      ),
       totalDutyDue = TotalDutyDue(
         totalDutyDueAlcoholProducts = BigDecimal("441.53"),
         totalDutyOverDeclaration = BigDecimal("52.85"),
@@ -831,5 +843,41 @@ trait TestData extends ModelGenerators {
       amount = total,
       chargeReference = if (total != 0) Some(chargeReference) else None,
       paymentDueDate = PeriodKey.toYearMonth(periodKey).plusMonths(1).atDay(dueDate)
+    )
+
+  val calculateDutyDueByTaxTypeRequest: CalculateDutyDueByTaxTypeRequest =
+    CalculateDutyDueByTaxTypeRequest(
+      declarationOrAdjustmentItems = Seq(
+        CalculateDutyDueByTaxTypeRequestItem(
+          taxType = "331",
+          dutyDue = BigDecimal("115.11")
+        ),
+        CalculateDutyDueByTaxTypeRequestItem(
+          taxType = "332",
+          dutyDue = BigDecimal("321.88")
+        ),
+        CalculateDutyDueByTaxTypeRequestItem(
+          taxType = "332",
+          dutyDue = BigDecimal("245.79")
+        ),
+        CalculateDutyDueByTaxTypeRequestItem(
+          taxType = "331",
+          dutyDue = BigDecimal("8.12")
+        )
+      )
+    )
+
+  val calculatedDutyDueByTaxType: CalculatedDutyDueByTaxType =
+    CalculatedDutyDueByTaxType(
+      totalDutyDueByTaxType = Seq(
+        CalculatedDutyDueByTaxTypeItem(
+          taxType = "332",
+          totalDutyDue = BigDecimal("567.67")
+        ),
+        CalculatedDutyDueByTaxTypeItem(
+          taxType = "331",
+          totalDutyDue = BigDecimal("123.23")
+        )
+      )
     )
 }

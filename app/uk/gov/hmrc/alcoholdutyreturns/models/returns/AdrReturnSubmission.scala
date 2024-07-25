@@ -134,7 +134,15 @@ case class AdrAdjustments(
   drawbackProducts: Seq[AdrAdjustmentItem],
   repackagedDraughtDeclared: Boolean,
   repackagedDraughtProducts: Seq[AdrRepackagedDraughtAdjustmentItem]
-)
+) {
+
+  def adjustmentsDeclared: Boolean =
+    overDeclarationProducts.nonEmpty &&
+      underDeclarationProducts.nonEmpty &&
+      spoiltProducts.nonEmpty &&
+      drawbackProducts.nonEmpty &&
+      repackagedDraughtProducts.nonEmpty
+}
 
 case object AdrAdjustments {
   implicit val adrAdjustmentsFormat: OFormat[AdrAdjustments] =
@@ -152,7 +160,7 @@ case object AdrDutySuspendedProduct {
 
 case class AdrDutySuspended(
   declared: Boolean,
-  dutySuspendedProducts: Set[AdrDutySuspendedProduct]
+  dutySuspendedProducts: Seq[AdrDutySuspendedProduct]
 )
 
 case object AdrDutySuspended {

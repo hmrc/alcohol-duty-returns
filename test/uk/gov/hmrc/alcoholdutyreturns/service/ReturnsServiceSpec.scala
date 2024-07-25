@@ -17,26 +17,55 @@
 package uk.gov.hmrc.alcoholdutyreturns.service
 
 import cats.data.EitherT
+import org.mockito.ArgumentMatchers.any
 import uk.gov.hmrc.alcoholdutyreturns.base.SpecBase
-import uk.gov.hmrc.alcoholdutyreturns.connector.ReturnsConnector
+import uk.gov.hmrc.alcoholdutyreturns.connector.{CalculatorConnector, ReturnsConnector}
 import uk.gov.hmrc.alcoholdutyreturns.models.ErrorResponse
+import uk.gov.hmrc.alcoholdutyreturns.models.calculation.CalculatedDutyDueByTaxType
 import uk.gov.hmrc.alcoholdutyreturns.models.returns.ReturnCreatedDetails
+import uk.gov.hmrc.alcoholdutyreturns.repositories.CacheRepository
 
 import java.time.Instant
 import scala.concurrent.Future
 
 class ReturnsServiceSpec extends SpecBase {
   "ReturnsService" should {
-    "submit a return successfully return the created response" in new SetUp {
+    "calculate dutyDueByTaxType, submit a return successfully, clear the cache and return the created response" in new SetUp {
       when(mockReturnsConnector.submitReturn(returnSubmission, retId.appaId))
         .thenReturn(EitherT.rightT[Future, ErrorResponse](returnCreatedDetails))
+
+      when(mockCalculatorConnector.calculateDutyDueByTaxType(any())(any()))
+        .thenReturn(EitherT.right[ErrorResponse](Future.successful(calculatedDutyDueByTaxType)))
+
+      when(mockCacheRespository.clearUserAnswersById(retId)).thenReturn(Future.unit)
 
       whenReady(returnsService.submitReturn(adrReturnSubmission, retId).value) {
         _ shouldBe Right[ErrorResponse, ReturnCreatedDetails](returnCreatedDetails)
       }
     }
 
-    "return any error from the connector if failure" in new SetUp {
+    "return any error from the calculator connector if failure" in new SetUp {
+      when(mockCalculatorConnector.calculateDutyDueByTaxType(any())(any()))
+        .thenReturn(EitherT.leftT[Future, CalculatedDutyDueByTaxType](ErrorResponse.EntityNotFound))
+
+      whenReady(returnsService.submitReturn(adrReturnSubmission, retId).value) {
+        _ shouldBe Left[ErrorResponse, ReturnCreatedDetails](ErrorResponse.EntityNotFound)
+      }
+    }
+
+    "return a failed failure if the calculator connector fails" in new SetUp {
+      when(mockCalculatorConnector.calculateDutyDueByTaxType(any())(any()))
+        .thenReturn(EitherT.left[CalculatedDutyDueByTaxType](Future.failed(new RuntimeException("Fail!"))))
+
+      whenReady(returnsService.submitReturn(adrReturnSubmission, retId).value.failed) {
+        _ shouldBe a[RuntimeException]
+      }
+    }
+
+    "return any error from the returns connector if failure" in new SetUp {
+      when(mockCalculatorConnector.calculateDutyDueByTaxType(any())(any()))
+        .thenReturn(EitherT.right[ErrorResponse](Future.successful(calculatedDutyDueByTaxType)))
+
       when(mockReturnsConnector.submitReturn(returnSubmission, retId.appaId))
         .thenReturn(EitherT.leftT[Future, ReturnCreatedDetails](ErrorResponse.EntityNotFound))
 
@@ -44,11 +73,39 @@ class ReturnsServiceSpec extends SpecBase {
         _ shouldBe Left[ErrorResponse, ReturnCreatedDetails](ErrorResponse.EntityNotFound)
       }
     }
+
+    "return a failed failure if the returns connector fails" in new SetUp {
+      when(mockCalculatorConnector.calculateDutyDueByTaxType(any())(any()))
+        .thenReturn(EitherT.right[ErrorResponse](Future.successful(calculatedDutyDueByTaxType)))
+
+      when(mockReturnsConnector.submitReturn(returnSubmission, retId.appaId))
+        .thenReturn(EitherT.left[ReturnCreatedDetails](Future.failed(new RuntimeException("Fail!"))))
+
+      whenReady(returnsService.submitReturn(adrReturnSubmission, retId).value.failed) {
+        _ shouldBe a[RuntimeException]
+      }
+    }
+
+    "return any error if the cache repository couldn't clear user answers" in new SetUp {
+      when(mockCalculatorConnector.calculateDutyDueByTaxType(any())(any()))
+        .thenReturn(EitherT.right[ErrorResponse](Future.successful(calculatedDutyDueByTaxType)))
+
+      when(mockCalculatorConnector.calculateDutyDueByTaxType(any())(any()))
+        .thenReturn(EitherT.right[ErrorResponse](Future.successful(calculatedDutyDueByTaxType)))
+
+      when(mockCacheRespository.clearUserAnswersById(retId)).thenReturn(Future.failed(new RuntimeException("Fail!")))
+
+      whenReady(returnsService.submitReturn(adrReturnSubmission, retId).value.failed) {
+        _ shouldBe a[RuntimeException]
+      }
+    }
   }
 
   class SetUp {
-    val mockReturnsConnector = mock[ReturnsConnector]
-    val returnsService       = new ReturnsService(mockReturnsConnector)
+    val mockReturnsConnector    = mock[ReturnsConnector]
+    val mockCalculatorConnector = mock[CalculatorConnector]
+    val mockCacheRespository    = mock[CacheRepository]
+    val returnsService          = new ReturnsService(mockReturnsConnector, mockCalculatorConnector, mockCacheRespository)
 
     val periodKey = "24AC"
     val retId     = returnId.copy(periodKey = periodKey)

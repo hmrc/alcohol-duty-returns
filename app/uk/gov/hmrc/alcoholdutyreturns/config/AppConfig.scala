@@ -30,6 +30,9 @@ class AppConfig @Inject() (config: Configuration, servicesConfig: ServicesConfig
   private lazy val adrAccountHost: String =
     servicesConfig.baseUrl("alcohol-duty-accounts")
 
+  private lazy val adrCalculatorHost: String =
+    servicesConfig.baseUrl("alcohol-duty-calculator")
+
   private lazy val returnsHost: String =
     servicesConfig.baseUrl("returns")
 
@@ -48,6 +51,11 @@ class AppConfig @Inject() (config: Configuration, servicesConfig: ServicesConfig
 
   def getObligationDataUrl(appaId: String): String =
     s"$adrAccountHost/alcohol-duty-account/obligationDetails/$appaId"
+
+  def getCalculateDutyDueByTaxTypeUrl: String = {
+    val url = getConfStringAndThrowIfNotFound("alcohol-duty-calculator.url.calculateDutyDueByTaxType")
+    s"$adrCalculatorHost$url"
+  }
 
   def getReturnUrl(returnId: ReturnId): String = {
     val url = returnsGetReturnUrlFormat.format(Array(regime.toLowerCase, returnId.appaId, returnId.periodKey))

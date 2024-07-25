@@ -346,7 +346,7 @@ object NetDutySuspensionProducts {
       totalLtsPureAlcoholOtherFermented = None
     )
 
-  def fromAdrDutySuspendedProducts(dutySuspendedProducts: Set[AdrDutySuspendedProduct]): NetDutySuspensionProducts =
+  def fromAdrDutySuspendedProducts(dutySuspendedProducts: Seq[AdrDutySuspendedProduct]): NetDutySuspensionProducts =
     dutySuspendedProducts.foldLeft(NetDutySuspensionProducts()) { case (ndsp, suspendedProduct) =>
       suspendedProduct.regime match {
         case AdrDutySuspendedAlcoholRegime.Beer                  =>
