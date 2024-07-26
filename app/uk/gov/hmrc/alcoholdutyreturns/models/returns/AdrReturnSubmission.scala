@@ -136,7 +136,7 @@ case class AdrAdjustments(
   repackagedDraughtProducts: Seq[AdrRepackagedDraughtAdjustmentItem]
 ) {
 
-  def adjustmentsDeclared: Boolean =
+  def hasAdjustments: Boolean =
     overDeclarationProducts.nonEmpty &&
       underDeclarationProducts.nonEmpty &&
       spoiltProducts.nonEmpty &&

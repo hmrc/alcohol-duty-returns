@@ -65,7 +65,7 @@ object CalculateDutyDueByTaxTypeRequest {
     repackagedDraughtAdjustmentItems.map(CalculateDutyDueByTaxTypeRequestItem.fromRepackagedDraughtAdjustmentItem)
 
   def fromReturnsSubmission(returnSubmission: AdrReturnSubmission): Option[CalculateDutyDueByTaxTypeRequest] =
-    if (returnSubmission.dutyDeclared.dutyDeclaredItems.isEmpty && !returnSubmission.adjustments.adjustmentsDeclared) {
+    if (returnSubmission.dutyDeclared.dutyDeclaredItems.isEmpty && !returnSubmission.adjustments.hasAdjustments) {
       None
     } else {
       Some(

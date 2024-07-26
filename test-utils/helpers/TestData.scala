@@ -276,29 +276,29 @@ trait TestData extends ModelGenerators {
           receiptDate = now
         ),
         alcoholProducts = AlcoholProducts(
-          alcoholProductsProducedFilled = true,
+          alcoholProductsProducedFilled = false,
           regularReturn = None
         ),
         overDeclaration = OverDeclaration(
-          overDeclFilled = true,
+          overDeclFilled = false,
           reasonForOverDecl = None,
           overDeclarationProducts = Seq.empty
         ),
         underDeclaration = UnderDeclaration(
-          underDeclFilled = true,
+          underDeclFilled = false,
           reasonForUnderDecl = None,
           underDeclarationProducts = Seq.empty
         ),
         spoiltProduct = SpoiltProduct(
-          spoiltProdFilled = true,
+          spoiltProdFilled = false,
           spoiltProductProducts = Seq.empty
         ),
         drawback = Drawback(
-          drawbackFilled = true,
+          drawbackFilled = false,
           drawbackProducts = Seq.empty
         ),
         repackagedDraught = RepackagedDraught(
-          repDraughtFilled = true,
+          repDraughtFilled = false,
           repackagedDraughtProducts = Seq.empty
         ),
         totalDutyDuebyTaxType = None,
@@ -312,7 +312,7 @@ trait TestData extends ModelGenerators {
           totalDutyDue = BigDecimal(0)
         ),
         netDutySuspension = NetDutySuspension(
-          netDutySuspensionFilled = true,
+          netDutySuspensionFilled = false,
           netDutySuspensionProducts = None
         ),
         spiritsProduced = None
@@ -720,25 +720,25 @@ trait TestData extends ModelGenerators {
 
   val exampleNilSubmissionRequest: AdrReturnSubmission = AdrReturnSubmission(
     dutyDeclared = AdrDutyDeclared(
-      declared = true,
+      declared = false,
       dutyDeclaredItems = Seq.empty
     ),
     adjustments = AdrAdjustments(
-      overDeclarationDeclared = true,
+      overDeclarationDeclared = false,
       reasonForOverDeclaration = None,
       overDeclarationProducts = Seq.empty,
-      underDeclarationDeclared = true,
+      underDeclarationDeclared = false,
       reasonForUnderDeclaration = None,
       underDeclarationProducts = Seq.empty,
-      spoiltProductDeclared = true,
+      spoiltProductDeclared = false,
       spoiltProducts = Seq.empty,
-      drawbackDeclared = true,
+      drawbackDeclared = false,
       drawbackProducts = Seq.empty,
-      repackagedDraughtDeclared = true,
+      repackagedDraughtDeclared = false,
       repackagedDraughtProducts = Seq.empty
     ),
     dutySuspended = AdrDutySuspended(
-      declared = true,
+      declared = false,
       dutySuspendedProducts = Seq.empty
     ),
     spirits = None,
