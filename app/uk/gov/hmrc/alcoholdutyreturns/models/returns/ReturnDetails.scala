@@ -580,7 +580,7 @@ case class ReturnCreatedDetails(
   amount: BigDecimal,
   chargeReference: Option[String],
   paymentDueDate: LocalDate,
-  submissionID: Option[String]
+  submissionID: String
 )
 
 object ReturnCreatedDetails {

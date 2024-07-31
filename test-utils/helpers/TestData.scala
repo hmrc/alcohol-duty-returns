@@ -957,7 +957,7 @@ trait TestData extends ModelGenerators {
         amount = total,
         chargeReference = if (total != 0) Some(chargeReference) else None,
         paymentDueDate = PeriodKey.toYearMonth(periodKey).plusMonths(1).atDay(dueDate),
-        submissionID = Some(submissionId)
+        submissionID = submissionId
       )
     )
 
