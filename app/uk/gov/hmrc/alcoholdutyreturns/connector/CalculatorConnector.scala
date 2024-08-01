@@ -27,7 +27,7 @@ import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReadsInstances, HttpResp
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.Try
+import scala.util.{Failure, Success, Try}
 
 class CalculatorConnector @Inject() (
   config: AppConfig,
@@ -48,8 +48,13 @@ class CalculatorConnector @Inject() (
         )
         .map {
           case Right(response)                                                =>
-            Try(response.json.as[O]).toOption
-              .fold[Either[ErrorResponse, O]](Left(ErrorResponse.InvalidJson))(Right(_))
+            Try(response.json.as[O]) match {
+              case Success(result) =>
+                Right(result)
+              case Failure(e)      =>
+                logger.warn(s"Parsing failed for calculation result", e)
+                Left(ErrorResponse.InvalidJson)
+            }
           case Left(errorResponse) if errorResponse.statusCode == BAD_REQUEST => Left(ErrorResponse.BadRequest)
           case Left(errorResponse)                                            =>
             logger.warn(
@@ -61,6 +66,14 @@ class CalculatorConnector @Inject() (
 
   def calculateDutyDueByTaxType(declarationsByTaxTypeRequest: CalculateDutyDueByTaxTypeRequest)(implicit
     hc: HeaderCarrier
-  ): EitherT[Future, ErrorResponse, CalculatedDutyDueByTaxType] =
-    performCalculation(config.getCalculateDutyDueByTaxTypeUrl, declarationsByTaxTypeRequest)
+  ): EitherT[Future, ErrorResponse, CalculatedDutyDueByTaxType] = {
+    logger.info("Requesting calculation of duty due by tax type")
+    performCalculation[CalculateDutyDueByTaxTypeRequest, CalculatedDutyDueByTaxType](
+      config.getCalculateDutyDueByTaxTypeUrl,
+      declarationsByTaxTypeRequest
+    ).biSemiflatTap(
+      _ => Future.successful(logger.warn("Calculation of duty due by tax type failed")),
+      _ => Future.successful(logger.info("Calculation of duty due by tax type succeeded"))
+    )
+  }
 }
