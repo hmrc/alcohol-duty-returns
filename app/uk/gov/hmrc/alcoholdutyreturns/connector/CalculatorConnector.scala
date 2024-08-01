@@ -55,7 +55,11 @@ class CalculatorConnector @Inject() (
                 logger.warn(s"Parsing failed for calculation result", e)
                 Left(ErrorResponse.InvalidJson)
             }
-          case Left(errorResponse) if errorResponse.statusCode == BAD_REQUEST => Left(ErrorResponse.BadRequest)
+          case Left(errorResponse) if errorResponse.statusCode == BAD_REQUEST =>
+            logger.warn(
+              s"Received bad request from calculator API: ${errorResponse.message}"
+            )
+            Left(ErrorResponse.BadRequest)
           case Left(errorResponse)                                            =>
             logger.warn(
               s"Received unexpected response from calculator API: ${errorResponse.statusCode} ${errorResponse.message}"

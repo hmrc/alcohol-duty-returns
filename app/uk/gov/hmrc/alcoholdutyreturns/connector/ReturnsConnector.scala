@@ -56,18 +56,18 @@ class ReturnsConnector @Inject() (
                 Right(returnDetailsSuccess.success)
               case Failure(e)                    =>
                 logger.warn(
-                  s"Parsing failed for return (appaId ${returnId.appaId}, periodKey ${returnId.periodKey}): result",
+                  s"Parsing failed for return (appaId ${returnId.appaId}, periodKey ${returnId.periodKey})",
                   e
                 )
                 Left(ErrorResponse.InvalidJson)
             }
           case Left(errorResponse) if errorResponse.statusCode == BAD_REQUEST =>
             logger.warn(
-              s"Bad request returned for get return (appaId ${returnId.appaId}, periodKey ${returnId.periodKey}): result"
+              s"Bad request returned for get return (appaId ${returnId.appaId}, periodKey ${returnId.periodKey}): ${errorResponse.message}"
             )
             Left(ErrorResponse.BadRequest)
           case Left(errorResponse) if errorResponse.statusCode == NOT_FOUND   =>
-            logger.warn(s"Return not found (appaId ${returnId.appaId}, periodKey ${returnId.periodKey}): result")
+            logger.warn(s"Return not found (appaId ${returnId.appaId}, periodKey ${returnId.periodKey})")
             Left(ErrorResponse.EntityNotFound)
           case Left(errorResponse)                                            =>
             logger.warn(
@@ -98,14 +98,16 @@ class ReturnsConnector @Inject() (
                 Right(returnCreatedSuccess.success)
               case Failure(e)                    =>
                 logger
-                  .warn(s"Parsing failed for submit return response (appaId $appaId, periodKey $periodKey): result", e)
+                  .warn(s"Parsing failed for submit return response (appaId $appaId, periodKey $periodKey)", e)
                 Left(ErrorResponse.InvalidJson)
             }
           case Left(errorResponse) if errorResponse.statusCode == BAD_REQUEST =>
-            logger.warn(s"Bad request returned for submit return (appaId $appaId, periodKey $periodKey): result")
+            logger.warn(
+              s"Bad request returned for submit return (appaId $appaId, periodKey $periodKey): ${errorResponse.message}"
+            )
             Left(ErrorResponse.BadRequest)
           case Left(errorResponse) if errorResponse.statusCode == NOT_FOUND   =>
-            logger.warn(s"Not found returned for submit return (appaId $appaId, periodKey $periodKey): result")
+            logger.warn(s"Not found returned for submit return (appaId $appaId, periodKey $periodKey)")
             Left(ErrorResponse.EntityNotFound)
           case Left(errorResponse)                                            =>
             logger.warn(
