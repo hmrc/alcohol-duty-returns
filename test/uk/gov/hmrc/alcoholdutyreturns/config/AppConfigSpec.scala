@@ -20,20 +20,33 @@ import uk.gov.hmrc.alcoholdutyreturns.base.SpecBase
 
 class SpecBaseWithConfigOverrides extends SpecBase {
   override def configOverrides: Map[String, Any] = Map(
-    "microservice.services.returns.port"          -> "http",
-    "microservice.services.returns.host"          -> "host",
-    "microservice.services.returns.port"          -> 12345,
-    "microservice.services.returns.url.getReturn" -> "/excise/{0}/return/{1}/{2}",
-    "downstream-apis.regimeType"                  -> "AD"
+    "microservice.services.alcohol-duty-calculator.port"                          -> "http",
+    "microservice.services.alcohol-duty-calculator.host"                          -> "calchost",
+    "microservice.services.alcohol-duty-calculator.port"                          -> 16003,
+    "microservice.services.alcohol-duty-calculator.url.calculateDutyDueByTaxType" -> "/alcohol-duty-calculator/calculate-duty-due-by-tax-type",
+    "microservice.services.returns.port"                                          -> "http",
+    "microservice.services.returns.host"                                          -> "host",
+    "microservice.services.returns.port"                                          -> 12345,
+    "microservice.services.returns.url.getReturn"                                 -> "/etmp/RESTAdapter/excise/{0}/return/{1}/{2}",
+    "microservice.services.returns.url.submitReturn"                              -> "/etmp/RESTAdapter/excise/{0}/return",
+    "downstream-apis.regimeType"                                                  -> regime
   )
 }
 
 class AppConfigSpec extends SpecBaseWithConfigOverrides {
   "AppConfig" should {
-    "return the getReturns url" in {
-      appConfig.getReturnsUrl(
+    "get the calculateDutyDueByTaxType url" in {
+      appConfig.getCalculateDutyDueByTaxTypeUrl shouldBe "http://calchost:16003/alcohol-duty-calculator/calculate-duty-due-by-tax-type"
+    }
+
+    "get the getReturn url" in {
+      appConfig.getReturnUrl(
         returnId
-      ) shouldBe s"http://host:12345/excise/ad/return/${returnId.appaId}/${returnId.periodKey}"
+      ) shouldBe s"http://host:12345/etmp/RESTAdapter/excise/${regime.toLowerCase}/return/${returnId.appaId}/${returnId.periodKey}"
+    }
+
+    "get the submitReturn url" in {
+      appConfig.submitReturnUrl shouldBe s"http://host:12345/etmp/RESTAdapter/excise/${regime.toLowerCase}/return"
     }
   }
 }

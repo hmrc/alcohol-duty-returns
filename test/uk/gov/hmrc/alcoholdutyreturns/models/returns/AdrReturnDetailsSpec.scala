@@ -34,23 +34,30 @@ class AdrReturnDetailsSpec extends SpecBase {
     "should convert ReturnDetails to AdrReturnDetails" in new SetUp {
       AdrReturnDetails.fromGetReturnDetails(returnDetails.success) shouldBe convertedReturnDetails(
         periodKey,
-        Instant.now(clock)
+        now
       )
+    }
+
+    "should convert a nil ReturnDetails to AdrReturnDetails" in new SetUp {
+      AdrReturnDetails.fromGetReturnDetails(nilReturn.success) shouldBe adrNilReturnDetails
     }
   }
 
   class SetUp {
     val periodKey: String = "24AC"
+    val now               = Instant.now(clock)
 
-    val returnDetails = successfulReturnsExample(
+    val returnDetails = successfulReturnExample(
       appaId,
       periodKey,
       submissionId,
       chargeReference,
-      Instant.now(clock)
+      now
     )
 
-    val adrReturnDetails = exampleReturnDetails(periodKey, Instant.now(clock))
+    val adrReturnDetails    = exampleReturnDetails(periodKey, now)
+    val nilReturn           = nilReturnExample(appaId, periodKey, submissionId, now)
+    val adrNilReturnDetails = nilReturnDetails(periodKey, now)
 
     val json =
       s"""{"identification":{"periodKey":"$periodKey","submittedTime":"2024-06-11T15:07:47.838Z"},"alcoholDeclared":{"alcoholDeclaredDetails":[{"taxType":"311","litresOfPureAlcohol":450,"dutyRate":9.27,"dutyValue":4171.5},{"taxType":"321","litresOfPureAlcohol":450,"dutyRate":21.01,"dutyValue":9454.5},{"taxType":"331","litresOfPureAlcohol":450,"dutyRate":28.5,"dutyValue":12825},{"taxType":"341","litresOfPureAlcohol":450,"dutyRate":31.64,"dutyValue":14238},{"taxType":"351","litresOfPureAlcohol":450,"dutyRate":8.42,"dutyValue":3789},{"taxType":"356","litresOfPureAlcohol":450,"dutyRate":19.08,"dutyValue":8586},{"taxType":"361","litresOfPureAlcohol":450,"dutyRate":8.4,"dutyValue":3780},{"taxType":"366","litresOfPureAlcohol":450,"dutyRate":16.47,"dutyValue":7411.5},{"taxType":"371","litresOfPureAlcohol":450,"dutyRate":8.2,"dutyValue":3960},{"taxType":"376","litresOfPureAlcohol":450,"dutyRate":15.63,"dutyValue":7033.5}],"total":75249},"adjustments":{"adjustmentDetails":[{"adjustmentTypeKey":"underdeclaration","taxType":"321","litresOfPureAlcohol":150,"dutyRate":21.01,"dutyValue":3151.5},{"adjustmentTypeKey":"spoilt","taxType":"321","litresOfPureAlcohol":1150,"dutyRate":21.01,"dutyValue":-24161.5},{"adjustmentTypeKey":"spoilt","taxType":"321","litresOfPureAlcohol":75,"dutyRate":21.01,"dutyValue":-1575.5},{"adjustmentTypeKey":"repackagedDraught","taxType":"321","litresOfPureAlcohol":150,"dutyRate":21.01,"dutyValue":3151.5}],"total":-19434},"totalDutyDue":{"totalDue":55815}}"""

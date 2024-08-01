@@ -23,8 +23,9 @@ import play.api.libs.json.Json
 import play.api.mvc.Result
 import uk.gov.hmrc.alcoholdutyreturns.base.SpecBase
 import uk.gov.hmrc.alcoholdutyreturns.connector.ReturnsConnector
-import uk.gov.hmrc.alcoholdutyreturns.models.returns.GetReturnDetails
+import uk.gov.hmrc.alcoholdutyreturns.models.returns.{GetReturnDetails, ReturnCreatedDetails}
 import uk.gov.hmrc.alcoholdutyreturns.models.ErrorResponse
+import uk.gov.hmrc.alcoholdutyreturns.service.ReturnsService
 
 import java.time.Instant
 import scala.concurrent.Future
@@ -32,7 +33,7 @@ import scala.concurrent.Future
 class ReturnsControllerSpec extends SpecBase {
   "ReturnsController" when {
     "calling getReturn" should {
-      "return 200 OK and the return" in new SetUp {
+      "return 200 OK and the return when successful" in new SetUp {
         when(mockReturnsConnector.getReturn(eqTo(returnId.copy(periodKey = periodKey)))(any()))
           .thenReturn(EitherT.rightT[Future, ErrorResponse](returnDetails.success))
 
@@ -43,7 +44,17 @@ class ReturnsControllerSpec extends SpecBase {
         contentAsJson(result) shouldBe Json.toJson(adrReturnDetails)
       }
 
-      "return 404 NOT_FOUND when there is an issue" in new SetUp {
+      "return 400 BAD_REQUEST when there is a BAD_REQUEST" in new SetUp {
+        when(mockReturnsConnector.getReturn(eqTo(returnId.copy(periodKey = periodKey)))(any()))
+          .thenReturn(EitherT.leftT[Future, GetReturnDetails](ErrorResponse.BadRequest))
+
+        val result: Future[Result] =
+          controller.getReturn(appaId, periodKey)(fakeRequest)
+
+        status(result) shouldBe BAD_REQUEST
+      }
+
+      "return 404 NOT_FOUND when not found" in new SetUp {
         when(mockReturnsConnector.getReturn(eqTo(returnId.copy(periodKey = periodKey)))(any()))
           .thenReturn(EitherT.leftT[Future, GetReturnDetails](ErrorResponse.EntityNotFound))
 
@@ -52,17 +63,89 @@ class ReturnsControllerSpec extends SpecBase {
 
         status(result) shouldBe NOT_FOUND
       }
+
+      "return 500 INTERNAL_SERVER_ERROR when an unexpected response" in new SetUp {
+        when(mockReturnsConnector.getReturn(eqTo(returnId.copy(periodKey = periodKey)))(any()))
+          .thenReturn(EitherT.leftT[Future, GetReturnDetails](ErrorResponse.UnexpectedResponse))
+
+        val result: Future[Result] =
+          controller.getReturn(appaId, periodKey)(fakeRequest)
+
+        status(result) shouldBe INTERNAL_SERVER_ERROR
+      }
+    }
+
+    "calling submitReturn" should {
+      "return 201 CREATED and the submission created response when successful" in new SetUp {
+        when(
+          mockReturnsService.submitReturn(eqTo(adrReturnsSubmission), eqTo(returnId.copy(periodKey = periodKey)))(any())
+        )
+          .thenReturn(EitherT.rightT[Future, ErrorResponse](returnCreatedDetails))
+
+        val result: Future[Result] =
+          controller.submitReturn(appaId, periodKey)(
+            fakeRequestWithJsonBody(Json.toJson(adrReturnsSubmission))
+          )
+
+        status(result)        shouldBe CREATED
+        contentAsJson(result) shouldBe Json.toJson(adrReturnCreatedDetails)
+      }
+
+      "return 400 BAD_REQUEST when there is a BAD_REQUEST" in new SetUp {
+        when(
+          mockReturnsService.submitReturn(eqTo(adrReturnsSubmission), eqTo(returnId.copy(periodKey = periodKey)))(any())
+        )
+          .thenReturn(EitherT.leftT[Future, ReturnCreatedDetails](ErrorResponse.BadRequest))
+
+        val result: Future[Result] =
+          controller.submitReturn(appaId, periodKey)(
+            fakeRequestWithJsonBody(Json.toJson(adrReturnsSubmission))
+          )
+
+        status(result) shouldBe BAD_REQUEST
+      }
+
+      "return 404 NOT_FOUND when not found" in new SetUp {
+        when(
+          mockReturnsService.submitReturn(eqTo(adrReturnsSubmission), eqTo(returnId.copy(periodKey = periodKey)))(any())
+        )
+          .thenReturn(EitherT.leftT[Future, ReturnCreatedDetails](ErrorResponse.EntityNotFound))
+
+        val result: Future[Result] =
+          controller.submitReturn(appaId, periodKey)(
+            fakeRequestWithJsonBody(Json.toJson(adrReturnsSubmission))
+          )
+
+        status(result) shouldBe NOT_FOUND
+      }
+
+      "return 500 INTERNAL_SERVER_ERROR when an unexpected response" in new SetUp {
+        when(
+          mockReturnsService.submitReturn(eqTo(adrReturnsSubmission), eqTo(returnId.copy(periodKey = periodKey)))(any())
+        )
+          .thenReturn(EitherT.leftT[Future, ReturnCreatedDetails](ErrorResponse.UnexpectedResponse))
+
+        val result: Future[Result] =
+          controller.submitReturn(appaId, periodKey)(
+            fakeRequestWithJsonBody(Json.toJson(adrReturnsSubmission))
+          )
+
+        status(result) shouldBe INTERNAL_SERVER_ERROR
+      }
     }
   }
 
   class SetUp {
+    val mockReturnsService: ReturnsService     = mock[ReturnsService]
     val mockReturnsConnector: ReturnsConnector = mock[ReturnsConnector]
 
-    val controller = new ReturnsController(fakeAuthorisedAction, mockReturnsConnector, cc)
+    val controller = new ReturnsController(fakeAuthorisedAction, mockReturnsService, mockReturnsConnector, cc)
 
     val periodKey: String = "24AC"
+    val total             = BigDecimal("12345.67")
+    val now               = Instant.now()
 
-    val returnDetails = successfulReturnsExample(
+    val returnDetails = successfulReturnExample(
       appaId,
       periodKey,
       submissionId,
@@ -71,5 +154,11 @@ class ReturnsControllerSpec extends SpecBase {
     )
 
     val adrReturnDetails = convertedReturnDetails(periodKey, Instant.now(clock))
+
+    val adrReturnsSubmission = exampleReturnSubmissionRequest
+
+    val returnCreatedDetails    =
+      exampleReturnCreatedSuccessfulResponse(periodKey, total, now, chargeReference, submissionId).success
+    val adrReturnCreatedDetails = exampleReturnCreatedDetails(periodKey, total, now, chargeReference)
   }
 }

@@ -19,6 +19,7 @@ package uk.gov.hmrc.alcoholdutyreturns.base
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock.{aResponse, getRequestedFor, postRequestedFor, urlEqualTo}
+import com.github.tomakehurst.wiremock.matching.EqualToJsonPattern
 
 trait WireMockHelper {
   val wireMockServer: WireMockServer
@@ -61,9 +62,9 @@ trait WireMockHelper {
         .willReturn(aResponse().withStatus(status).withBody(body))
     )
 
-  def stubPost(url: String, status: Int, body: String): Unit =
+  def stubPost(url: String, status: Int, requestBody: String, returnBody: String): Unit =
     wireMockServer.stubFor(
-      WireMock.post(urlEqualTo(stripToPath(url))).willReturn(aResponse().withStatus(status).withBody(body))
+      WireMock.post(urlEqualTo(stripToPath(url))).withRequestBody(new EqualToJsonPattern(requestBody, true, false)).willReturn(aResponse().withStatus(status).withBody(returnBody))
     )
 
   def verifyGet(url: String): Unit =
