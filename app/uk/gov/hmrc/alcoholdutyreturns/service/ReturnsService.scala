@@ -20,6 +20,7 @@ import cats.implicits._
 import cats.data.EitherT
 import com.google.inject.{Inject, Singleton}
 import uk.gov.hmrc.alcoholdutyreturns.connector.{CalculatorConnector, ReturnsConnector}
+import uk.gov.hmrc.alcoholdutyreturns.models.ErrorResponse.BadRequest
 import uk.gov.hmrc.alcoholdutyreturns.models.calculation.CalculateDutyDueByTaxTypeRequest
 import uk.gov.hmrc.alcoholdutyreturns.models.{ErrorResponse, ReturnId}
 import uk.gov.hmrc.alcoholdutyreturns.models.returns.{AdrReturnSubmission, ReturnCreate, ReturnCreatedDetails, TotalDutyDuebyTaxType}
@@ -32,11 +33,12 @@ import scala.concurrent.{ExecutionContext, Future}
 class ReturnsService @Inject() (
   returnsConnector: ReturnsConnector,
   calculatorConnector: CalculatorConnector,
-  cacheRepository: CacheRepository
+  cacheRepository: CacheRepository,
+  schemaValidationService: SchemaValidationService
 )(implicit
   ec: ExecutionContext
 ) {
-  def calculateTotalDutyDueByTaxType(
+  private def calculateTotalDutyDueByTaxType(
     returnSubmission: AdrReturnSubmission
   )(implicit hc: HeaderCarrier): EitherT[Future, ErrorResponse, Option[Seq[TotalDutyDuebyTaxType]]] =
     CalculateDutyDueByTaxTypeRequest
@@ -44,15 +46,28 @@ class ReturnsService @Inject() (
       .map(calculatorConnector.calculateDutyDueByTaxType)
       .traverse(_.map(_.convertToTotalDutyDuebyTaxType()))
 
+  private def validateAgainstSchema(returnToSubmit: ReturnCreate): EitherT[Future, ErrorResponse, Unit] =
+    EitherT(
+      Future(
+        if (!schemaValidationService.validateAgainstSchema(returnToSubmit)) {
+          Left(BadRequest)
+        } else {
+          Right(())
+        }
+      )
+    )
+
   def submitReturn(returnSubmission: AdrReturnSubmission, returnId: ReturnId)(implicit
     hc: HeaderCarrier
   ): EitherT[Future, ErrorResponse, ReturnCreatedDetails] = {
-    val returnToSubmit = ReturnCreate.fromAdrReturnSubmission(returnSubmission, returnId.periodKey)
+    val returnConvertedToSubmissionFormat = ReturnCreate.fromAdrReturnSubmission(returnSubmission, returnId.periodKey)
 
     for {
       maybeTotalDutyDueByTaxType <- calculateTotalDutyDueByTaxType(returnSubmission)
+      returnToSubmit              = returnConvertedToSubmissionFormat.copy(totalDutyDuebyTaxType = maybeTotalDutyDueByTaxType)
+      _                          <- validateAgainstSchema(returnToSubmit)
       returnCreatedDetails       <- returnsConnector.submitReturn(
-                                      returnToSubmit.copy(totalDutyDuebyTaxType = maybeTotalDutyDueByTaxType),
+                                      returnToSubmit,
                                       returnId.appaId
                                     )
       _                          <- EitherT.right[ErrorResponse](cacheRepository.clearUserAnswersById(returnId))

@@ -59,6 +59,23 @@ class ReturnsIntegrationSpec extends ISpecBase {
         verifyPost(calculateDutyDueByTaxTypeUrl)
         verifyPost(submitReturnUrl)
       }
+
+      "return 400 BAD_REQUEST and the submission created response when successful" in new SetUp {
+        stubAuthorised()
+        stubPost(calculateDutyDueByTaxTypeUrl, OK, Json.toJson(calculateDutyDueByTaxTypeRequestForExampleSubmission).toString(), Json.toJson(calculatedDutyDueByTaxTypeForExampleSubmission).toString())
+        stubPost(submitReturnUrl, CREATED, Json.toJson(returnSubmission).toString(), Json.toJson(returnCreatedSuccess).toString())
+
+        val response = callRoute(
+          FakeRequest("POST", routes.ReturnsController.submitReturn(appaId, periodKey).url)
+            .withHeaders("Authorization" -> "Bearer 12345")
+            .withBody(Json.toJson(badAdrReturnsSubmission))
+        )
+
+        status(response) shouldBe BAD_REQUEST
+
+        verifyPost(calculateDutyDueByTaxTypeUrl)
+        verifyPostNeverCalled(submitReturnUrl)
+      }
     }
   }
 
@@ -76,6 +93,7 @@ class ReturnsIntegrationSpec extends ISpecBase {
     val adrReturnDetails = convertedReturnDetails(periodKey, now)
 
     val adrReturnsSubmission = exampleReturnSubmissionRequest
+    val badAdrReturnsSubmission = exampleReturnSubmissionRequest.copy(totals = adrReturnsSubmission.totals.copy(totalDutyDue = BigDecimal("99.999")))
 
     val returnSubmission = returnCreateSubmission(periodKey)
     val returnCreatedSuccess    =

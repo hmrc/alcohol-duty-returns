@@ -1,0 +1,907 @@
+{
+  "description": "EPID1491 - D1809- Consumer to ETMP - Alcohol Duty Create API",
+  "required": [
+    "alcoholProducts",
+    "drawback",
+    "netDutySuspension",
+    "overDeclaration",
+    "periodKey",
+    "repackagedDraught",
+    "spoiltProduct",
+    "totalDutyDue",
+    "underDeclaration"
+  ],
+  "type": "object",
+  "properties": {
+    "periodKey": {
+      "maxLength": 4,
+      "minLength": 4,
+      "type": "string"
+    },
+    "alcoholProducts": {
+      "required": [
+        "alcoholProductsProducedFilled"
+      ],
+      "type": "object",
+      "properties": {
+        "alcoholProductsProducedFilled": {
+          "maxLength": 1,
+          "minLength": 1,
+          "enum": [
+            "0",
+            "1"
+          ],
+          "type": "string"
+        },
+        "regularReturn": {
+          "minItems": 0,
+          "type": "array",
+          "items": {
+            "required": [
+              "dutyDue",
+              "dutyRate",
+              "litresOfPureAlcohol",
+              "litresProduced",
+              "taxType"
+            ],
+            "type": "object",
+            "properties": {
+              "taxType": {
+                "maxLength": 3,
+                "minLength": 3,
+                "type": "string"
+              },
+              "dutyRate": {
+                "description": "Volume - Total digit 11 with 2 decimal place",
+                "multipleOf": 0.01,
+                "maximum": 999999999.99,
+                "minimum": -999999999.99,
+                "type": "number"
+              },
+              "litresProduced": {
+                "description": "Volume - Total digit 11 with 2 decimal place",
+                "multipleOf": 0.01,
+                "maximum": 999999999.99,
+                "minimum": -999999999.99,
+                "type": "number"
+              },
+              "litresOfPureAlcohol": {
+                "description": "Total digit 13 with 4 decimal place",
+                "multipleOf": 0.0001,
+                "maximum": 999999999.9999,
+                "minimum": -999999999.9999,
+                "type": "number"
+              },
+              "dutyDue": {
+                "description": "Currency - Total digit 13 with 2 decimal place",
+                "multipleOf": 0.01,
+                "maximum": 99999999999.99,
+                "minimum": -99999999999.99,
+                "type": "number"
+              },
+              "productName": {
+                "maxLength": 120,
+                "minLength": 0,
+                "type": "string"
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "overDeclaration": {
+      "required": [
+        "overDeclFilled"
+      ],
+      "type": "object",
+      "properties": {
+        "overDeclFilled": {
+          "maxLength": 1,
+          "minLength": 1,
+          "enum": [
+            "0",
+            "1"
+          ],
+          "type": "string"
+        },
+        "reasonForOverDecl": {
+          "maxLength": 250,
+          "minLength": 1,
+          "type": "string"
+        },
+        "overDeclarationProducts": {
+          "minItems": 0,
+          "type": "array",
+          "items": {
+            "required": [
+              "dutyDue",
+              "dutyRate",
+              "litresOfPureAlcohol",
+              "litresProduced",
+              "returnPeriodAffected",
+              "taxType"
+            ],
+            "type": "object",
+            "properties": {
+              "returnPeriodAffected": {
+                "maxLength": 4,
+                "minLength": 4,
+                "type": "string"
+              },
+              "taxType": {
+                "maxLength": 3,
+                "minLength": 3,
+                "type": "string"
+              },
+              "dutyRate": {
+                "description": "Volume - Total digit 11 with 2 decimal place",
+                "multipleOf": 0.01,
+                "maximum": 999999999.99,
+                "minimum": -999999999.99,
+                "type": "number"
+              },
+              "litresProduced": {
+                "description": "Volume - Total digit 11 with 2 decimal place",
+                "multipleOf": 0.01,
+                "maximum": 999999999.99,
+                "minimum": -999999999.99,
+                "type": "number"
+              },
+              "litresOfPureAlcohol": {
+                "description": "Total digit 13 with 4 decimal place",
+                "multipleOf": 0.0001,
+                "maximum": 999999999.9999,
+                "minimum": -999999999.9999,
+                "type": "number"
+              },
+              "dutyDue": {
+                "description": "Currency - Total digit 13 with 2 decimal place",
+                "multipleOf": 0.01,
+                "maximum": 99999999999.99,
+                "minimum": -99999999999.99,
+                "type": "number"
+              },
+              "productName": {
+                "maxLength": 120,
+                "minLength": 0,
+                "type": "string"
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "underDeclaration": {
+      "required": [
+        "underDeclFilled"
+      ],
+      "type": "object",
+      "properties": {
+        "underDeclFilled": {
+          "maxLength": 1,
+          "minLength": 1,
+          "enum": [
+            "0",
+            "1"
+          ],
+          "type": "string"
+        },
+        "reasonForUnderDecl": {
+          "maxLength": 250,
+          "minLength": 1,
+          "type": "string"
+        },
+        "underDeclarationProducts": {
+          "minItems": 0,
+          "type": "array",
+          "items": {
+            "required": [
+              "dutyDue",
+              "dutyRate",
+              "litresOfPureAlcohol",
+              "litresProduced",
+              "returnPeriodAffected",
+              "taxType"
+            ],
+            "type": "object",
+            "properties": {
+              "returnPeriodAffected": {
+                "maxLength": 4,
+                "minLength": 4,
+                "type": "string"
+              },
+              "taxType": {
+                "maxLength": 3,
+                "minLength": 3,
+                "type": "string"
+              },
+              "dutyRate": {
+                "description": "Volume - Total digit 11 with 2 decimal place",
+                "multipleOf": 0.01,
+                "maximum": 999999999.99,
+                "minimum": -999999999.99,
+                "type": "number"
+              },
+              "litresProduced": {
+                "description": "Volume - Total digit 11 with 2 decimal place",
+                "multipleOf": 0.01,
+                "maximum": 999999999.99,
+                "minimum": -999999999.99,
+                "type": "number"
+              },
+              "litresOfPureAlcohol": {
+                "description": "Total digit 13 with 4 decimal place",
+                "multipleOf": 0.0001,
+                "maximum": 999999999.9999,
+                "minimum": -999999999.9999,
+                "type": "number"
+              },
+              "dutyDue": {
+                "description": "Currency - Total digit 13 with 2 decimal place",
+                "multipleOf": 0.01,
+                "maximum": 99999999999.99,
+                "minimum": -99999999999.99,
+                "type": "number"
+              },
+              "productName": {
+                "maxLength": 120,
+                "minLength": 0,
+                "type": "string"
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "spoiltProduct": {
+      "required": [
+        "spoiltProdFilled"
+      ],
+      "type": "object",
+      "properties": {
+        "spoiltProdFilled": {
+          "maxLength": 1,
+          "minLength": 1,
+          "enum": [
+            "0",
+            "1"
+          ],
+          "type": "string"
+        },
+        "spoiltProductProducts": {
+          "minItems": 0,
+          "type": "array",
+          "items": {
+            "required": [
+              "dutyDue",
+              "dutyRate",
+              "litresOfPureAlcohol",
+              "litresProduced",
+              "returnPeriodAffected",
+              "taxType"
+            ],
+            "type": "object",
+            "properties": {
+              "returnPeriodAffected": {
+                "maxLength": 4,
+                "minLength": 4,
+                "type": "string"
+              },
+              "taxType": {
+                "maxLength": 3,
+                "minLength": 3,
+                "type": "string"
+              },
+              "dutyRate": {
+                "description": "Volume - Total digit 11 with 2 decimal place",
+                "multipleOf": 0.01,
+                "maximum": 999999999.99,
+                "minimum": -999999999.99,
+                "type": "number"
+              },
+              "litresProduced": {
+                "description": "Volume - Total digit 11 with 2 decimal place",
+                "multipleOf": 0.01,
+                "maximum": 999999999.99,
+                "minimum": -999999999.99,
+                "type": "number"
+              },
+              "litresOfPureAlcohol": {
+                "description": "Total digit 13 with 4 decimal place",
+                "multipleOf": 0.0001,
+                "maximum": 999999999.9999,
+                "minimum": -999999999.9999,
+                "type": "number"
+              },
+              "dutyDue": {
+                "description": "Currency - Total digit 13 with 2 decimal place",
+                "multipleOf": 0.01,
+                "maximum": 99999999999.99,
+                "minimum": -99999999999.99,
+                "type": "number"
+              },
+              "productName": {
+                "maxLength": 120,
+                "minLength": 0,
+                "type": "string"
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "drawback": {
+      "required": [
+        "drawbackFilled"
+      ],
+      "type": "object",
+      "properties": {
+        "drawbackFilled": {
+          "maxLength": 1,
+          "minLength": 1,
+          "enum": [
+            "0",
+            "1"
+          ],
+          "type": "string"
+        },
+        "drawbackProducts": {
+          "minItems": 0,
+          "type": "array",
+          "items": {
+            "required": [
+              "dutyDue",
+              "dutyRate",
+              "litresOfPureAlcohol",
+              "litresProduced",
+              "returnPeriodAffected",
+              "taxType"
+            ],
+            "type": "object",
+            "properties": {
+              "returnPeriodAffected": {
+                "maxLength": 4,
+                "minLength": 4,
+                "type": "string"
+              },
+              "taxType": {
+                "maxLength": 3,
+                "minLength": 3,
+                "type": "string"
+              },
+              "dutyRate": {
+                "description": "Volume - Total digit 11 with 2 decimal place",
+                "multipleOf": 0.01,
+                "maximum": 999999999.99,
+                "minimum": -999999999.99,
+                "type": "number"
+              },
+              "litresProduced": {
+                "description": "Volume - Total digit 11 with 2 decimal place",
+                "multipleOf": 0.01,
+                "maximum": 999999999.99,
+                "minimum": -999999999.99,
+                "type": "number"
+              },
+              "litresOfPureAlcohol": {
+                "description": "Total digit 13 with 4 decimal place",
+                "multipleOf": 0.0001,
+                "maximum": 999999999.9999,
+                "minimum": -999999999.9999,
+                "type": "number"
+              },
+              "dutyDue": {
+                "description": "Currency - Total digit 13 with 2 decimal place",
+                "multipleOf": 0.01,
+                "maximum": 99999999999.99,
+                "minimum": -99999999999.99,
+                "type": "number"
+              },
+              "productName": {
+                "maxLength": 120,
+                "minLength": 0,
+                "type": "string"
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "repackagedDraught": {
+      "required": [
+        "repDraughtFilled"
+      ],
+      "type": "object",
+      "properties": {
+        "repDraughtFilled": {
+          "maxLength": 1,
+          "minLength": 1,
+          "enum": [
+            "0",
+            "1"
+          ],
+          "type": "string"
+        },
+        "repackagedDraughtProducts": {
+          "minItems": 0,
+          "type": "array",
+          "items": {
+            "required": [
+              "dutyDue",
+              "dutyRate",
+              "litresOfPureAlcohol",
+              "litresOfRepackaging",
+              "newTaxType",
+              "originaldutyRate",
+              "originaltaxType",
+              "returnPeriodAffected"
+            ],
+            "type": "object",
+            "properties": {
+              "returnPeriodAffected": {
+                "maxLength": 4,
+                "minLength": 4,
+                "type": "string"
+              },
+              "originaltaxType": {
+                "maxLength": 3,
+                "minLength": 3,
+                "type": "string"
+              },
+              "originaldutyRate": {
+                "description": "Volume - Total digit 11 with 2 decimal place",
+                "multipleOf": 0.01,
+                "maximum": 999999999.99,
+                "minimum": -999999999.99,
+                "type": "number"
+              },
+              "newTaxType": {
+                "maxLength": 3,
+                "minLength": 3,
+                "type": "string"
+              },
+              "dutyRate": {
+                "description": "Volume - Total digit 11 with 2 decimal place",
+                "multipleOf": 0.01,
+                "maximum": 999999999.99,
+                "minimum": -999999999.99,
+                "type": "number"
+              },
+              "litresOfRepackaging": {
+                "description": "Volume - Total digit 11 with 2 decimal place",
+                "multipleOf": 0.01,
+                "maximum": 999999999.99,
+                "minimum": -999999999.99,
+                "type": "number"
+              },
+              "litresOfPureAlcohol": {
+                "description": "Total digit 13 with 4 decimal place",
+                "multipleOf": 0.0001,
+                "maximum": 999999999.9999,
+                "minimum": -999999999.9999,
+                "type": "number"
+              },
+              "dutyDue": {
+                "description": "Currency - Total digit 13 with 2 decimal place",
+                "multipleOf": 0.01,
+                "maximum": 99999999999.99,
+                "minimum": -99999999999.99,
+                "type": "number"
+              },
+              "productName": {
+                "maxLength": 120,
+                "minLength": 0,
+                "type": "string"
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "totalDutyDuebyTaxType": {
+      "minItems": 1,
+      "type": "array",
+      "items": {
+        "required": [
+          "taxType",
+          "totalDutyDueTaxType"
+        ],
+        "type": "object",
+        "properties": {
+          "taxType": {
+            "maxLength": 3,
+            "minLength": 3,
+            "type": "string"
+          },
+          "totalDutyDueTaxType": {
+            "description": "Currency - Total digit 13 with 2 decimal place",
+            "multipleOf": 0.01,
+            "maximum": 99999999999.99,
+            "minimum": -99999999999.99,
+            "type": "number"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "totalDutyDue": {
+      "required": [
+        "totalDutyDrawback",
+        "totalDutyDue",
+        "totalDutyDueAlcoholProducts",
+        "totalDutyOverDeclaration",
+        "totalDutyRepDraughtProducts",
+        "totalDutySpoiltProduct",
+        "totalDutyUnderDeclaration"
+      ],
+      "type": "object",
+      "properties": {
+        "totalDutyDueAlcoholProducts": {
+          "description": "Currency - Total digit 13 with 2 decimal place",
+          "multipleOf": 0.01,
+          "maximum": 99999999999.99,
+          "minimum": -99999999999.99,
+          "type": "number"
+        },
+        "totalDutyOverDeclaration": {
+          "description": "Currency - Total digit 13 with 2 decimal place",
+          "multipleOf": 0.01,
+          "maximum": 99999999999.99,
+          "minimum": -99999999999.99,
+          "type": "number"
+        },
+        "totalDutyUnderDeclaration": {
+          "description": "Currency - Total digit 13 with 2 decimal place",
+          "multipleOf": 0.01,
+          "maximum": 99999999999.99,
+          "minimum": -99999999999.99,
+          "type": "number"
+        },
+        "totalDutySpoiltProduct": {
+          "description": "Currency - Total digit 13 with 2 decimal place",
+          "multipleOf": 0.01,
+          "maximum": 99999999999.99,
+          "minimum": -99999999999.99,
+          "type": "number"
+        },
+        "totalDutyDrawback": {
+          "description": "Currency - Total digit 13 with 2 decimal place",
+          "multipleOf": 0.01,
+          "maximum": 99999999999.99,
+          "minimum": -99999999999.99,
+          "type": "number"
+        },
+        "totalDutyRepDraughtProducts": {
+          "description": "Currency - Total digit 13 with 2 decimal place",
+          "multipleOf": 0.01,
+          "maximum": 99999999999.99,
+          "minimum": -99999999999.99,
+          "type": "number"
+        },
+        "totalDutyDue": {
+          "description": "Currency - Total digit 13 with 2 decimal place",
+          "multipleOf": 0.01,
+          "maximum": 99999999999.99,
+          "minimum": -99999999999.99,
+          "type": "number"
+        }
+      },
+      "additionalProperties": false
+    },
+    "netDutySuspension": {
+      "required": [
+        "netDutySuspensionFilled"
+      ],
+      "type": "object",
+      "properties": {
+        "netDutySuspensionFilled": {
+          "maxLength": 1,
+          "minLength": 1,
+          "enum": [
+            "0",
+            "1"
+          ],
+          "type": "string"
+        },
+        "netDutySuspensionProducts": {
+          "type": "object",
+          "properties": {
+            "totalLtsBeer": {
+              "description": "Volume - Total digit 11 with 2 decimal place",
+              "multipleOf": 0.01,
+              "maximum": 999999999.99,
+              "minimum": -999999999.99,
+              "type": "number"
+            },
+            "totalLtsWine": {
+              "description": "Volume - Total digit 11 with 2 decimal place",
+              "multipleOf": 0.01,
+              "maximum": 999999999.99,
+              "minimum": -999999999.99,
+              "type": "number"
+            },
+            "totalLtsCider": {
+              "description": "Volume - Total digit 11 with 2 decimal place",
+              "multipleOf": 0.01,
+              "maximum": 999999999.99,
+              "minimum": -999999999.99,
+              "type": "number"
+            },
+            "totalLtsSpirit": {
+              "description": "Volume - Total digit 11 with 2 decimal place",
+              "multipleOf": 0.01,
+              "maximum": 999999999.99,
+              "minimum": -999999999.99,
+              "type": "number"
+            },
+            "totalLtsOtherFermented": {
+              "description": "Volume - Total digit 11 with 2 decimal place",
+              "multipleOf": 0.01,
+              "maximum": 999999999.99,
+              "minimum": -999999999.99,
+              "type": "number"
+            },
+            "totalLtsPureAlcoholBeer": {
+              "description": "Total digit 13 with 4 decimal place",
+              "multipleOf": 0.0001,
+              "maximum": 999999999.9999,
+              "minimum": -999999999.9999,
+              "type": "number"
+            },
+            "totalLtsPureAlcoholWine": {
+              "description": "Total digit 13 with 4 decimal place",
+              "multipleOf": 0.0001,
+              "maximum": 999999999.9999,
+              "minimum": -999999999.9999,
+              "type": "number"
+            },
+            "totalLtsPureAlcoholCider": {
+              "description": "Total digit 13 with 4 decimal place",
+              "multipleOf": 0.0001,
+              "maximum": 999999999.9999,
+              "minimum": -999999999.9999,
+              "type": "number"
+            },
+            "totalLtsPureAlcoholSpirit": {
+              "description": "Total digit 13 with 4 decimal place",
+              "multipleOf": 0.0001,
+              "maximum": 999999999.9999,
+              "minimum": -999999999.9999,
+              "type": "number"
+            },
+            "totalLtsPureAlcoholOtherFermented": {
+              "description": "Total digit 13 with 4 decimal place",
+              "multipleOf": 0.0001,
+              "maximum": 999999999.9999,
+              "minimum": -999999999.9999,
+              "type": "number"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "spiritsProduced": {
+      "required": [
+        "spiritsProdFilled"
+      ],
+      "type": "object",
+      "properties": {
+        "spiritsProdFilled": {
+          "maxLength": 1,
+          "minLength": 1,
+          "enum": [
+            "0",
+            "1"
+          ],
+          "type": "string"
+        },
+        "spiritsProduced": {
+          "required": [
+            "irishWhisky",
+            "scotchWhiskey",
+            "totalSpirits",
+            "typeOfSpirit"
+          ],
+          "type": "object",
+          "properties": {
+            "totalSpirits": {
+              "description": "Volume - Total digit 11 with 2 decimal place",
+              "multipleOf": 0.01,
+              "maximum": 999999999.99,
+              "minimum": -999999999.99,
+              "type": "number"
+            },
+            "scotchWhiskey": {
+              "description": "Volume - Total digit 11 with 2 decimal place",
+              "multipleOf": 0.01,
+              "maximum": 999999999.99,
+              "minimum": -999999999.99,
+              "type": "number"
+            },
+            "irishWhisky": {
+              "description": "Volume - Total digit 11 with 2 decimal place",
+              "multipleOf": 0.01,
+              "maximum": 999999999.99,
+              "minimum": -999999999.99,
+              "type": "number"
+            },
+            "typeOfSpirit": {
+              "description": "01-Malt Spirit02-Grain Spirit03-Neutral Spirit (agricultural origin)04-03-Neutral Spirit (industrial origin)05-Beer based spirit06-Wine/made-wine based spirit07-Cider/perry based spirit08-Other",
+              "maxItems": 8,
+              "minItems": 1,
+              "uniqueItems": true,
+              "type": "array",
+              "items": {
+                "description": "01-Malt Spirit  02-Grain Spirit  03-Neutral Spirit (agricultural origin)  04-Neutral Spirit (industrial origin)  05-Beer based spirit  06-Wine/made-wine based spirit 07-Cider/perry based spirit   08-Other",
+                "maxLength": 2,
+                "minLength": 2,
+                "enum": [
+                  "01",
+                  "02",
+                  "03",
+                  "04",
+                  "05",
+                  "06",
+                  "07",
+                  "08"
+                ],
+                "type": "string"
+              }
+            },
+            "typeOfSpiritOther": {
+              "maxLength": 150,
+              "minLength": 1,
+              "type": "string"
+            },
+            "code1MaltedBarley": {
+              "description": "Volume - Total digit 11 with 2 decimal place",
+              "multipleOf": 0.01,
+              "maximum": 999999999.99,
+              "minimum": -999999999.99,
+              "type": "number"
+            },
+            "code2Other": {
+              "maxLength": 1,
+              "minLength": 1,
+              "enum": [
+                "0",
+                "1"
+              ],
+              "type": "string"
+            },
+            "maltedGrainQuantity": {
+              "description": "Volume - Total digit 11 with 2 decimal place",
+              "multipleOf": 0.01,
+              "maximum": 999999999.99,
+              "minimum": -999999999.99,
+              "type": "number"
+            },
+            "maltedGrainType": {
+              "maxLength": 120,
+              "minLength": 1,
+              "type": "string"
+            },
+            "code3Wheat": {
+              "description": "Volume - Total digit 11 with 2 decimal place",
+              "multipleOf": 0.01,
+              "maximum": 999999999.99,
+              "minimum": -999999999.99,
+              "type": "number"
+            },
+            "code4Maize": {
+              "description": "Volume - Total digit 11 with 2 decimal place",
+              "multipleOf": 0.01,
+              "maximum": 999999999.99,
+              "minimum": -999999999.99,
+              "type": "number"
+            },
+            "code5Rye": {
+              "description": "Volume - Total digit 11 with 2 decimal place",
+              "multipleOf": 0.01,
+              "maximum": 999999999.99,
+              "minimum": -999999999.99,
+              "type": "number"
+            },
+            "code6UnmaltedGrain": {
+              "description": "Volume - Total digit 11 with 2 decimal place",
+              "multipleOf": 0.01,
+              "maximum": 999999999.99,
+              "minimum": -999999999.99,
+              "type": "number"
+            },
+            "code7EthyleneGas": {
+              "description": "Volume - Total digit 11 with 2 decimal place",
+              "multipleOf": 0.01,
+              "maximum": 999999999.99,
+              "minimum": -999999999.99,
+              "type": "number"
+            },
+            "code8Molasses": {
+              "description": "Volume - Total digit 11 with 2 decimal place",
+              "multipleOf": 0.01,
+              "maximum": 999999999.99,
+              "minimum": -999999999.99,
+              "type": "number"
+            },
+            "code9Beer": {
+              "description": "Volume - Total digit 11 with 2 decimal place",
+              "multipleOf": 0.01,
+              "maximum": 999999999.99,
+              "minimum": -999999999.99,
+              "type": "number"
+            },
+            "code10Wine": {
+              "description": "Volume - Total digit 11 with 2 decimal place",
+              "multipleOf": 0.01,
+              "maximum": 999999999.99,
+              "minimum": -999999999.99,
+              "type": "number"
+            },
+            "code11MadeWine": {
+              "description": "Volume - Total digit 11 with 2 decimal place",
+              "multipleOf": 0.01,
+              "maximum": 999999999.99,
+              "minimum": -999999999.99,
+              "type": "number"
+            },
+            "code12CiderOrPerry": {
+              "description": "Volume - Total digit 11 with 2 decimal place",
+              "multipleOf": 0.01,
+              "maximum": 999999999.99,
+              "minimum": -999999999.99,
+              "type": "number"
+            },
+            "code13Other": {
+              "maxLength": 1,
+              "minLength": 1,
+              "enum": [
+                "0",
+                "1"
+              ],
+              "type": "string"
+            },
+            "otherMaterialsQuantity": {
+              "description": "Volume - Total digit 11 with 2 decimal place",
+              "multipleOf": 0.01,
+              "maximum": 999999999.99,
+              "minimum": -999999999.99,
+              "type": "number"
+            },
+            "otherMaterialsUom": {
+              "description": "01-Tonnes\n02-Litres",
+              "maxLength": 2,
+              "minLength": 2,
+              "enum": [
+                "01",
+                "02"
+              ],
+              "type": "string"
+            },
+            "otherMaterialsType": {
+              "maxLength": 120,
+              "minLength": 0,
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

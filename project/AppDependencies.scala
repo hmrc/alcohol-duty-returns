@@ -13,7 +13,9 @@ object AppDependencies {
     "ai.x"              %% "play-json-extensions"      % "0.42.0",
     "uk.gov.hmrc.mongo" %% "hmrc-mongo-play-30"        % hmrcMongoVersion,
     "org.typelevel"     %% "cats-core"                 % "2.10.0",
-    "com.beachape"      %% "enumeratum-play"           % "1.8.0"
+    "com.beachape"      %% "enumeratum-play"           % "1.8.0",
+    "com.networknt"     % "json-schema-validator"      % "1.5.1" exclude("org.slf4j", "slf4j-api")
+      exclude("com.fasterxml.jackson.core", "jackson-databind"),
   )
 
   val test = Seq(
