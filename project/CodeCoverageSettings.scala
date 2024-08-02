@@ -1,13 +1,15 @@
+import CodeCoverageSettings.scoverageExcludedList
 import sbt.Setting
 import scoverage.ScoverageKeys
 
 object CodeCoverageSettings {
 
-  private val excludedPackages: Seq[String] = Seq(
+  private val scoverageExcludedList: Seq[String] = Seq(
     "<empty>",
     "Reverse.*",
     "uk.gov.hmrc.BuildInfo",
     "app.*",
+    ".*SchemaValidationService.*",
     "prod.*",
     ".*Routes.*",
     "testOnly.*",
@@ -15,7 +17,7 @@ object CodeCoverageSettings {
   )
 
   val settings: Seq[Setting[_]] = Seq(
-    ScoverageKeys.coverageExcludedPackages := excludedPackages.mkString(";"),
+    ScoverageKeys.coverageExcludedFiles := scoverageExcludedList.mkString(";"),
     ScoverageKeys.coverageMinimumStmtTotal := 99,
     ScoverageKeys.coverageFailOnMinimum := true,
     ScoverageKeys.coverageHighlighting := true
