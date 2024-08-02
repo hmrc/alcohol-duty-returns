@@ -71,6 +71,8 @@ class AppConfig @Inject() (config: Configuration, servicesConfig: ServicesConfig
 
   val regime: String = config.get[String]("downstream-apis.regimeType")
 
+  lazy val schemaDir = config.get[String]("schema-directory")
+
   private def getConfStringAndThrowIfNotFound(key: String) =
     servicesConfig.getConfString(key, throw new RuntimeException(s"Could not find services config key '$key'"))
 }

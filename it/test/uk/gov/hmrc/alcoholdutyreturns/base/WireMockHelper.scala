@@ -70,9 +70,18 @@ trait WireMockHelper {
   def verifyGet(url: String): Unit =
     wireMockServer.verify(getRequestedFor(urlEqualTo(stripToPath(url))))
 
+  def verifyGetNeverCalled(url: String): Unit =
+    wireMockServer.verify(0, getRequestedFor(urlEqualTo(stripToPath(url))))
+
   def verifyGetWithParameters(url: String, parameters: Map[String, String]): Unit =
     wireMockServer.verify(getRequestedFor(urlEqualTo(urlWithParameters(url, parameters))))
 
+  def verifyGetWithParametersNeverCalled(url: String, parameters: Map[String, String]): Unit =
+    wireMockServer.verify(0, getRequestedFor(urlEqualTo(urlWithParameters(url, parameters))))
+
   def verifyPost(url: String): Unit =
     wireMockServer.verify(postRequestedFor(urlEqualTo(stripToPath(url))))
+
+  def verifyPostNeverCalled(url: String): Unit =
+    wireMockServer.verify(0, postRequestedFor(urlEqualTo(stripToPath(url))))
 }
