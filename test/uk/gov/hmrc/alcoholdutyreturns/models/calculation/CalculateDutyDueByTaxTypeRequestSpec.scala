@@ -25,10 +25,39 @@ class CalculateDutyDueByTaxTypeRequestSpec extends SpecBase {
       Json.toJson(calculateDutyDueByTaxTypeRequest).toString shouldBe json
     }
 
-    "populate data from a returns submission when data is present" in {
+    "populate data from a returns submission when duty declared and all adjustment data is present" in {
       CalculateDutyDueByTaxTypeRequest.fromReturnsSubmission(exampleReturnSubmissionRequest) shouldBe Some(
         calculateDutyDueByTaxTypeRequestForExampleSubmission
       )
+    }
+
+    "populate data from a returns submission when duty declared and no adjustments present" in {
+      CalculateDutyDueByTaxTypeRequest
+        .fromReturnsSubmission(
+          exampleReturnSubmissionRequest.copy(adjustments = exampleNilSubmissionRequest.adjustments)
+        )
+        .nonEmpty shouldBe true
+    }
+
+    "populate data from a returns submission when no duty declared and adjustments are present" in {
+      CalculateDutyDueByTaxTypeRequest
+        .fromReturnsSubmission(
+          exampleReturnSubmissionRequest.copy(dutyDeclared = exampleNilSubmissionRequest.dutyDeclared)
+        )
+        .nonEmpty shouldBe true
+    }
+
+    /* Regression */
+    "populate data from a returns submission when no duty declared and not all adjustments are present" in {
+      CalculateDutyDueByTaxTypeRequest
+        .fromReturnsSubmission(
+          exampleReturnSubmissionRequest.copy(
+            dutyDeclared = exampleNilSubmissionRequest.dutyDeclared,
+            adjustments =
+              exampleReturnSubmissionRequest.adjustments.copy(spoiltProductDeclared = false, spoiltProducts = Seq.empty)
+          )
+        )
+        .nonEmpty shouldBe true
     }
 
     "not populate data from a returns submission when a nil return" in {

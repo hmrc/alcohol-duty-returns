@@ -137,10 +137,10 @@ case class AdrAdjustments(
 ) {
 
   def hasAdjustments: Boolean =
-    overDeclarationProducts.nonEmpty &&
-      underDeclarationProducts.nonEmpty &&
-      spoiltProducts.nonEmpty &&
-      drawbackProducts.nonEmpty &&
+    overDeclarationProducts.nonEmpty ||
+      underDeclarationProducts.nonEmpty ||
+      spoiltProducts.nonEmpty ||
+      drawbackProducts.nonEmpty ||
       repackagedDraughtProducts.nonEmpty
 }
 
