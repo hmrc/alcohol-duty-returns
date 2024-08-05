@@ -22,6 +22,63 @@ import uk.gov.hmrc.alcoholdutyreturns.base.SpecBase
 import java.time.Instant
 
 class AdrReturnSubmissionSpec extends SpecBase {
+  "AdrAdjustments" should {
+    "return it has adjustments if any adjustment has entries" in new SetUp {
+      adrReturnSubmission.adjustments
+        .copy(
+          underDeclarationProducts = Seq.empty,
+          spoiltProducts = Seq.empty,
+          drawbackProducts = Seq.empty,
+          repackagedDraughtProducts = Seq.empty
+        )
+        .hasAdjustments shouldBe true
+      adrReturnSubmission.adjustments
+        .copy(
+          overDeclarationProducts = Seq.empty,
+          spoiltProducts = Seq.empty,
+          drawbackProducts = Seq.empty,
+          repackagedDraughtProducts = Seq.empty
+        )
+        .hasAdjustments shouldBe true
+      adrReturnSubmission.adjustments
+        .copy(
+          overDeclarationProducts = Seq.empty,
+          underDeclarationProducts = Seq.empty,
+          drawbackProducts = Seq.empty,
+          repackagedDraughtProducts = Seq.empty
+        )
+        .hasAdjustments shouldBe true
+      adrReturnSubmission.adjustments
+        .copy(
+          overDeclarationProducts = Seq.empty,
+          underDeclarationProducts = Seq.empty,
+          spoiltProducts = Seq.empty,
+          repackagedDraughtProducts = Seq.empty
+        )
+        .hasAdjustments shouldBe true
+      adrReturnSubmission.adjustments
+        .copy(
+          overDeclarationProducts = Seq.empty,
+          underDeclarationProducts = Seq.empty,
+          spoiltProducts = Seq.empty,
+          drawbackProducts = Seq.empty
+        )
+        .hasAdjustments shouldBe true
+    }
+
+    "return it doesn't have adjustments if no adjustment has entries" in new SetUp {
+      adrReturnSubmission.adjustments
+        .copy(
+          overDeclarationProducts = Seq.empty,
+          underDeclarationProducts = Seq.empty,
+          spoiltProducts = Seq.empty,
+          drawbackProducts = Seq.empty,
+          repackagedDraughtProducts = Seq.empty
+        )
+        .hasAdjustments shouldBe false
+    }
+  }
+
   "AdrReturnSubmission" should {
     "deserialise from json" in new SetUp {
       Json.parse(adrReturnSubmissionJson).as[AdrReturnSubmission] shouldBe adrReturnSubmission
