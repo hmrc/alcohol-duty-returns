@@ -20,7 +20,7 @@ import play.api.libs.json.{JsError, JsString, JsSuccess, Json, OFormat, Reads, W
 import ai.x.play.json.Jsonx
 import ai.x.play.json.Encoders._
 import enumeratum.{Enum, EnumEntry}
-import uk.gov.hmrc.alcoholdutyreturns.models.JsonHelpers
+import uk.gov.hmrc.alcoholdutyreturns.models.{JsonHelpers, ReturnPeriod}
 
 import java.time.{Instant, LocalDate}
 
@@ -181,7 +181,7 @@ object Drawback {
 }
 
 case class ReturnDetails(
-  returnPeriodAffected: String,
+  returnPeriodAffected: ReturnPeriod,
   taxType: String,
   dutyRate: BigDecimal,
   litresProduced: BigDecimal,
@@ -222,7 +222,7 @@ object RepackagedDraught {
 }
 
 case class RepackagedDraughtProduct(
-  returnPeriodAffected: String,
+  returnPeriodAffected: ReturnPeriod,
   originaltaxType: String,
   originaldutyRate: BigDecimal,
   newTaxType: String,

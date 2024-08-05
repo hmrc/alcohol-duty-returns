@@ -91,6 +91,41 @@ class ReturnsControllerSpec extends SpecBase {
         contentAsJson(result) shouldBe Json.toJson(adrReturnCreatedDetails)
       }
 
+      "return 400 BAD_REQUEST if the period key is invalid" in new SetUp {
+        when(
+          mockReturnsService.submitReturn(eqTo(adrReturnsSubmission), eqTo(returnId.copy(periodKey = badPeriodKey)))(
+            any()
+          )
+        )
+          .thenReturn(EitherT.rightT[Future, ErrorResponse](returnCreatedDetails))
+
+        val result: Future[Result] =
+          controller.submitReturn(appaId, badPeriodKey)(
+            fakeRequestWithJsonBody(Json.toJson(adrReturnsSubmission))
+          )
+
+        status(result) shouldBe BAD_REQUEST
+        verify(mockReturnsService, never)
+          .submitReturn(eqTo(adrReturnsSubmission), eqTo(returnId.copy(periodKey = badPeriodKey)))(any())
+      }
+
+      "return 400 BAD_REQUEST if the return payload fails validation" in new SetUp {
+        when(
+          mockReturnsService
+            .submitReturn(eqTo(invalidAdrReturnsSubmission), eqTo(returnId.copy(periodKey = periodKey)))(any())
+        )
+          .thenReturn(EitherT.rightT[Future, ErrorResponse](returnCreatedDetails))
+
+        val result: Future[Result] =
+          controller.submitReturn(appaId, periodKey)(
+            fakeRequestWithJsonBody(Json.toJson(invalidAdrReturnsSubmission))
+          )
+
+        status(result) shouldBe BAD_REQUEST
+        verify(mockReturnsService, never)
+          .submitReturn(eqTo(invalidAdrReturnsSubmission), eqTo(returnId.copy(periodKey = periodKey)))(any())
+      }
+
       "return 400 BAD_REQUEST when there is a BAD_REQUEST" in new SetUp {
         when(
           mockReturnsService.submitReturn(eqTo(adrReturnsSubmission), eqTo(returnId.copy(periodKey = periodKey)))(any())
@@ -141,9 +176,10 @@ class ReturnsControllerSpec extends SpecBase {
 
     val controller = new ReturnsController(fakeAuthorisedAction, mockReturnsService, mockReturnsConnector, cc)
 
-    val periodKey: String = "24AC"
-    val total             = BigDecimal("12345.67")
-    val now               = Instant.now()
+    val periodKey: String    = "24AC"
+    val badPeriodKey: String = "24BC"
+    val total                = BigDecimal("12345.67")
+    val now                  = Instant.now()
 
     val returnDetails = successfulReturnExample(
       appaId,
@@ -160,5 +196,8 @@ class ReturnsControllerSpec extends SpecBase {
     val returnCreatedDetails    =
       exampleReturnCreatedSuccessfulResponse(periodKey, total, now, chargeReference, submissionId).success
     val adrReturnCreatedDetails = exampleReturnCreatedDetails(periodKey, total, now, chargeReference)
+
+    val invalidAdrReturnsSubmission =
+      adrReturnsSubmission.copy(dutyDeclared = adrReturnsSubmission.dutyDeclared.copy(dutyDeclaredItems = Seq.empty))
   }
 }

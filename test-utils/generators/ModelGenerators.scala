@@ -17,6 +17,7 @@
 package generators
 
 import org.scalacheck.Gen
+import uk.gov.hmrc.alcoholdutyreturns.models.ReturnPeriod
 
 trait ModelGenerators {
 
@@ -24,6 +25,10 @@ trait ModelGenerators {
     year  <- Gen.chooseNum(23, 50)
     month <- Gen.chooseNum(0, 11)
   } yield s"${year}A${(month + 'A').toChar}"
+
+  def invalidPeriodKeyGen: Gen[String] = Gen.alphaStr
+    .suchThat(_.nonEmpty)
+    .suchThat(!_.matches(ReturnPeriod.returnPeriodPattern.toString()))
 
   def appaIdGen: Gen[String]          = Gen.listOfN(10, Gen.numChar).map(id => s"XMADP${id.mkString}")
   def submissionIdGen: Gen[String]    = Gen.listOfN(12, Gen.numChar).map(_.mkString)
