@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.alcoholdutyreturns.controllers
 
-import cats.data.EitherT
 import org.apache.pekko.util.ByteString
 import play.api.Logging
 import play.api.http.HttpEntity
@@ -28,7 +27,6 @@ import uk.gov.hmrc.alcoholdutyreturns.models.{ErrorResponse, ReturnId, ReturnPer
 import uk.gov.hmrc.alcoholdutyreturns.models.returns.{AdrReturnCreatedDetails, AdrReturnDetails, AdrReturnSubmission}
 import uk.gov.hmrc.alcoholdutyreturns.service.ReturnsService
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
-import views.html.defaultpages.error
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
@@ -68,7 +66,7 @@ class ReturnsController @Inject() (
               .validate(returnPeriod)
               .fold(
                 failures => {
-                  logger.info(
+                  logger.warn(
                     s"Validation errors when submitting return: ${failures.toChain.toList.map(_.errorMessage).mkString("; ")}"
                   )
                   Future.successful(error(ErrorResponse.BadRequest))
