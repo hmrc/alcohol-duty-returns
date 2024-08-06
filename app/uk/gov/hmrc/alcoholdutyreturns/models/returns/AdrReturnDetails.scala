@@ -60,10 +60,16 @@ case class AdrReturnAlcoholDeclared(alcoholDeclaredDetails: Option[Seq[AdrReturn
 object AdrReturnAlcoholDeclared {
   def fromReturnDetailsSuccess(returnDetailsSuccess: GetReturnDetails): AdrReturnAlcoholDeclared =
     AdrReturnAlcoholDeclared(
-      returnDetailsSuccess.alcoholProducts.regularReturn.map(
-        _.map(
-          AdrReturnAlcoholDeclaredRow.fromRegularReturnDetails
-        )
+      returnDetailsSuccess.alcoholProducts.regularReturn.flatMap(items =>
+        if (items.isEmpty) {
+          None
+        } else {
+          Some(
+            items.map(
+              AdrReturnAlcoholDeclaredRow.fromRegularReturnDetails
+            )
+          )
+        }
       ),
       total = returnDetailsSuccess.totalDutyDue.totalDutyDueAlcoholProducts
     )
@@ -116,19 +122,41 @@ object AdrReturnAdjustments {
 
   def fromReturnDetailsSuccess(returnDetailsSuccess: GetReturnDetails): AdrReturnAdjustments = {
     val allAdjustmentRows = Seq(
-      returnDetailsSuccess.underDeclaration.underDeclarationProducts.map(
-        AdrReturnAdjustmentsRow.fromReturnDetails(underDeclaredKey, _)
-      ),
-      returnDetailsSuccess.overDeclaration.overDeclarationProducts.map(
-        AdrReturnAdjustmentsRow.fromReturnDetails(overDeclaredKey, _)
-      ),
-      returnDetailsSuccess.repackagedDraught.repackagedDraughtProducts.map(rpd =>
-        AdrReturnAdjustmentsRow.fromReturnDetails(repackagedDraughtKey, rpd.toReturnDetailsForAdjustment())
-      ),
-      returnDetailsSuccess.spoiltProduct.spoiltProductProducts.map(
-        AdrReturnAdjustmentsRow.fromReturnDetails(spoiltKey, _)
-      ),
-      returnDetailsSuccess.drawback.drawbackProducts.map(AdrReturnAdjustmentsRow.fromReturnDetails(drawbackKey, _))
+      returnDetailsSuccess.underDeclaration.underDeclarationProducts
+        .map(
+          _.map(
+            AdrReturnAdjustmentsRow.fromReturnDetails(underDeclaredKey, _)
+          )
+        )
+        .getOrElse(Seq.empty),
+      returnDetailsSuccess.overDeclaration.overDeclarationProducts
+        .map(
+          _.map(
+            AdrReturnAdjustmentsRow.fromReturnDetails(overDeclaredKey, _)
+          )
+        )
+        .getOrElse(Seq.empty),
+      returnDetailsSuccess.repackagedDraught.repackagedDraughtProducts
+        .map(
+          _.map(rpd =>
+            AdrReturnAdjustmentsRow.fromReturnDetails(repackagedDraughtKey, rpd.toReturnDetailsForAdjustment())
+          )
+        )
+        .getOrElse(Seq.empty),
+      returnDetailsSuccess.spoiltProduct.spoiltProductProducts
+        .map(
+          _.map(
+            AdrReturnAdjustmentsRow.fromReturnDetails(spoiltKey, _)
+          )
+        )
+        .getOrElse(Seq.empty),
+      returnDetailsSuccess.drawback.drawbackProducts
+        .map(
+          _.map(
+            AdrReturnAdjustmentsRow.fromReturnDetails(drawbackKey, _)
+          )
+        )
+        .getOrElse(Seq.empty)
     ).flatten
 
     AdrReturnAdjustments(

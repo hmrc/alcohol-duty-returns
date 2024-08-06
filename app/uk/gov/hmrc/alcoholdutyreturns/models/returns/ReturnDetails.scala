@@ -113,7 +113,7 @@ object RegularReturnDetails {
 case class OverDeclaration(
   overDeclFilled: Boolean,
   reasonForOverDecl: Option[String],
-  overDeclarationProducts: Seq[ReturnDetails]
+  overDeclarationProducts: Option[Seq[ReturnDetails]]
 )
 
 object OverDeclaration {
@@ -126,14 +126,18 @@ object OverDeclaration {
     OverDeclaration(
       overDeclFilled = adrAdjustments.overDeclarationDeclared,
       reasonForOverDecl = adrAdjustments.reasonForOverDeclaration,
-      overDeclarationProducts = adrAdjustments.overDeclarationProducts.map(ReturnDetails.fromAdrAdjustmentItem)
+      overDeclarationProducts = if (adrAdjustments.overDeclarationProducts.nonEmpty) {
+        Some(adrAdjustments.overDeclarationProducts.map(ReturnDetails.fromAdrAdjustmentItem))
+      } else {
+        None
+      }
     )
 }
 
 case class UnderDeclaration(
   underDeclFilled: Boolean,
   reasonForUnderDecl: Option[String],
-  underDeclarationProducts: Seq[ReturnDetails]
+  underDeclarationProducts: Option[Seq[ReturnDetails]]
 )
 
 object UnderDeclaration {
@@ -146,11 +150,15 @@ object UnderDeclaration {
     UnderDeclaration(
       underDeclFilled = adrAdjustments.underDeclarationDeclared,
       reasonForUnderDecl = adrAdjustments.reasonForUnderDeclaration,
-      underDeclarationProducts = adrAdjustments.underDeclarationProducts.map(ReturnDetails.fromAdrAdjustmentItem)
+      underDeclarationProducts = if (adrAdjustments.underDeclarationProducts.nonEmpty) {
+        Some(adrAdjustments.underDeclarationProducts.map(ReturnDetails.fromAdrAdjustmentItem))
+      } else {
+        None
+      }
     )
 }
 
-case class SpoiltProduct(spoiltProdFilled: Boolean, spoiltProductProducts: Seq[ReturnDetails])
+case class SpoiltProduct(spoiltProdFilled: Boolean, spoiltProductProducts: Option[Seq[ReturnDetails]])
 
 object SpoiltProduct {
   import JsonHelpers.booleanReads
@@ -161,11 +169,15 @@ object SpoiltProduct {
   def fromAdrAdjustments(adrAdjustments: AdrAdjustments): SpoiltProduct =
     SpoiltProduct(
       spoiltProdFilled = adrAdjustments.spoiltProductDeclared,
-      spoiltProductProducts = adrAdjustments.spoiltProducts.map(ReturnDetails.fromAdrAdjustmentItem)
+      spoiltProductProducts = if (adrAdjustments.spoiltProducts.nonEmpty) {
+        Some(adrAdjustments.spoiltProducts.map(ReturnDetails.fromAdrAdjustmentItem))
+      } else {
+        None
+      }
     )
 }
 
-case class Drawback(drawbackFilled: Boolean, drawbackProducts: Seq[ReturnDetails])
+case class Drawback(drawbackFilled: Boolean, drawbackProducts: Option[Seq[ReturnDetails]])
 
 object Drawback {
   import JsonHelpers.booleanReads
@@ -176,7 +188,11 @@ object Drawback {
   def fromAdrAdjustments(adrAdjustments: AdrAdjustments): Drawback =
     Drawback(
       drawbackFilled = adrAdjustments.drawbackDeclared,
-      drawbackProducts = adrAdjustments.drawbackProducts.map(ReturnDetails.fromAdrAdjustmentItem)
+      drawbackProducts = if (adrAdjustments.drawbackProducts.nonEmpty) {
+        Some(adrAdjustments.drawbackProducts.map(ReturnDetails.fromAdrAdjustmentItem))
+      } else {
+        None
+      }
     )
 }
 
@@ -205,7 +221,10 @@ object ReturnDetails {
     )
 }
 
-case class RepackagedDraught(repDraughtFilled: Boolean, repackagedDraughtProducts: Seq[RepackagedDraughtProduct])
+case class RepackagedDraught(
+  repDraughtFilled: Boolean,
+  repackagedDraughtProducts: Option[Seq[RepackagedDraughtProduct]]
+)
 
 object RepackagedDraught {
   import JsonHelpers.booleanReads
@@ -216,8 +235,13 @@ object RepackagedDraught {
   def fromAdrAdjustments(adrAdjustments: AdrAdjustments): RepackagedDraught =
     RepackagedDraught(
       repDraughtFilled = adrAdjustments.repackagedDraughtDeclared,
-      repackagedDraughtProducts =
-        adrAdjustments.repackagedDraughtProducts.map(RepackagedDraughtProduct.fromAdrRepackagedDraughtAdjustmentItem)
+      repackagedDraughtProducts = if (adrAdjustments.repackagedDraughtProducts.nonEmpty) {
+        Some(
+          adrAdjustments.repackagedDraughtProducts.map(RepackagedDraughtProduct.fromAdrRepackagedDraughtAdjustmentItem)
+        )
+      } else {
+        None
+      }
     )
 }
 
