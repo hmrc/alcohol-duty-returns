@@ -28,7 +28,8 @@ import uk.gov.hmrc.alcoholdutyreturns.models.returns.{AdrAdjustmentItem, AdrAdju
 import java.time.{Clock, Instant, LocalDate, YearMonth, ZoneId}
 
 trait TestData extends ModelGenerators {
-  val clock = Clock.fixed(Instant.ofEpochMilli(1718118467838L), ZoneId.of("UTC"))
+  val clockMillis: Long = 1718118467838L
+  val clock: Clock      = Clock.fixed(Instant.ofEpochMilli(clockMillis), ZoneId.of("UTC"))
 
   val regime: String          = "AD"
   val appaId: String          = appaIdGen.sample.get
@@ -121,74 +122,84 @@ trait TestData extends ModelGenerators {
         overDeclaration = OverDeclaration(
           overDeclFilled = true,
           reasonForOverDecl = Some("Why over-declared"),
-          overDeclarationProducts = Seq(
-            ReturnDetails(
-              returnPeriodAffected = periodKeyFromDate(periodFrom(1, periodDate)),
-              taxType = "302",
-              dutyRate = BigDecimal("3.56"),
-              litresProduced = BigDecimal("5000.79"),
-              litresOfPureAlcohol = BigDecimal("100.58"),
-              dutyDue = BigDecimal("358.07"),
-              productName = None
+          overDeclarationProducts = Some(
+            Seq(
+              ReturnDetails(
+                returnPeriodAffected = periodKeyFromDate(periodFrom(1, periodDate)),
+                taxType = "302",
+                dutyRate = BigDecimal("3.56"),
+                litresProduced = BigDecimal("5000.79"),
+                litresOfPureAlcohol = BigDecimal("100.58"),
+                dutyDue = BigDecimal("358.07"),
+                productName = None
+              )
             )
           )
         ),
         underDeclaration = UnderDeclaration(
           underDeclFilled = true,
           reasonForUnderDecl = Some("Why under-declared"),
-          underDeclarationProducts = Seq(
-            ReturnDetails(
-              returnPeriodAffected = periodKeyFromDate(periodFrom(2, periodDate)),
-              taxType = "301",
-              dutyRate = BigDecimal("5.27"),
-              litresProduced = BigDecimal("49000.78"),
-              litresOfPureAlcohol = BigDecimal("989"),
-              dutyDue = BigDecimal("5212.03"),
-              productName = None
+          underDeclarationProducts = Some(
+            Seq(
+              ReturnDetails(
+                returnPeriodAffected = periodKeyFromDate(periodFrom(2, periodDate)),
+                taxType = "301",
+                dutyRate = BigDecimal("5.27"),
+                litresProduced = BigDecimal("49000.78"),
+                litresOfPureAlcohol = BigDecimal("989"),
+                dutyDue = BigDecimal("5212.03"),
+                productName = None
+              )
             )
           )
         ),
         spoiltProduct = SpoiltProduct(
           spoiltProdFilled = true,
-          spoiltProductProducts = Seq(
-            ReturnDetails(
-              returnPeriodAffected = periodKeyFromDate(periodFrom(3, periodDate)),
-              taxType = "305",
-              dutyRate = BigDecimal("1.75"),
-              litresProduced = BigDecimal("50000.69"),
-              litresOfPureAlcohol = BigDecimal("1000.94"),
-              dutyDue = BigDecimal("1751.65"),
-              productName = None
+          spoiltProductProducts = Some(
+            Seq(
+              ReturnDetails(
+                returnPeriodAffected = periodKeyFromDate(periodFrom(3, periodDate)),
+                taxType = "305",
+                dutyRate = BigDecimal("1.75"),
+                litresProduced = BigDecimal("50000.69"),
+                litresOfPureAlcohol = BigDecimal("1000.94"),
+                dutyDue = BigDecimal("1751.65"),
+                productName = None
+              )
             )
           )
         ),
         drawback = Drawback(
           drawbackFilled = true,
-          drawbackProducts = Seq(
-            ReturnDetails(
-              returnPeriodAffected = periodKeyFromDate(periodFrom(4, periodDate)),
-              taxType = "309",
-              dutyRate = BigDecimal("5.12"),
-              litresProduced = BigDecimal("60000.02"),
-              litresOfPureAlcohol = BigDecimal("1301.11"),
-              dutyDue = BigDecimal("6661.69"),
-              productName = None
+          drawbackProducts = Some(
+            Seq(
+              ReturnDetails(
+                returnPeriodAffected = periodKeyFromDate(periodFrom(4, periodDate)),
+                taxType = "309",
+                dutyRate = BigDecimal("5.12"),
+                litresProduced = BigDecimal("60000.02"),
+                litresOfPureAlcohol = BigDecimal("1301.11"),
+                dutyDue = BigDecimal("6661.69"),
+                productName = None
+              )
             )
           )
         ),
         repackagedDraught = RepackagedDraught(
           repDraughtFilled = true,
-          repackagedDraughtProducts = Seq(
-            RepackagedDraughtProduct(
-              returnPeriodAffected = periodKeyFromDate(periodFrom(5, periodDate)),
-              originaltaxType = "300",
-              originaldutyRate = BigDecimal("0.64"),
-              newTaxType = "304",
-              dutyRate = BigDecimal("12.76"),
-              litresOfRepackaging = BigDecimal("5000.97"),
-              litresOfPureAlcohol = BigDecimal("100.81"),
-              dutyDue = BigDecimal("1221.82"),
-              productName = None
+          repackagedDraughtProducts = Some(
+            Seq(
+              RepackagedDraughtProduct(
+                returnPeriodAffected = periodKeyFromDate(periodFrom(5, periodDate)),
+                originaltaxType = "300",
+                originaldutyRate = BigDecimal("0.64"),
+                newTaxType = "304",
+                dutyRate = BigDecimal("12.76"),
+                litresOfRepackaging = BigDecimal("5000.97"),
+                litresOfPureAlcohol = BigDecimal("100.81"),
+                dutyDue = BigDecimal("1221.82"),
+                productName = None
+              )
             )
           )
         ),
@@ -256,6 +267,71 @@ trait TestData extends ModelGenerators {
     )
   }
 
+  /* This shouldn't occur, but is supported by the schema */
+  def nilReturnWithPresentItemSequencesExample(
+    appaId: String,
+    periodKey: String,
+    submissionId: String,
+    now: Instant
+  ): GetReturnDetailsSuccess = {
+    val periodDate = LocalDate.of(periodKey.take(2).toInt + 2000, periodKey.charAt(3) - 'A' + 1, 1)
+
+    GetReturnDetailsSuccess(
+      GetReturnDetails(
+        processingDate = now,
+        idDetails = IdDetails(adReference = appaId, submissionID = submissionId),
+        chargeDetails = ChargeDetails(
+          periodKey = periodKey,
+          chargeReference = None,
+          periodFrom = periodDate,
+          periodTo = YearMonth.from(periodDate).atEndOfMonth(),
+          receiptDate = now
+        ),
+        alcoholProducts = AlcoholProducts(
+          alcoholProductsProducedFilled = false,
+          regularReturn = Some(Seq.empty)
+        ),
+        overDeclaration = OverDeclaration(
+          overDeclFilled = false,
+          reasonForOverDecl = None,
+          overDeclarationProducts = Some(Seq.empty)
+        ),
+        underDeclaration = UnderDeclaration(
+          underDeclFilled = false,
+          reasonForUnderDecl = None,
+          underDeclarationProducts = Some(Seq.empty)
+        ),
+        spoiltProduct = SpoiltProduct(
+          spoiltProdFilled = false,
+          spoiltProductProducts = Some(Seq.empty)
+        ),
+        drawback = Drawback(
+          drawbackFilled = false,
+          drawbackProducts = Some(Seq.empty)
+        ),
+        repackagedDraught = RepackagedDraught(
+          repDraughtFilled = false,
+          repackagedDraughtProducts = Some(Seq.empty)
+        ),
+        totalDutyDuebyTaxType = None,
+        totalDutyDue = TotalDutyDue(
+          totalDutyDueAlcoholProducts = BigDecimal(0),
+          totalDutyOverDeclaration = BigDecimal(0),
+          totalDutyUnderDeclaration = BigDecimal(0),
+          totalDutySpoiltProduct = BigDecimal(0),
+          totalDutyDrawback = BigDecimal(0),
+          totalDutyRepDraughtProducts = BigDecimal(0),
+          totalDutyDue = BigDecimal(0)
+        ),
+        netDutySuspension = NetDutySuspension(
+          netDutySuspensionFilled = false,
+          netDutySuspensionProducts = None
+        ),
+        spiritsProduced = None
+      )
+    )
+  }
+
   def nilReturnExample(
     appaId: String,
     periodKey: String,
@@ -282,24 +358,24 @@ trait TestData extends ModelGenerators {
         overDeclaration = OverDeclaration(
           overDeclFilled = false,
           reasonForOverDecl = None,
-          overDeclarationProducts = Seq.empty
+          overDeclarationProducts = None
         ),
         underDeclaration = UnderDeclaration(
           underDeclFilled = false,
           reasonForUnderDecl = None,
-          underDeclarationProducts = Seq.empty
+          underDeclarationProducts = None
         ),
         spoiltProduct = SpoiltProduct(
           spoiltProdFilled = false,
-          spoiltProductProducts = Seq.empty
+          spoiltProductProducts = None
         ),
         drawback = Drawback(
           drawbackFilled = false,
-          drawbackProducts = Seq.empty
+          drawbackProducts = None
         ),
         repackagedDraught = RepackagedDraught(
           repDraughtFilled = false,
-          repackagedDraughtProducts = Seq.empty
+          repackagedDraughtProducts = None
         ),
         totalDutyDuebyTaxType = None,
         totalDutyDue = TotalDutyDue(
@@ -718,7 +794,7 @@ trait TestData extends ModelGenerators {
     )
   )
 
-  val exampleNilSubmissionRequest: AdrReturnSubmission = AdrReturnSubmission(
+  val exampleNilReturnSubmissionRequest: AdrReturnSubmission = AdrReturnSubmission(
     dutyDeclared = AdrDutyDeclared(
       declared = false,
       dutyDeclaredItems = Seq.empty
@@ -759,7 +835,7 @@ trait TestData extends ModelGenerators {
       alcoholProducts = AlcoholProducts(
         alcoholProductsProducedFilled = true,
         regularReturn = Some(
-          List(
+          Seq(
             RegularReturnDetails(
               taxType = "331",
               dutyRate = BigDecimal("1.27"),
@@ -782,74 +858,84 @@ trait TestData extends ModelGenerators {
       overDeclaration = OverDeclaration(
         overDeclFilled = true,
         reasonForOverDecl = Some("Submitted too much"),
-        overDeclarationProducts = List(
-          ReturnDetails(
-            returnPeriodAffected = "24AD",
-            taxType = "352",
-            dutyRate = BigDecimal("1.32"),
-            litresProduced = BigDecimal("400.04"),
-            litresOfPureAlcohol = BigDecimal("40.0404"),
-            dutyDue = BigDecimal("52.85"),
-            productName = None
+        overDeclarationProducts = Some(
+          Seq(
+            ReturnDetails(
+              returnPeriodAffected = "24AD",
+              taxType = "352",
+              dutyRate = BigDecimal("1.32"),
+              litresProduced = BigDecimal("400.04"),
+              litresOfPureAlcohol = BigDecimal("40.0404"),
+              dutyDue = BigDecimal("52.85"),
+              productName = None
+            )
           )
         )
       ),
       underDeclaration = UnderDeclaration(
         underDeclFilled = true,
         reasonForUnderDecl = Some("Submitted too little"),
-        underDeclarationProducts = List(
-          ReturnDetails(
-            returnPeriodAffected = "24AC",
-            taxType = "351",
-            dutyRate = BigDecimal("2.32"),
-            litresProduced = BigDecimal("300.03"),
-            litresOfPureAlcohol = BigDecimal("30.0303"),
-            dutyDue = BigDecimal("69.67"),
-            productName = None
+        underDeclarationProducts = Some(
+          Seq(
+            ReturnDetails(
+              returnPeriodAffected = "24AC",
+              taxType = "351",
+              dutyRate = BigDecimal("2.32"),
+              litresProduced = BigDecimal("300.03"),
+              litresOfPureAlcohol = BigDecimal("30.0303"),
+              dutyDue = BigDecimal("69.67"),
+              productName = None
+            )
           )
         )
       ),
       spoiltProduct = SpoiltProduct(
         spoiltProdFilled = true,
-        spoiltProductProducts = List(
-          ReturnDetails(
-            returnPeriodAffected = "24AE",
-            taxType = "353",
-            dutyRate = BigDecimal("1.82"),
-            litresProduced = BigDecimal("500.05"),
-            litresOfPureAlcohol = BigDecimal("50.0505"),
-            dutyDue = BigDecimal("91.09"),
-            productName = None
+        spoiltProductProducts = Some(
+          Seq(
+            ReturnDetails(
+              returnPeriodAffected = "24AE",
+              taxType = "353",
+              dutyRate = BigDecimal("1.82"),
+              litresProduced = BigDecimal("500.05"),
+              litresOfPureAlcohol = BigDecimal("50.0505"),
+              dutyDue = BigDecimal("91.09"),
+              productName = None
+            )
           )
         )
       ),
       drawback = Drawback(
         drawbackFilled = true,
-        drawbackProducts = List(
-          ReturnDetails(
-            returnPeriodAffected = "24AF",
-            taxType = "361",
-            dutyRate = BigDecimal("2.21"),
-            litresProduced = BigDecimal("600.06"),
-            litresOfPureAlcohol = BigDecimal("60.0606"),
-            dutyDue = BigDecimal("132.73"),
-            productName = None
+        drawbackProducts = Some(
+          Seq(
+            ReturnDetails(
+              returnPeriodAffected = "24AF",
+              taxType = "361",
+              dutyRate = BigDecimal("2.21"),
+              litresProduced = BigDecimal("600.06"),
+              litresOfPureAlcohol = BigDecimal("60.0606"),
+              dutyDue = BigDecimal("132.73"),
+              productName = None
+            )
           )
         )
       ),
       repackagedDraught = RepackagedDraught(
         repDraughtFilled = true,
-        repackagedDraughtProducts = List(
-          RepackagedDraughtProduct(
-            returnPeriodAffected = "24AG",
-            originaltaxType = "371",
-            originaldutyRate = BigDecimal("0.27"),
-            newTaxType = "331",
-            dutyRate = BigDecimal("1.27"),
-            litresOfRepackaging = BigDecimal("700.07"),
-            litresOfPureAlcohol = BigDecimal("70.0707"),
-            dutyDue = BigDecimal("70.07"),
-            productName = None
+        repackagedDraughtProducts = Some(
+          Seq(
+            RepackagedDraughtProduct(
+              returnPeriodAffected = "24AG",
+              originaltaxType = "371",
+              originaldutyRate = BigDecimal("0.27"),
+              newTaxType = "331",
+              dutyRate = BigDecimal("1.27"),
+              litresOfRepackaging = BigDecimal("700.07"),
+              litresOfPureAlcohol = BigDecimal("70.0707"),
+              dutyDue = BigDecimal("70.07"),
+              productName = None
+            )
           )
         )
       ),
@@ -939,6 +1025,52 @@ trait TestData extends ModelGenerators {
           )
         )
       )
+    )
+
+  def nilReturnCreateSubmission(periodKey: String): ReturnCreate =
+    ReturnCreate(
+      periodKey = periodKey,
+      alcoholProducts = AlcoholProducts(
+        alcoholProductsProducedFilled = false,
+        regularReturn = None
+      ),
+      overDeclaration = OverDeclaration(
+        overDeclFilled = false,
+        reasonForOverDecl = None,
+        overDeclarationProducts = None
+      ),
+      underDeclaration = UnderDeclaration(
+        underDeclFilled = false,
+        reasonForUnderDecl = None,
+        underDeclarationProducts = None
+      ),
+      spoiltProduct = SpoiltProduct(
+        spoiltProdFilled = false,
+        spoiltProductProducts = None
+      ),
+      drawback = Drawback(
+        drawbackFilled = false,
+        drawbackProducts = None
+      ),
+      repackagedDraught = RepackagedDraught(
+        repDraughtFilled = false,
+        repackagedDraughtProducts = None
+      ),
+      totalDutyDuebyTaxType = None,
+      totalDutyDue = TotalDutyDue(
+        totalDutyDueAlcoholProducts = BigDecimal(0),
+        totalDutyOverDeclaration = BigDecimal(0),
+        totalDutyUnderDeclaration = BigDecimal(0),
+        totalDutySpoiltProduct = BigDecimal(0),
+        totalDutyDrawback = BigDecimal(0),
+        totalDutyRepDraughtProducts = BigDecimal(0),
+        totalDutyDue = BigDecimal(0)
+      ),
+      netDutySuspension = NetDutySuspension(
+        netDutySuspensionFilled = false,
+        netDutySuspensionProducts = None
+      ),
+      spiritsProduced = None
     )
 
   private val dueDate = 25

@@ -34,7 +34,7 @@ class CalculateDutyDueByTaxTypeRequestSpec extends SpecBase {
     "populate data from a returns submission when duty declared and no adjustments present" in {
       CalculateDutyDueByTaxTypeRequest
         .fromReturnsSubmission(
-          exampleReturnSubmissionRequest.copy(adjustments = exampleNilSubmissionRequest.adjustments)
+          exampleReturnSubmissionRequest.copy(adjustments = exampleNilReturnSubmissionRequest.adjustments)
         )
         .nonEmpty shouldBe true
     }
@@ -42,7 +42,7 @@ class CalculateDutyDueByTaxTypeRequestSpec extends SpecBase {
     "populate data from a returns submission when no duty declared and adjustments are present" in {
       CalculateDutyDueByTaxTypeRequest
         .fromReturnsSubmission(
-          exampleReturnSubmissionRequest.copy(dutyDeclared = exampleNilSubmissionRequest.dutyDeclared)
+          exampleReturnSubmissionRequest.copy(dutyDeclared = exampleNilReturnSubmissionRequest.dutyDeclared)
         )
         .nonEmpty shouldBe true
     }
@@ -52,7 +52,7 @@ class CalculateDutyDueByTaxTypeRequestSpec extends SpecBase {
       CalculateDutyDueByTaxTypeRequest
         .fromReturnsSubmission(
           exampleReturnSubmissionRequest.copy(
-            dutyDeclared = exampleNilSubmissionRequest.dutyDeclared,
+            dutyDeclared = exampleNilReturnSubmissionRequest.dutyDeclared,
             adjustments =
               exampleReturnSubmissionRequest.adjustments.copy(spoiltProductDeclared = false, spoiltProducts = Seq.empty)
           )
@@ -61,7 +61,7 @@ class CalculateDutyDueByTaxTypeRequestSpec extends SpecBase {
     }
 
     "not populate data from a returns submission when a nil return" in {
-      CalculateDutyDueByTaxTypeRequest.fromReturnsSubmission(exampleNilSubmissionRequest) shouldBe None
+      CalculateDutyDueByTaxTypeRequest.fromReturnsSubmission(exampleNilReturnSubmissionRequest) shouldBe None
     }
   }
 
