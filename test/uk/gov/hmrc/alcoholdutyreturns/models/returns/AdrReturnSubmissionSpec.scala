@@ -1295,6 +1295,6 @@ class AdrReturnSubmissionSpec extends SpecBase {
       exampleReturnCreatedSuccessfulResponse(periodKey, total, now, chargeReference, submissionId).success
     val adrReturnCreatedDetails = exampleReturnCreatedDetails(periodKey, total, now, chargeReference)
 
-    val nilReturn = exampleNilSubmissionRequest
+    val nilReturn = exampleNilReturnSubmissionRequest
   }
 }

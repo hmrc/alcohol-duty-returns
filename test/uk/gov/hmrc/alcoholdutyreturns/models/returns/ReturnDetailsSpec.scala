@@ -42,7 +42,12 @@ class ReturnDetailsSpec extends SpecBase {
 
   "ReturnCreate" should {
     "should be obtained from the submission data" in new SetUp {
-      ReturnCreate.fromAdrReturnSubmission(submissionData, periodKey) shouldBe returnCreateSubmissionData
+      ReturnCreate.fromAdrReturnSubmission(returnSubmissionData, periodKey) shouldBe returnCreateSubmissionData
+        .copy(totalDutyDuebyTaxType = None)
+    }
+
+    "should be obtained from the submission data when a nil return" in new SetUp {
+      ReturnCreate.fromAdrReturnSubmission(nilReturnSubmissionData, periodKey) shouldBe nilReturnCreateSubmissionData
         .copy(totalDutyDuebyTaxType = None)
     }
   }
@@ -110,25 +115,27 @@ class ReturnDetailsSpec extends SpecBase {
   "AlcoholProducts" should {
     "convert from AdrDutyDeclared" in new SetUp {
       AlcoholProducts.fromAdrDutyDeclared(
-        submissionData.dutyDeclared
+        returnSubmissionData.dutyDeclared
       ) shouldBe returnCreateSubmissionData.alcoholProducts
     }
 
     "not convert when not declared" in new SetUp {
       AlcoholProducts.fromAdrDutyDeclared(
-        exampleNilSubmissionRequest.dutyDeclared
+        exampleNilReturnSubmissionRequest.dutyDeclared
       ) shouldBe nilReturnDetails.alcoholProducts
     }
   }
 
   "OverDeclaration" should {
     "convert from AdrAdjustments" in new SetUp {
-      OverDeclaration.fromAdrAdjustments(submissionData.adjustments) shouldBe returnCreateSubmissionData.overDeclaration
+      OverDeclaration.fromAdrAdjustments(
+        returnSubmissionData.adjustments
+      ) shouldBe returnCreateSubmissionData.overDeclaration
     }
 
     "not convert when not declared" in new SetUp {
       OverDeclaration.fromAdrAdjustments(
-        exampleNilSubmissionRequest.adjustments
+        exampleNilReturnSubmissionRequest.adjustments
       ) shouldBe nilReturnDetails.overDeclaration
     }
   }
@@ -136,74 +143,80 @@ class ReturnDetailsSpec extends SpecBase {
   "UnderDeclaration" should {
     "convert from AdrAdjustments" in new SetUp {
       UnderDeclaration.fromAdrAdjustments(
-        submissionData.adjustments
+        returnSubmissionData.adjustments
       ) shouldBe returnCreateSubmissionData.underDeclaration
     }
 
     "not convert when not declared" in new SetUp {
       UnderDeclaration.fromAdrAdjustments(
-        exampleNilSubmissionRequest.adjustments
+        exampleNilReturnSubmissionRequest.adjustments
       ) shouldBe nilReturnDetails.underDeclaration
     }
   }
 
   "SpoiltProduct" should {
     "convert from AdrAdjustments" in new SetUp {
-      SpoiltProduct.fromAdrAdjustments(submissionData.adjustments) shouldBe returnCreateSubmissionData.spoiltProduct
+      SpoiltProduct.fromAdrAdjustments(
+        returnSubmissionData.adjustments
+      ) shouldBe returnCreateSubmissionData.spoiltProduct
     }
 
     "not convert when not declared" in new SetUp {
-      SpoiltProduct.fromAdrAdjustments(exampleNilSubmissionRequest.adjustments) shouldBe nilReturnDetails.spoiltProduct
+      SpoiltProduct.fromAdrAdjustments(
+        exampleNilReturnSubmissionRequest.adjustments
+      ) shouldBe nilReturnDetails.spoiltProduct
     }
   }
 
   "Drawback" should {
     "convert from AdrAdjustments" in new SetUp {
-      Drawback.fromAdrAdjustments(submissionData.adjustments) shouldBe returnCreateSubmissionData.drawback
+      Drawback.fromAdrAdjustments(returnSubmissionData.adjustments) shouldBe returnCreateSubmissionData.drawback
     }
 
     "not convert when not declared" in new SetUp {
-      Drawback.fromAdrAdjustments(exampleNilSubmissionRequest.adjustments) shouldBe nilReturnDetails.drawback
+      Drawback.fromAdrAdjustments(exampleNilReturnSubmissionRequest.adjustments) shouldBe nilReturnDetails.drawback
     }
   }
 
   "RepackagedDraught" should {
     "convert from AdrAdjustments" in new SetUp {
       RepackagedDraught.fromAdrAdjustments(
-        submissionData.adjustments
+        returnSubmissionData.adjustments
       ) shouldBe returnCreateSubmissionData.repackagedDraught
     }
 
     "not convert when not declared" in new SetUp {
       RepackagedDraught.fromAdrAdjustments(
-        exampleNilSubmissionRequest.adjustments
+        exampleNilReturnSubmissionRequest.adjustments
       ) shouldBe nilReturnDetails.repackagedDraught
     }
   }
 
   "TotalDutyDue" should {
     "convert from AdrTotals" in new SetUp {
-      TotalDutyDue.fromAdrTotals(submissionData.totals) shouldBe returnCreateSubmissionData.totalDutyDue
+      TotalDutyDue.fromAdrTotals(returnSubmissionData.totals) shouldBe returnCreateSubmissionData.totalDutyDue
     }
   }
 
   "NetDutySuspension" should {
     "convert from AdrDutySuspended" in new SetUp {
       NetDutySuspension.fromAdrDutySuspended(
-        submissionData.dutySuspended
+        returnSubmissionData.dutySuspended
       ) shouldBe returnCreateSubmissionData.netDutySuspension
     }
 
     "not convert when not declared" in new SetUp {
       NetDutySuspension.fromAdrDutySuspended(
-        exampleNilSubmissionRequest.dutySuspended
+        exampleNilReturnSubmissionRequest.dutySuspended
       ) shouldBe nilReturnDetails.netDutySuspension
     }
   }
 
   "SpiritsProduced" should {
     "convert from AdrSpirits" in new SetUp {
-      SpiritsProduced.fromAdrSpirits(submissionData.spirits.get) shouldBe returnCreateSubmissionData.spiritsProduced.get
+      SpiritsProduced.fromAdrSpirits(
+        returnSubmissionData.spirits.get
+      ) shouldBe returnCreateSubmissionData.spiritsProduced.get
     }
   }
 
@@ -212,8 +225,10 @@ class ReturnDetailsSpec extends SpecBase {
     val json              =
       s"""{"success":{"processingDate":"2024-06-11T15:07:47.838Z","idDetails":{"adReference":"$appaId","submissionID":"$submissionId"},"chargeDetails":{"periodKey":"$periodKey","chargeReference":"$chargeReference","periodFrom":"2024-03-01","periodTo":"2024-03-31","receiptDate":"2024-06-11T15:07:47.838Z"},"alcoholProducts":{"alcoholProductsProducedFilled":"1","regularReturn":[{"taxType":"301","dutyRate":5.27,"litresProduced":240000.02,"litresOfPureAlcohol":12041,"dutyDue":63456.07}]},"overDeclaration":{"overDeclFilled":"1","reasonForOverDecl":"Why over-declared","overDeclarationProducts":[{"returnPeriodAffected":"24AB","taxType":"302","dutyRate":3.56,"litresProduced":5000.79,"litresOfPureAlcohol":100.58,"dutyDue":358.07}]},"underDeclaration":{"underDeclFilled":"1","reasonForUnderDecl":"Why under-declared","underDeclarationProducts":[{"returnPeriodAffected":"24AA","taxType":"301","dutyRate":5.27,"litresProduced":49000.78,"litresOfPureAlcohol":989,"dutyDue":5212.03}]},"spoiltProduct":{"spoiltProdFilled":"1","spoiltProductProducts":[{"returnPeriodAffected":"23AL","taxType":"305","dutyRate":1.75,"litresProduced":50000.69,"litresOfPureAlcohol":1000.94,"dutyDue":1751.65}]},"drawback":{"drawbackFilled":"1","drawbackProducts":[{"returnPeriodAffected":"23AK","taxType":"309","dutyRate":5.12,"litresProduced":60000.02,"litresOfPureAlcohol":1301.11,"dutyDue":6661.69}]},"repackagedDraught":{"repDraughtFilled":"1","repackagedDraughtProducts":[{"returnPeriodAffected":"23AJ","originaltaxType":"300","originaldutyRate":0.64,"newTaxType":"304","dutyRate":12.76,"litresOfRepackaging":5000.97,"litresOfPureAlcohol":100.81,"dutyDue":1221.82}]},"totalDutyDuebyTaxType":[{"taxType":"301","totalDutyDueTaxType":1}],"totalDutyDue":{"totalDutyDueAlcoholProducts":63456.07,"totalDutyOverDeclaration":358.07,"totalDutyUnderDeclaration":5212.03,"totalDutySpoiltProduct":1751.65,"totalDutyDrawback":6661.69,"totalDutyRepDraughtProducts":1221.82,"totalDutyDue":61118.51},"netDutySuspension":{"netDutySuspensionFilled":"1","netDutySuspensionProducts":{"totalLtsBeer":1.51,"totalLtsWine":4.41,"totalLtsCider":3.82,"totalLtsSpirit":2.93,"totalLtsOtherFermented":2.14,"totalLtsPureAlcoholBeer":0.4248,"totalLtsPureAlcoholWine":0.5965,"totalLtsPureAlcoholCider":0.0379,"totalLtsPureAlcoholSpirit":0.2492,"totalLtsPureAlcoholOtherFermented":0.1894}},"spiritsProduced":{"spiritsProdFilled":"1","spiritsProduced":{"totalSpirits":0.05,"scotchWhiskey":0.26,"irishWhisky":0.16,"typeOfSpirit":["03"],"typeOfSpiritOther":"Coco Pops Vodka","code1MaltedBarley":0.17,"code2Other":"1","maltedGrainQuantity":0.55,"maltedGrainType":"wheat","code3Wheat":0.8,"code4Maize":0.67,"code5Rye":0.13,"code6UnmaltedGrain":0.71,"code7EthyleneGas":0.45,"code8Molasses":0.31,"code9Beer":0.37,"code10Wine":0.76,"code11MadeWine":0.6,"code12CiderOrPerry":0.04,"code13Other":"1","otherMaterialsQuantity":0.26,"otherMaterialsUom":"01","otherMaterialsType":"Coco Pops"}}}}"""
 
-    val submissionData             = exampleReturnSubmissionRequest
-    val returnCreateSubmissionData = returnCreateSubmission(periodKey)
-    val nilReturnDetails           = nilReturnExample(appaId, periodKey, submissionId, Instant.now()).success
+    val returnSubmissionData          = exampleReturnSubmissionRequest
+    val nilReturnSubmissionData       = exampleNilReturnSubmissionRequest
+    val returnCreateSubmissionData    = returnCreateSubmission(periodKey)
+    val nilReturnCreateSubmissionData = nilReturnCreateSubmission(periodKey)
+    val nilReturnDetails              = nilReturnExample(appaId, periodKey, submissionId, Instant.now()).success
   }
 }
