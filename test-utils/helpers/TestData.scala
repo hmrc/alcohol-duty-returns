@@ -28,7 +28,8 @@ import uk.gov.hmrc.alcoholdutyreturns.models.returns.{AdrAdjustmentItem, AdrAdju
 import java.time.{Clock, Instant, LocalDate, YearMonth, ZoneId}
 
 trait TestData extends ModelGenerators {
-  val clock = Clock.fixed(Instant.ofEpochMilli(1718118467838L), ZoneId.of("UTC"))
+  val clockMillis: Long = 1718118467838L
+  val clock: Clock      = Clock.fixed(Instant.ofEpochMilli(clockMillis), ZoneId.of("UTC"))
 
   val regime: String          = "AD"
   val appaId: String          = appaIdGen.sample.get
