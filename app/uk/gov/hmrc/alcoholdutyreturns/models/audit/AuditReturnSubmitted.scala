@@ -16,13 +16,15 @@
 
 package uk.gov.hmrc.alcoholdutyreturns.models.audit
 
-import enumeratum._
+import play.api.libs.json.{Json, OFormat}
+import uk.gov.hmrc.alcoholdutyreturns.models.audit.AuditType.ReturnSubmitted
 
-sealed trait AuditType extends EnumEntry
+case class AuditReturnSubmitted (
+                                  appaId: String
+                                ) extends AuditEventDetail {
+  protected val _auditType = ReturnSubmitted
+}
 
-object AuditType extends Enum[AuditType] {
-  val values = findValues
-
-  case object ReturnStarted extends AuditType
-  case object ReturnSubmitted extends AuditType
+object AuditReturnSubmitted {
+  implicit val format: OFormat[AuditReturnSubmitted] = Json.format[AuditReturnSubmitted]
 }

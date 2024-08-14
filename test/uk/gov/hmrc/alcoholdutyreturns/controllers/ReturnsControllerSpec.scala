@@ -25,7 +25,7 @@ import uk.gov.hmrc.alcoholdutyreturns.base.SpecBase
 import uk.gov.hmrc.alcoholdutyreturns.connector.ReturnsConnector
 import uk.gov.hmrc.alcoholdutyreturns.models.returns.{GetReturnDetails, ReturnCreatedDetails}
 import uk.gov.hmrc.alcoholdutyreturns.models.ErrorResponse
-import uk.gov.hmrc.alcoholdutyreturns.service.ReturnsService
+import uk.gov.hmrc.alcoholdutyreturns.service.{AuditService, ReturnsService}
 
 import java.time.Instant
 import scala.concurrent.Future
@@ -138,8 +138,10 @@ class ReturnsControllerSpec extends SpecBase {
   class SetUp {
     val mockReturnsService: ReturnsService     = mock[ReturnsService]
     val mockReturnsConnector: ReturnsConnector = mock[ReturnsConnector]
+    val mockAuditService: AuditService         = mock[AuditService]
 
-    val controller = new ReturnsController(fakeAuthorisedAction, mockReturnsService, mockReturnsConnector, cc)
+    val controller =
+      new ReturnsController(fakeAuthorisedAction, mockReturnsService, mockAuditService, mockReturnsConnector, cc)
 
     val periodKey: String = "24AC"
     val total             = BigDecimal("12345.67")
