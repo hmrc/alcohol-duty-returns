@@ -19,9 +19,13 @@ package uk.gov.hmrc.alcoholdutyreturns.models.audit
 import play.api.libs.json.{Json, OFormat}
 import uk.gov.hmrc.alcoholdutyreturns.models.audit.AuditType.ReturnSubmitted
 
-case class AuditReturnSubmitted (
-                                  appaId: String
-                                ) extends AuditEventDetail {
+import java.time.Instant
+
+case class AuditReturnSubmitted(
+  appaId: String,
+  periodKey: String,
+  processingDate: Instant
+) extends AuditEventDetail {
   protected val _auditType = ReturnSubmitted
 }
 

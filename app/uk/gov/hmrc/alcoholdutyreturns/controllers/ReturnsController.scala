@@ -24,7 +24,7 @@ import play.api.mvc.{Action, AnyContent, ControllerComponents, ResponseHeader, R
 import uk.gov.hmrc.alcoholdutyreturns.connector.ReturnsConnector
 import uk.gov.hmrc.alcoholdutyreturns.controllers.actions.AuthorisedAction
 import uk.gov.hmrc.alcoholdutyreturns.models.audit.AuditReturnSubmitted
-import uk.gov.hmrc.alcoholdutyreturns.models.{ErrorResponse, ObligationData, ReturnId, UserAnswers}
+import uk.gov.hmrc.alcoholdutyreturns.models.{ErrorResponse, ReturnId}
 import uk.gov.hmrc.alcoholdutyreturns.models.returns.{AdrReturnCreatedDetails, AdrReturnDetails, AdrReturnSubmission}
 import uk.gov.hmrc.alcoholdutyreturns.service.{AuditService, ReturnsService}
 import uk.gov.hmrc.http.HeaderCarrier
@@ -68,18 +68,20 @@ class ReturnsController @Inject() (
               error(e)
             },
             returnCreatedDetails => {
-              auditReturnSubmitted(ReturnId(appaId, periodKey))
+              auditReturnSubmitted(returnCreatedDetails, ReturnId(appaId, periodKey))
               Created(Json.toJson(returnCreatedDetails))
             }
           )
       }
     }
 
-  private def auditReturnSubmitted(returnId: ReturnId)(implicit
+  private def auditReturnSubmitted(returnCreatedDetails: AdrReturnCreatedDetails, returnId: ReturnId)(implicit
     hc: HeaderCarrier
   ): Unit = {
     val eventDetail = AuditReturnSubmitted(
-      appaId = returnId.appaId
+      appaId = returnId.appaId,
+      periodKey = returnId.periodKey,
+      processingDate = returnCreatedDetails.processingDate
     )
 
     auditService.audit(eventDetail)
