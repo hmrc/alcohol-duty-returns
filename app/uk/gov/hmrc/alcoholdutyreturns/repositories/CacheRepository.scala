@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.alcoholdutyreturns.repositories
 
+import cats.data.OptionT
 import org.mongodb.scala.model._
 import play.api.libs.json.Format
 import uk.gov.hmrc.alcoholdutyreturns.config.AppConfig
@@ -71,12 +72,13 @@ class CacheRepository @Inject() (
       .toFuture()
       .map(_ => true)
 
-  def get(id: ReturnId): Future[Option[UserAnswers]] =
+  def get(id: ReturnId): OptionT[Future, UserAnswers] = OptionT {
     keepAlive(id).flatMap { _ =>
       collection
         .find(byId(id))
         .headOption()
     }
+  }
 
   def set(answers: UserAnswers): Future[UpdateResult] = {
 

@@ -24,17 +24,19 @@ import play.api.mvc.{Action, AnyContent, ControllerComponents, ResponseHeader, R
 import uk.gov.hmrc.alcoholdutyreturns.connector.ReturnsConnector
 import uk.gov.hmrc.alcoholdutyreturns.controllers.actions.AuthorisedAction
 import uk.gov.hmrc.alcoholdutyreturns.models.audit.AuditReturnSubmitted
-import uk.gov.hmrc.alcoholdutyreturns.models.{ErrorResponse, ReturnId}
+import uk.gov.hmrc.alcoholdutyreturns.models.{ErrorResponse, ReturnId, UserAnswers}
 import uk.gov.hmrc.alcoholdutyreturns.models.returns.{AdrReturnCreatedDetails, AdrReturnDetails, AdrReturnSubmission}
+import uk.gov.hmrc.alcoholdutyreturns.repositories.CacheRepository
 import uk.gov.hmrc.alcoholdutyreturns.service.{AuditService, ReturnsService}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import javax.inject.Inject
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
 class ReturnsController @Inject() (
   authorise: AuthorisedAction,
+  cacheRepository: CacheRepository,
   returnsService: ReturnsService,
   auditService: AuditService,
   returnsConnector: ReturnsConnector,
@@ -68,19 +70,26 @@ class ReturnsController @Inject() (
               error(e)
             },
             returnCreatedDetails => {
-              auditReturnSubmitted(returnCreatedDetails, ReturnId(appaId, periodKey))
+              cacheRepository.get(ReturnId(appaId, periodKey)).map { userAnswers =>
+                auditReturnSubmitted(userAnswers, returnCreatedDetails, ReturnId(appaId, periodKey))
+              }
               Created(Json.toJson(returnCreatedDetails))
             }
           )
       }
     }
 
-  private def auditReturnSubmitted(returnCreatedDetails: AdrReturnCreatedDetails, returnId: ReturnId)(implicit
+  private def auditReturnSubmitted(
+    userAnswers: UserAnswers,
+    returnCreatedDetails: AdrReturnCreatedDetails,
+    returnId: ReturnId
+  )(implicit
     hc: HeaderCarrier
   ): Unit = {
     val eventDetail = AuditReturnSubmitted(
       appaId = returnId.appaId,
       periodKey = returnId.periodKey,
+      governmentGatewayId = userAnswers.internalId,
       processingDate = returnCreatedDetails.processingDate
     )
 

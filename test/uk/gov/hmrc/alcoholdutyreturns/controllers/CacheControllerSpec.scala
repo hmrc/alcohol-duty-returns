@@ -16,14 +16,14 @@
 
 package uk.gov.hmrc.alcoholdutyreturns.controllers
 
-import cats.data.EitherT
+import cats.data.{EitherT, OptionT}
 import org.mockito.ArgumentMatchers
 import org.mockito.ArgumentMatchers.any
 import org.mockito.ArgumentMatchersSugar.eqTo
 import play.api.libs.json.Json
 import play.api.mvc.Result
 import uk.gov.hmrc.alcoholdutyreturns.base.SpecBase
-import uk.gov.hmrc.alcoholdutyreturns.models.{ApprovalStatus, ErrorResponse}
+import uk.gov.hmrc.alcoholdutyreturns.models.{ApprovalStatus, ErrorResponse, UserAnswers}
 import uk.gov.hmrc.alcoholdutyreturns.repositories.{CacheRepository, UpdateFailure, UpdateSuccess}
 import uk.gov.hmrc.alcoholdutyreturns.service.{AccountService, AuditService}
 
@@ -46,7 +46,7 @@ class CacheControllerSpec extends SpecBase {
   "get" should {
     "return 200 OK with an existing user answers when there is one for the id" in {
       when(mockCacheRepository.get(ArgumentMatchers.eq(returnId)))
-        .thenReturn(Future.successful(Some(emptyUserAnswers)))
+        .thenReturn(OptionT[Future, UserAnswers](Future.successful(Some(emptyUserAnswers))))
 
       val result: Future[Result] =
         controller.get(appaId, periodKey)(fakeRequest)
@@ -57,7 +57,7 @@ class CacheControllerSpec extends SpecBase {
 
     "return 404 NOT_FOUND when there is no user answers for the id" in {
       when(mockCacheRepository.get(ArgumentMatchers.eq(returnId)))
-        .thenReturn(Future.successful(None))
+        .thenReturn(OptionT[Future, UserAnswers](Future.successful(None)))
 
       val result: Future[Result] =
         controller.get(appaId, periodKey)(fakeRequest)

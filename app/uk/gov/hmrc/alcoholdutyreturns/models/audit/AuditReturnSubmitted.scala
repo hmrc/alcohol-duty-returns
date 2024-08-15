@@ -24,6 +24,7 @@ import java.time.Instant
 case class AuditReturnSubmitted(
   appaId: String,
   periodKey: String,
+  governmentGatewayId: String,
   processingDate: Instant
 ) extends AuditEventDetail {
   protected val _auditType = ReturnSubmitted

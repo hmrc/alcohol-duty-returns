@@ -25,6 +25,7 @@ import uk.gov.hmrc.alcoholdutyreturns.base.SpecBase
 import uk.gov.hmrc.alcoholdutyreturns.connector.ReturnsConnector
 import uk.gov.hmrc.alcoholdutyreturns.models.returns.{GetReturnDetails, ReturnCreatedDetails}
 import uk.gov.hmrc.alcoholdutyreturns.models.ErrorResponse
+import uk.gov.hmrc.alcoholdutyreturns.repositories.CacheRepository
 import uk.gov.hmrc.alcoholdutyreturns.service.{AuditService, ReturnsService}
 
 import java.time.Instant
@@ -139,9 +140,17 @@ class ReturnsControllerSpec extends SpecBase {
     val mockReturnsService: ReturnsService     = mock[ReturnsService]
     val mockReturnsConnector: ReturnsConnector = mock[ReturnsConnector]
     val mockAuditService: AuditService         = mock[AuditService]
+    val mockCacheRepository: CacheRepository   = mock[CacheRepository]
 
     val controller =
-      new ReturnsController(fakeAuthorisedAction, mockReturnsService, mockAuditService, mockReturnsConnector, cc)
+      new ReturnsController(
+        fakeAuthorisedAction,
+        mockCacheRepository,
+        mockReturnsService,
+        mockAuditService,
+        mockReturnsConnector,
+        cc
+      )
 
     val periodKey: String = "24AC"
     val total             = BigDecimal("12345.67")
