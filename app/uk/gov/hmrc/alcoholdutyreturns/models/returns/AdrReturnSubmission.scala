@@ -273,7 +273,7 @@ case class AdrReturnCreatedDetails(
 )
 
 object AdrReturnCreatedDetails {
-  implicit val returnCreatedDetailsWrites: OWrites[AdrReturnCreatedDetails] = Json.writes[AdrReturnCreatedDetails]
+  implicit val returnCreatedDetailsWrites: OFormat[AdrReturnCreatedDetails] = Json.format[AdrReturnCreatedDetails]
 
   def fromReturnCreatedDetails(returnCreatedDetails: ReturnCreatedDetails): AdrReturnCreatedDetails =
     AdrReturnCreatedDetails(

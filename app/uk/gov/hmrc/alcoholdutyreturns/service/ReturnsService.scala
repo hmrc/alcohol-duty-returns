@@ -77,7 +77,12 @@ class ReturnsService @Inject() (
     } yield {
       cacheRepository.get(returnId).map {
         case Some(ua) =>
-          auditReturnSubmitted(ua, AdrReturnCreatedDetails.fromReturnCreatedDetails(returnCreatedDetails), returnId)
+          auditReturnSubmitted(
+            ua,
+            returnToSubmit,
+            AdrReturnCreatedDetails.fromReturnCreatedDetails(returnCreatedDetails),
+            returnId
+          )
         case None     =>
           logger.warn("User answers couldn't be retrieved while auditing return submission")
       }
@@ -87,6 +92,7 @@ class ReturnsService @Inject() (
 
   private def auditReturnSubmitted(
     userAnswers: UserAnswers,
+    returnToSubmit: ReturnCreate,
     returnCreatedDetails: AdrReturnCreatedDetails,
     returnId: ReturnId
   )(implicit
@@ -96,7 +102,11 @@ class ReturnsService @Inject() (
       appaId = returnId.appaId,
       periodKey = returnId.periodKey,
       governmentGatewayId = userAnswers.internalId,
-      processingDate = returnCreatedDetails.processingDate
+      governmentGatewayGroupId = userAnswers.groupId,
+      processingDate = returnCreatedDetails.processingDate,
+      alcoholRegimes = userAnswers.regimes.regimes,
+      requestPayload = returnToSubmit,
+      responsePayload = returnCreatedDetails
     )
 
     auditService.audit(eventDetail)
