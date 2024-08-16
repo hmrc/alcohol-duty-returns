@@ -19,11 +19,13 @@ package uk.gov.hmrc.alcoholdutyreturns.service
 import cats.implicits._
 import cats.data.EitherT
 import com.google.inject.{Inject, Singleton}
+import play.api.Logging
 import uk.gov.hmrc.alcoholdutyreturns.connector.{CalculatorConnector, ReturnsConnector}
 import uk.gov.hmrc.alcoholdutyreturns.models.ErrorResponse.BadRequest
+import uk.gov.hmrc.alcoholdutyreturns.models.audit.AuditReturnSubmitted
 import uk.gov.hmrc.alcoholdutyreturns.models.calculation.CalculateDutyDueByTaxTypeRequest
-import uk.gov.hmrc.alcoholdutyreturns.models.{ErrorResponse, ReturnId}
-import uk.gov.hmrc.alcoholdutyreturns.models.returns.{AdrReturnSubmission, ReturnCreate, ReturnCreatedDetails, TotalDutyDuebyTaxType}
+import uk.gov.hmrc.alcoholdutyreturns.models.{ErrorResponse, ReturnId, UserAnswers}
+import uk.gov.hmrc.alcoholdutyreturns.models.returns.{AdrReturnCreatedDetails, AdrReturnSubmission, ReturnCreate, ReturnCreatedDetails, TotalDutyDuebyTaxType}
 import uk.gov.hmrc.alcoholdutyreturns.repositories.CacheRepository
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -34,10 +36,11 @@ class ReturnsService @Inject() (
   returnsConnector: ReturnsConnector,
   calculatorConnector: CalculatorConnector,
   cacheRepository: CacheRepository,
+  auditService: AuditService,
   schemaValidationService: SchemaValidationService
 )(implicit
   ec: ExecutionContext
-) {
+) extends Logging {
   private def calculateTotalDutyDueByTaxType(
     returnSubmission: AdrReturnSubmission
   )(implicit hc: HeaderCarrier): EitherT[Future, ErrorResponse, Option[Seq[TotalDutyDuebyTaxType]]] =
@@ -71,6 +74,32 @@ class ReturnsService @Inject() (
                                       returnId.appaId
                                     )
       _                          <- EitherT.right[ErrorResponse](cacheRepository.clearUserAnswersById(returnId))
-    } yield returnCreatedDetails
+    } yield {
+      cacheRepository.get(returnId).map {
+        case Some(ua) =>
+          auditReturnSubmitted(ua, AdrReturnCreatedDetails.fromReturnCreatedDetails(returnCreatedDetails), returnId)
+        case None     =>
+          logger.warn("User answers couldn't be retrieved while auditing return submission")
+      }
+      returnCreatedDetails
+    }
   }
+
+  private def auditReturnSubmitted(
+    userAnswers: UserAnswers,
+    returnCreatedDetails: AdrReturnCreatedDetails,
+    returnId: ReturnId
+  )(implicit
+    hc: HeaderCarrier
+  ): Unit = {
+    val eventDetail = AuditReturnSubmitted(
+      appaId = returnId.appaId,
+      periodKey = returnId.periodKey,
+      governmentGatewayId = userAnswers.internalId,
+      processingDate = returnCreatedDetails.processingDate
+    )
+
+    auditService.audit(eventDetail)
+  }
+
 }

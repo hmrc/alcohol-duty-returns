@@ -20,7 +20,7 @@ import cats.data.EitherT
 import org.mockito.ArgumentMatchers.any
 import uk.gov.hmrc.alcoholdutyreturns.base.SpecBase
 import uk.gov.hmrc.alcoholdutyreturns.connector.{CalculatorConnector, ReturnsConnector}
-import uk.gov.hmrc.alcoholdutyreturns.models.ErrorResponse
+import uk.gov.hmrc.alcoholdutyreturns.models.{ErrorResponse, ReturnId}
 import uk.gov.hmrc.alcoholdutyreturns.models.calculation.CalculatedDutyDueByTaxType
 import uk.gov.hmrc.alcoholdutyreturns.models.returns.ReturnCreatedDetails
 import uk.gov.hmrc.alcoholdutyreturns.repositories.CacheRepository
@@ -41,9 +41,14 @@ class ReturnsServiceSpec extends SpecBase {
 
       when(mockCacheRespository.clearUserAnswersById(retId)).thenReturn(Future.unit)
 
+      when(mockCacheRespository.get(retId)).thenReturn(Future.successful(Some(userAnswers)))
+
       whenReady(returnsService.submitReturn(adrReturnSubmission, retId).value) {
         _ shouldBe Right[ErrorResponse, ReturnCreatedDetails](returnCreatedDetails)
       }
+
+      verify(mockCacheRespository).get(ReturnId(appaId, periodKey))
+
     }
 
     "return any error from the calculator connector if failure" in new SetUp {
@@ -150,11 +155,14 @@ class ReturnsServiceSpec extends SpecBase {
     val mockReturnsConnector        = mock[ReturnsConnector]
     val mockCalculatorConnector     = mock[CalculatorConnector]
     val mockCacheRespository        = mock[CacheRepository]
+    val mockAuditService            = mock[AuditService]
     val mockSchemaValidationService = mock[SchemaValidationService]
-    val returnsService              = new ReturnsService(
+
+    val returnsService = new ReturnsService(
       mockReturnsConnector,
       mockCalculatorConnector,
       mockCacheRespository,
+      mockAuditService,
       mockSchemaValidationService
     )
 

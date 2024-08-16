@@ -23,12 +23,9 @@ import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{Action, AnyContent, ControllerComponents, ResponseHeader, Result}
 import uk.gov.hmrc.alcoholdutyreturns.connector.ReturnsConnector
 import uk.gov.hmrc.alcoholdutyreturns.controllers.actions.AuthorisedAction
-import uk.gov.hmrc.alcoholdutyreturns.models.audit.AuditReturnSubmitted
-import uk.gov.hmrc.alcoholdutyreturns.models.{ErrorResponse, ReturnId, UserAnswers}
+import uk.gov.hmrc.alcoholdutyreturns.models.{ErrorResponse, ReturnId}
 import uk.gov.hmrc.alcoholdutyreturns.models.returns.{AdrReturnCreatedDetails, AdrReturnDetails, AdrReturnSubmission}
-import uk.gov.hmrc.alcoholdutyreturns.repositories.CacheRepository
-import uk.gov.hmrc.alcoholdutyreturns.service.{AuditService, ReturnsService}
-import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.alcoholdutyreturns.service.ReturnsService
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import javax.inject.Inject
@@ -36,9 +33,7 @@ import scala.concurrent.ExecutionContext
 
 class ReturnsController @Inject() (
   authorise: AuthorisedAction,
-  cacheRepository: CacheRepository,
   returnsService: ReturnsService,
-  auditService: AuditService,
   returnsConnector: ReturnsConnector,
   override val controllerComponents: ControllerComponents
 )(implicit executionContext: ExecutionContext)
@@ -69,33 +64,10 @@ class ReturnsController @Inject() (
               logger.warn(s"Unable to submit return $periodKey for $appaId: $e")
               error(e)
             },
-            returnCreatedDetails => {
-              cacheRepository.get(ReturnId(appaId, periodKey)).map {
-                case Some(ua) => auditReturnSubmitted(ua, returnCreatedDetails, ReturnId(appaId, periodKey))
-                case None     => logger.warn("User answers couldn't be retrieved while auditing return submission")
-              }
-              Created(Json.toJson(returnCreatedDetails))
-            }
+            returnCreatedDetails => Created(Json.toJson(returnCreatedDetails))
           )
       }
     }
-
-  private def auditReturnSubmitted(
-    userAnswers: UserAnswers,
-    returnCreatedDetails: AdrReturnCreatedDetails,
-    returnId: ReturnId
-  )(implicit
-    hc: HeaderCarrier
-  ): Unit = {
-    val eventDetail = AuditReturnSubmitted(
-      appaId = returnId.appaId,
-      periodKey = returnId.periodKey,
-      governmentGatewayId = userAnswers.internalId,
-      processingDate = returnCreatedDetails.processingDate
-    )
-
-    auditService.audit(eventDetail)
-  }
 
   def error(errorResponse: ErrorResponse): Result = Result(
     header = ResponseHeader(errorResponse.status),

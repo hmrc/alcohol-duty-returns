@@ -24,7 +24,7 @@ import play.api.mvc.Result
 import uk.gov.hmrc.alcoholdutyreturns.base.SpecBase
 import uk.gov.hmrc.alcoholdutyreturns.connector.ReturnsConnector
 import uk.gov.hmrc.alcoholdutyreturns.models.returns.{GetReturnDetails, ReturnCreatedDetails}
-import uk.gov.hmrc.alcoholdutyreturns.models.{ErrorResponse, ReturnId}
+import uk.gov.hmrc.alcoholdutyreturns.models.ErrorResponse
 import uk.gov.hmrc.alcoholdutyreturns.repositories.CacheRepository
 import uk.gov.hmrc.alcoholdutyreturns.service.{AuditService, ReturnsService}
 
@@ -83,8 +83,6 @@ class ReturnsControllerSpec extends SpecBase {
         )
           .thenReturn(EitherT.rightT[Future, ErrorResponse](returnCreatedDetails))
 
-        when(mockCacheRepository.get(any())).thenReturn(Future.successful(Some(userAnswers)))
-
         val result: Future[Result] =
           controller.submitReturn(appaId, periodKey)(
             fakeRequestWithJsonBody(Json.toJson(adrReturnsSubmission))
@@ -93,7 +91,6 @@ class ReturnsControllerSpec extends SpecBase {
         status(result)        shouldBe CREATED
         contentAsJson(result) shouldBe Json.toJson(adrReturnCreatedDetails)
 
-        verify(mockCacheRepository).get(ReturnId(appaId, periodKey))
       }
 
       "return 400 BAD_REQUEST when there is a BAD_REQUEST" in new SetUp {
@@ -149,9 +146,7 @@ class ReturnsControllerSpec extends SpecBase {
     val controller =
       new ReturnsController(
         fakeAuthorisedAction,
-        mockCacheRepository,
         mockReturnsService,
-        mockAuditService,
         mockReturnsConnector,
         cc
       )
