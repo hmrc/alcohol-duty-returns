@@ -17,7 +17,7 @@
 package uk.gov.hmrc.alcoholdutyreturns.models.returns
 
 import enumeratum.{Enum, EnumEntry, PlayJsonEnum}
-import play.api.libs.json.{Json, OFormat, OWrites}
+import play.api.libs.json.{Json, OFormat}
 
 import java.time.{Instant, LocalDate}
 
