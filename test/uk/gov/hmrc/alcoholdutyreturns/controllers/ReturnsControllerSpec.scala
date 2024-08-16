@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.alcoholdutyreturns.controllers
 
-import cats.data.{EitherT, OptionT}
+import cats.data.EitherT
 import org.mockito.ArgumentMatchers.any
 import org.mockito.ArgumentMatchersSugar.eqTo
 import play.api.libs.json.Json
@@ -83,7 +83,7 @@ class ReturnsControllerSpec extends SpecBase {
         )
           .thenReturn(EitherT.rightT[Future, ErrorResponse](returnCreatedDetails))
 
-        when(mockCacheRepository.get(any())).thenReturn(OptionT.pure(userAnswers))
+        when(mockCacheRepository.get(any())).thenReturn(Future.successful(Some(userAnswers)))
 
         val result: Future[Result] =
           controller.submitReturn(appaId, periodKey)(

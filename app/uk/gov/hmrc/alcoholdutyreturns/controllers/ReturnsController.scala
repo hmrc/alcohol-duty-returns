@@ -70,8 +70,9 @@ class ReturnsController @Inject() (
               error(e)
             },
             returnCreatedDetails => {
-              cacheRepository.get(ReturnId(appaId, periodKey)).map { userAnswers =>
-                auditReturnSubmitted(userAnswers, returnCreatedDetails, ReturnId(appaId, periodKey))
+              cacheRepository.get(ReturnId(appaId, periodKey)).map {
+                case Some(ua) => auditReturnSubmitted(ua, returnCreatedDetails, ReturnId(appaId, periodKey))
+                case None     => logger.warn("User answers couldn't be retrieved while auditing return submission")
               }
               Created(Json.toJson(returnCreatedDetails))
             }

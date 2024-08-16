@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.alcoholdutyreturns.controllers
 
-import cats.data.OptionT
 import org.apache.pekko.util.ByteString
 import play.api.Logging
 import play.api.http.HttpEntity
@@ -45,10 +44,7 @@ class CacheController @Inject() (
 
   def get(appaId: String, periodKey: String): Action[AnyContent] =
     authorise.async { _ =>
-      val userAnswersOptionT: OptionT[Future, UserAnswers] =
-        cacheRepository.get(ReturnId(appaId, periodKey))
-
-      userAnswersOptionT.value.map {
+      cacheRepository.get(ReturnId(appaId, periodKey)).map {
         case Some(ua) => Ok(Json.toJson(ua))
         case None     => NotFound
       }
