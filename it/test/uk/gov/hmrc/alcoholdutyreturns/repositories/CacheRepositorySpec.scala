@@ -30,7 +30,7 @@ import uk.gov.hmrc.mongo.test.DefaultPlayMongoRepositorySupport
 
 import java.time.temporal.ChronoUnit
 import java.time.{Clock, Instant, ZoneId}
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
 class CacheRepositorySpec
     extends AnyFreeSpec
@@ -124,13 +124,13 @@ class CacheRepositorySpec
 
         insert(userAnswers).futureValue
 
-        val result         = repository.get(userAnswers.returnId).futureValue
+        val result         = repository.get(userAnswers.returnId).value.futureValue
         val expectedResult = userAnswers.copy(
           lastUpdated = instant,
           validUntil = Some(instant.plusSeconds(DB_TTL_IN_SEC))
         )
 
-        verifyUserAnswerResult(result.value, expectedResult)
+        verifyUserAnswerResult(result.get, expectedResult)
       }
     }
 
@@ -138,7 +138,7 @@ class CacheRepositorySpec
 
       "must return None" in {
 
-        repository.get(ReturnId("APPA id that does not exist", "period key that does not exist")).futureValue must not be defined
+        repository.get(ReturnId("APPA id that does not exist", "period key that does not exist")).value.futureValue must not be defined
       }
     }
   }
@@ -177,13 +177,13 @@ class CacheRepositorySpec
   ".clearUserAnswersById" - {
     "must clear down existing user answers" in {
       insert(userAnswers).futureValue
-      repository.get(userAnswers.returnId).futureValue.isEmpty mustBe false
+      repository.get(userAnswers.returnId).value.futureValue.isEmpty mustBe false
       repository.clearUserAnswersById(userAnswers.returnId).futureValue mustBe ()
-      repository.get(userAnswers.returnId).futureValue.isEmpty mustBe true
+      repository.get(userAnswers.returnId).value.futureValue.isEmpty mustBe true
     }
 
     "must not fail if user answers doesn't exist" in {
-      repository.get(userAnswers.returnId).futureValue.isEmpty mustBe true
+      repository.get(userAnswers.returnId).value.futureValue.isEmpty mustBe true
       repository.clearUserAnswersById(userAnswers.returnId).futureValue mustBe ()
     }
   }
