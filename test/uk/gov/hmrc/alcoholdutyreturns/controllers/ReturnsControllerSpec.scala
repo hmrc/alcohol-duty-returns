@@ -140,8 +140,6 @@ class ReturnsControllerSpec extends SpecBase {
   class SetUp {
     val mockReturnsService: ReturnsService     = mock[ReturnsService]
     val mockReturnsConnector: ReturnsConnector = mock[ReturnsConnector]
-    val mockAuditService: AuditService         = mock[AuditService]
-    val mockCacheRepository: CacheRepository   = mock[CacheRepository]
 
     val controller =
       new ReturnsController(
