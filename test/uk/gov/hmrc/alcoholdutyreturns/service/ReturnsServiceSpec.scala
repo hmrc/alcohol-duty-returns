@@ -20,9 +20,10 @@ import cats.data.EitherT
 import org.mockito.ArgumentMatchers.any
 import uk.gov.hmrc.alcoholdutyreturns.base.SpecBase
 import uk.gov.hmrc.alcoholdutyreturns.connector.{CalculatorConnector, ReturnsConnector}
+import uk.gov.hmrc.alcoholdutyreturns.models.audit.AuditReturnSubmitted
 import uk.gov.hmrc.alcoholdutyreturns.models.{ErrorResponse, ReturnId}
 import uk.gov.hmrc.alcoholdutyreturns.models.calculation.CalculatedDutyDueByTaxType
-import uk.gov.hmrc.alcoholdutyreturns.models.returns.ReturnCreatedDetails
+import uk.gov.hmrc.alcoholdutyreturns.models.returns.{AdrReturnCreatedDetails, ReturnCreatedDetails}
 import uk.gov.hmrc.alcoholdutyreturns.repositories.CacheRepository
 
 import java.time.Instant
@@ -48,6 +49,8 @@ class ReturnsServiceSpec extends SpecBase {
       }
 
       verify(mockCacheRespository).get(ReturnId(appaId, periodKey))
+
+      //verify(mockAuditService).audit()(any())
 
     }
 
@@ -176,5 +179,17 @@ class ReturnsServiceSpec extends SpecBase {
 
     val returnCreatedDetails =
       exampleReturnCreatedSuccessfulResponse(periodKey, total, now, chargeReference, submissionId).success
+
+//    val
+//    val auditReturnSubmitted = new AuditReturnSubmitted(
+//      appaId = returnId.appaId,
+//      periodKey = periodKey,
+//      governmentGatewayId = userAnswers.internalId,
+//      governmentGatewayGroupId = userAnswers.groupId,
+//      returnSubmittedTime = returnCreatedDetails.processingDate,
+//      alcoholRegimes = userAnswers.regimes.regimes,
+//      requestPayload = returnToSubmit,
+//      responsePayload = returnCreatedDetails
+//    )
   }
 }

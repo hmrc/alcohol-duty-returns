@@ -28,7 +28,7 @@ case class AuditReturnSubmitted(
   periodKey: String,
   governmentGatewayId: String,
   governmentGatewayGroupId: String,
-  processingDate: Instant,
+  returnSubmittedTime: Instant,
   alcoholRegimes: Set[AlcoholRegime],
   requestPayload: ReturnCreate,
   responsePayload: AdrReturnCreatedDetails

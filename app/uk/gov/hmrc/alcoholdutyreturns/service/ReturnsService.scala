@@ -73,43 +73,49 @@ class ReturnsService @Inject() (
                                       returnToSubmit,
                                       returnId.appaId
                                     )
+      _                           = cacheRepository.get(returnId).map {
+                                      case Some(ua) =>
+                                        auditReturnSubmitted(
+                                          Some(ua),
+                                          returnToSubmit,
+                                          AdrReturnCreatedDetails.fromReturnCreatedDetails(returnCreatedDetails),
+                                          returnId
+                                        )
+                                      case None     =>
+                                        logger.warn("User answers couldn't be retrieved while auditing return submission")
+                                        auditReturnSubmitted(
+                                          None,
+                                          returnToSubmit,
+                                          AdrReturnCreatedDetails.fromReturnCreatedDetails(returnCreatedDetails),
+                                          returnId
+                                        )
+                                    }
       _                          <- EitherT.right[ErrorResponse](cacheRepository.clearUserAnswersById(returnId))
-    } yield {
-      cacheRepository.get(returnId).map {
-        case Some(ua) =>
-          auditReturnSubmitted(
-            ua,
-            returnToSubmit,
-            AdrReturnCreatedDetails.fromReturnCreatedDetails(returnCreatedDetails),
-            returnId
-          )
-        case None     =>
-          logger.warn("User answers couldn't be retrieved while auditing return submission")
-      }
-      returnCreatedDetails
-    }
+    } yield returnCreatedDetails
   }
 
   private def auditReturnSubmitted(
-    userAnswers: UserAnswers,
+    userAnswers: Option[UserAnswers],
     returnToSubmit: ReturnCreate,
     returnCreatedDetails: AdrReturnCreatedDetails,
     returnId: ReturnId
   )(implicit
     hc: HeaderCarrier
-  ): Unit = {
-    val eventDetail = AuditReturnSubmitted(
-      appaId = returnId.appaId,
-      periodKey = returnId.periodKey,
-      governmentGatewayId = userAnswers.internalId,
-      governmentGatewayGroupId = userAnswers.groupId,
-      processingDate = returnCreatedDetails.processingDate,
-      alcoholRegimes = userAnswers.regimes.regimes,
-      requestPayload = returnToSubmit,
-      responsePayload = returnCreatedDetails
-    )
-
-    auditService.audit(eventDetail)
-  }
+  ): Unit =
+    userAnswers
+      .map { userAnswers =>
+        val eventDetail = AuditReturnSubmitted(
+          appaId = returnId.appaId,
+          periodKey = returnId.periodKey,
+          governmentGatewayId = userAnswers.internalId,
+          governmentGatewayGroupId = userAnswers.groupId,
+          returnSubmittedTime = returnCreatedDetails.processingDate,
+          alcoholRegimes = userAnswers.regimes.regimes,
+          requestPayload = returnToSubmit,
+          responsePayload = returnCreatedDetails
+        )
+        auditService.audit(eventDetail)
+      }
+      .getOrElse(logger.warn("No user answers found"))
 
 }
