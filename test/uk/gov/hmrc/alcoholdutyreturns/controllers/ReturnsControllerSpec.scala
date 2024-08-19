@@ -25,8 +25,7 @@ import uk.gov.hmrc.alcoholdutyreturns.base.SpecBase
 import uk.gov.hmrc.alcoholdutyreturns.connector.ReturnsConnector
 import uk.gov.hmrc.alcoholdutyreturns.models.returns.{GetReturnDetails, ReturnCreatedDetails}
 import uk.gov.hmrc.alcoholdutyreturns.models.ErrorResponse
-import uk.gov.hmrc.alcoholdutyreturns.repositories.CacheRepository
-import uk.gov.hmrc.alcoholdutyreturns.service.{AuditService, ReturnsService}
+import uk.gov.hmrc.alcoholdutyreturns.service.ReturnsService
 
 import java.time.Instant
 import scala.concurrent.Future
