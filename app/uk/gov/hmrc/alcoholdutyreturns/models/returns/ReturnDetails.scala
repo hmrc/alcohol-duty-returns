@@ -80,10 +80,11 @@ object AlcoholProducts {
   def fromAdrDutyDeclared(adrDutyDeclared: AdrDutyDeclared): AlcoholProducts =
     AlcoholProducts(
       alcoholProductsProducedFilled = adrDutyDeclared.declared,
-      regularReturn =
-        if (adrDutyDeclared.dutyDeclaredItems.nonEmpty)
-          Some(adrDutyDeclared.dutyDeclaredItems.map(RegularReturnDetails.fromAdrDutyDeclaredItem))
-        else None
+      regularReturn = if (adrDutyDeclared.dutyDeclaredItems.nonEmpty) {
+        Some(adrDutyDeclared.dutyDeclaredItems.map(RegularReturnDetails.fromAdrDutyDeclaredItem))
+      } else {
+        None
+      }
     )
 }
 
@@ -332,10 +333,11 @@ object NetDutySuspension {
   def fromAdrDutySuspended(adrDutySuspended: AdrDutySuspended): NetDutySuspension =
     NetDutySuspension(
       netDutySuspensionFilled = adrDutySuspended.declared,
-      netDutySuspensionProducts =
-        if (adrDutySuspended.dutySuspendedProducts.nonEmpty)
-          Some(NetDutySuspensionProducts.fromAdrDutySuspendedProducts(adrDutySuspended.dutySuspendedProducts))
-        else None
+      netDutySuspensionProducts = if (adrDutySuspended.dutySuspendedProducts.nonEmpty) {
+        Some(NetDutySuspensionProducts.fromAdrDutySuspendedProducts(adrDutySuspended.dutySuspendedProducts))
+      } else {
+        None
+      }
     )
 }
 
@@ -603,7 +605,7 @@ case class ReturnCreatedDetails(
   adReference: String,
   amount: BigDecimal,
   chargeReference: Option[String],
-  paymentDueDate: LocalDate,
+  paymentDueDate: Option[LocalDate],
   submissionID: String
 )
 

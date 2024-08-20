@@ -1088,7 +1088,7 @@ trait TestData extends ModelGenerators {
         adReference = appaId,
         amount = total,
         chargeReference = if (total != 0) Some(chargeReference) else None,
-        paymentDueDate = PeriodKey.toYearMonth(periodKey).plusMonths(1).atDay(dueDate),
+        paymentDueDate = if (total != 0) Some(PeriodKey.toYearMonth(periodKey).plusMonths(1).atDay(dueDate)) else None,
         submissionID = submissionId
       )
     )
@@ -1103,7 +1103,7 @@ trait TestData extends ModelGenerators {
       processingDate = now,
       amount = total,
       chargeReference = if (total != 0) Some(chargeReference) else None,
-      paymentDueDate = PeriodKey.toYearMonth(periodKey).plusMonths(1).atDay(dueDate)
+      paymentDueDate = if (total != 0) Some(PeriodKey.toYearMonth(periodKey).plusMonths(1).atDay(dueDate)) else None
     )
 
   val calculateDutyDueByTaxTypeRequest: CalculateDutyDueByTaxTypeRequest =
