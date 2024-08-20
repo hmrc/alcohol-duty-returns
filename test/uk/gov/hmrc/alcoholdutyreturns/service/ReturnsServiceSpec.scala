@@ -17,13 +17,14 @@
 package uk.gov.hmrc.alcoholdutyreturns.service
 
 import cats.data.EitherT
+import org.mockito.ArgumentMatchers
 import org.mockito.ArgumentMatchers.any
 import uk.gov.hmrc.alcoholdutyreturns.base.SpecBase
 import uk.gov.hmrc.alcoholdutyreturns.connector.{CalculatorConnector, ReturnsConnector}
 import uk.gov.hmrc.alcoholdutyreturns.models.audit.AuditReturnSubmitted
 import uk.gov.hmrc.alcoholdutyreturns.models.{ErrorResponse, ReturnId}
 import uk.gov.hmrc.alcoholdutyreturns.models.calculation.CalculatedDutyDueByTaxType
-import uk.gov.hmrc.alcoholdutyreturns.models.returns.{AdrReturnCreatedDetails, ReturnCreatedDetails}
+import uk.gov.hmrc.alcoholdutyreturns.models.returns.{AdrReturnCreatedDetails, ReturnCreate, ReturnCreatedDetails, TotalDutyDuebyTaxType}
 import uk.gov.hmrc.alcoholdutyreturns.repositories.CacheRepository
 
 import java.time.Instant
@@ -50,7 +51,7 @@ class ReturnsServiceSpec extends SpecBase {
 
       verify(mockCacheRespository).get(ReturnId(appaId, periodKey))
 
-      //verify(mockAuditService).audit()(any())
+      verify(mockAuditService).audit(ArgumentMatchers.eq(expectedAuditEvent))(any(), any())
 
     }
 
@@ -180,16 +181,31 @@ class ReturnsServiceSpec extends SpecBase {
     val returnCreatedDetails =
       exampleReturnCreatedSuccessfulResponse(periodKey, total, now, chargeReference, submissionId).success
 
-//    val
-//    val auditReturnSubmitted = new AuditReturnSubmitted(
-//      appaId = returnId.appaId,
-//      periodKey = periodKey,
-//      governmentGatewayId = userAnswers.internalId,
-//      governmentGatewayGroupId = userAnswers.groupId,
-//      returnSubmittedTime = returnCreatedDetails.processingDate,
-//      alcoholRegimes = userAnswers.regimes.regimes,
-//      requestPayload = returnToSubmit,
-//      responsePayload = returnCreatedDetails
-//    )
+    val returnToSubmit = ReturnCreate
+      .fromAdrReturnSubmission(adrReturnSubmission, periodKey)
+      .copy(totalDutyDuebyTaxType =
+        Some(
+          List(
+            TotalDutyDuebyTaxType("332", 314.31),
+            TotalDutyDuebyTaxType("351", 69.67),
+            TotalDutyDuebyTaxType("361", -132.73),
+            TotalDutyDuebyTaxType("353", -91.09),
+            TotalDutyDuebyTaxType("352", -52.85),
+            TotalDutyDuebyTaxType("331", 197.19)
+          )
+        )
+      )
+
+    val expectedAuditEvent = AuditReturnSubmitted(
+      appaId = retId.appaId,
+      periodKey = periodKey,
+      governmentGatewayId = userAnswers.internalId,
+      governmentGatewayGroupId = userAnswers.groupId,
+      returnSubmittedTime = returnCreatedDetails.processingDate,
+      alcoholRegimes = userAnswers.regimes.regimes,
+      requestPayload = returnToSubmit,
+      responsePayload = AdrReturnCreatedDetails.fromReturnCreatedDetails(returnCreatedDetails)
+    )
+
   }
 }
