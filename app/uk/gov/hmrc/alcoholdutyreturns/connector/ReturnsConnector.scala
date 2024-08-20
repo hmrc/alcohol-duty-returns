@@ -71,7 +71,8 @@ class ReturnsConnector @Inject() (
             Left(ErrorResponse.EntityNotFound)
           case Left(errorResponse)                                            =>
             logger.warn(
-              s"Received unexpected response from returns API (appaId ${returnId.appaId}, periodKey ${returnId.periodKey}): ${errorResponse.statusCode} ${errorResponse.message}"
+              s"""Received unexpected response from returns API (appaId ${returnId.appaId},
+                 | periodKey ${returnId.periodKey}): ${errorResponse.statusCode} ${errorResponse.message}""".stripMargin
             )
             Left(ErrorResponse.UnexpectedResponse)
         }
