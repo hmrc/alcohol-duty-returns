@@ -55,6 +55,27 @@ class ReturnsServiceSpec extends SpecBase {
 
     }
 
+    "return an audit event without user answers" in new SetUp {
+      when(mockCalculatorConnector.calculateDutyDueByTaxType(any())(any()))
+        .thenReturn(EitherT.right[ErrorResponse](Future.successful(calculatedDutyDueByTaxTypeForExampleSubmission)))
+
+      when(mockSchemaValidationService.validateAgainstSchema(returnSubmission)).thenReturn(true)
+
+      when(mockReturnsConnector.submitReturn(returnSubmission, retId.appaId))
+        .thenReturn(EitherT.rightT[Future, ErrorResponse](returnCreatedDetails))
+
+      when(mockCacheRespository.get(retId)).thenReturn(Future.successful(None))
+
+      when(mockCacheRespository.clearUserAnswersById(retId)).thenReturn(Future.unit)
+
+      whenReady(returnsService.submitReturn(adrReturnSubmission, retId).value) {
+        _ shouldBe Right[ErrorResponse, ReturnCreatedDetails](returnCreatedDetails)
+      }
+
+      verify(mockCacheRespository).get(ReturnId(appaId, periodKey))
+      verify(mockAuditService).audit(ArgumentMatchers.eq(expectedPartialAuditEvent))(any(), any())
+    }
+
     "return any error from the calculator connector if failure" in new SetUp {
       when(mockCalculatorConnector.calculateDutyDueByTaxType(any())(any()))
         .thenReturn(EitherT.leftT[Future, CalculatedDutyDueByTaxType](ErrorResponse.EntityNotFound))
@@ -199,10 +220,21 @@ class ReturnsServiceSpec extends SpecBase {
     val expectedAuditEvent = AuditReturnSubmitted(
       appaId = retId.appaId,
       periodKey = periodKey,
-      governmentGatewayId = userAnswers.internalId,
-      governmentGatewayGroupId = userAnswers.groupId,
+      governmentGatewayId = Some(userAnswers.internalId),
+      governmentGatewayGroupId = Some(userAnswers.groupId),
       returnSubmittedTime = returnCreatedDetails.processingDate,
-      alcoholRegimes = userAnswers.regimes.regimes,
+      alcoholRegimes = Some(userAnswers.regimes.regimes),
+      requestPayload = returnToSubmit,
+      responsePayload = AdrReturnCreatedDetails.fromReturnCreatedDetails(returnCreatedDetails)
+    )
+
+    val expectedPartialAuditEvent = AuditReturnSubmitted(
+      appaId = retId.appaId,
+      periodKey = periodKey,
+      governmentGatewayId = None,
+      governmentGatewayGroupId = None,
+      returnSubmittedTime = returnCreatedDetails.processingDate,
+      alcoholRegimes = None,
       requestPayload = returnToSubmit,
       responsePayload = AdrReturnCreatedDetails.fromReturnCreatedDetails(returnCreatedDetails)
     )

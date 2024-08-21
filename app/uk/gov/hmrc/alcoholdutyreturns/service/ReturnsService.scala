@@ -101,21 +101,31 @@ class ReturnsService @Inject() (
     returnId: ReturnId
   )(implicit
     hc: HeaderCarrier
-  ): Unit =
-    userAnswers
-      .map { userAnswers =>
-        val eventDetail = AuditReturnSubmitted(
+  ): Unit = {
+    val eventDetail = userAnswers match {
+      case Some(ua) =>
+        AuditReturnSubmitted(
           appaId = returnId.appaId,
           periodKey = returnId.periodKey,
-          governmentGatewayId = userAnswers.internalId,
-          governmentGatewayGroupId = userAnswers.groupId,
+          governmentGatewayId = Some(ua.internalId),
+          governmentGatewayGroupId = Some(ua.groupId),
           returnSubmittedTime = returnCreatedDetails.processingDate,
-          alcoholRegimes = userAnswers.regimes.regimes,
+          alcoholRegimes = Some(ua.regimes.regimes),
           requestPayload = returnToSubmit,
           responsePayload = returnCreatedDetails
         )
-        auditService.audit(eventDetail)
-      }
-      .getOrElse(logger.warn("No user answers found"))
-
+      case None     =>
+        AuditReturnSubmitted(
+          appaId = returnId.appaId,
+          periodKey = returnId.periodKey,
+          governmentGatewayId = None,
+          governmentGatewayGroupId = None,
+          returnSubmittedTime = returnCreatedDetails.processingDate,
+          alcoholRegimes = None,
+          requestPayload = returnToSubmit,
+          responsePayload = returnCreatedDetails
+        )
+    }
+    auditService.audit(eventDetail)
+  }
 }

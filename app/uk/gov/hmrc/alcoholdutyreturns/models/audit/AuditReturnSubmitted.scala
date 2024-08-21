@@ -26,10 +26,10 @@ import java.time.Instant
 case class AuditReturnSubmitted(
   appaId: String,
   periodKey: String,
-  governmentGatewayId: String,
-  governmentGatewayGroupId: String,
+  governmentGatewayId: Option[String],
+  governmentGatewayGroupId: Option[String],
   returnSubmittedTime: Instant,
-  alcoholRegimes: Set[AlcoholRegime],
+  alcoholRegimes: Option[Set[AlcoholRegime]],
   requestPayload: ReturnCreate,
   responsePayload: AdrReturnCreatedDetails
 ) extends AuditEventDetail {
