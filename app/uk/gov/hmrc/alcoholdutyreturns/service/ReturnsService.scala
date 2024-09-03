@@ -69,36 +69,27 @@ class ReturnsService @Inject() (
       maybeTotalDutyDueByTaxType <- calculateTotalDutyDueByTaxType(returnSubmission)
       returnToSubmit              = returnConvertedToSubmissionFormat.copy(totalDutyDuebyTaxType = maybeTotalDutyDueByTaxType)
       _                          <- validateAgainstSchema(returnToSubmit)
-      returnCreatedDetails       <- returnsConnector.submitReturn(
+      returnCreatedDetails       <- returnsConnector.submitReturn(returnToSubmit, returnId.appaId)
+      userAnswers                <-
+        EitherT.right[ErrorResponse](
+          cacheRepository
+            .get(returnId)
+            .recover { case _ =>
+              logger.warn(
+                s"Failed retrieving user answers from the cache for returnId=$returnId. Continuing the process and auditing without user answers. "
+              )
+              None
+            }
+        )
+      _                           = auditReturnSubmitted(
+                                      userAnswers,
                                       returnToSubmit,
-                                      returnId.appaId
+                                      AdrReturnCreatedDetails.fromReturnCreatedDetails(returnCreatedDetails),
+                                      returnId
                                     )
       _                          <- EitherT.right[ErrorResponse](
                                       cacheRepository
-                                        .get(returnId)
-                                        .map {
-                                          case Some(ua) =>
-                                            auditReturnSubmitted(
-                                              Some(ua),
-                                              returnToSubmit,
-                                              AdrReturnCreatedDetails.fromReturnCreatedDetails(returnCreatedDetails),
-                                              returnId
-                                            )
-                                          case None     =>
-                                            logger.warn("User answers couldn't be retrieved while auditing return submission")
-                                            auditReturnSubmitted(
-                                              None,
-                                              returnToSubmit,
-                                              AdrReturnCreatedDetails.fromReturnCreatedDetails(returnCreatedDetails),
-                                              returnId
-                                            )
-                                        }
-                                        .recoverWith { case e: Throwable =>
-                                          Future.successful(logger.warn("Encountered error while auditing return submission", e))
-                                        }
-                                        .andThen { case _ =>
-                                          cacheRepository.clearUserAnswersById(returnId)
-                                        }
+                                        .clearUserAnswersById(returnId)
                                     )
     } yield returnCreatedDetails
   }
