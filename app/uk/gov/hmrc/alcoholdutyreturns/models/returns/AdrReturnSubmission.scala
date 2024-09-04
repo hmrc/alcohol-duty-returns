@@ -17,7 +17,7 @@
 package uk.gov.hmrc.alcoholdutyreturns.models.returns
 
 import enumeratum.{Enum, EnumEntry, PlayJsonEnum}
-import play.api.libs.json.{Json, OFormat, OWrites}
+import play.api.libs.json.{Json, OFormat}
 
 import java.time.{Instant, LocalDate}
 
@@ -273,7 +273,7 @@ case class AdrReturnCreatedDetails(
 )
 
 object AdrReturnCreatedDetails {
-  implicit val returnCreatedDetailsWrites: OWrites[AdrReturnCreatedDetails] = Json.writes[AdrReturnCreatedDetails]
+  implicit val returnCreatedDetailsWrites: OFormat[AdrReturnCreatedDetails] = Json.format[AdrReturnCreatedDetails]
 
   def fromReturnCreatedDetails(returnCreatedDetails: ReturnCreatedDetails): AdrReturnCreatedDetails =
     AdrReturnCreatedDetails(

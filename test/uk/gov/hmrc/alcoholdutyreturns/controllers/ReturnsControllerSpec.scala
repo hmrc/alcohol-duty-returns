@@ -89,6 +89,7 @@ class ReturnsControllerSpec extends SpecBase {
 
         status(result)        shouldBe CREATED
         contentAsJson(result) shouldBe Json.toJson(adrReturnCreatedDetails)
+
       }
 
       "return 400 BAD_REQUEST when there is a BAD_REQUEST" in new SetUp {
@@ -139,7 +140,13 @@ class ReturnsControllerSpec extends SpecBase {
     val mockReturnsService: ReturnsService     = mock[ReturnsService]
     val mockReturnsConnector: ReturnsConnector = mock[ReturnsConnector]
 
-    val controller = new ReturnsController(fakeAuthorisedAction, mockReturnsService, mockReturnsConnector, cc)
+    val controller =
+      new ReturnsController(
+        fakeAuthorisedAction,
+        mockReturnsService,
+        mockReturnsConnector,
+        cc
+      )
 
     val periodKey: String = "24AC"
     val total             = BigDecimal("12345.67")
