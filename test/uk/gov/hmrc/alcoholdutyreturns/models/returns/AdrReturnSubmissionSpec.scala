@@ -90,14 +90,25 @@ class AdrReturnSubmissionSpec extends SpecBase {
       Json.toJson(adrReturnCreatedDetails).toString() shouldBe adrReturnCreatedDetailsJson
     }
 
+    "serialise to json with minimal payload" in new SetUp {
+      Json.toJson(adrReturnCreatedDetailsMinimal).toString() shouldBe adrReturnCreatedDetailsMinimalJson
+    }
+
     "convert from ReturnCreatedDetails to AdrReturnCreatedDetails" in new SetUp {
       AdrReturnCreatedDetails.fromReturnCreatedDetails(returnCreatedDetails) shouldBe adrReturnCreatedDetails
+    }
+
+    "convert from ReturnCreatedDetails to AdrReturnCreatedDetails with minimal payload" in new SetUp {
+      AdrReturnCreatedDetails.fromReturnCreatedDetails(
+        returnCreatedDetailsMinimal
+      ) shouldBe adrReturnCreatedDetailsMinimal
     }
   }
 
   class SetUp {
     val periodKey = "24AC"
     val total     = BigDecimal("12345.67")
+    val totalZero = BigDecimal("0")
     val now       = Instant.now(clock)
 
     val adrReturnSubmissionJson     =
@@ -105,9 +116,17 @@ class AdrReturnSubmissionSpec extends SpecBase {
     val adrReturnCreatedDetailsJson =
       s"""{"processingDate":"2024-06-11T15:07:47.838Z","amount":$total,"chargeReference":"$chargeReference","paymentDueDate":"2024-04-25"}"""
 
-    val adrReturnSubmission     = exampleReturnSubmissionRequest
-    val returnCreatedDetails    =
+    val adrReturnCreatedDetailsMinimalJson =
+      s"""{"processingDate":"2024-06-11T15:07:47.838Z","amount":$totalZero}"""
+
+    val adrReturnSubmission  = exampleReturnSubmissionRequest
+    val returnCreatedDetails =
       exampleReturnCreatedSuccessfulResponse(periodKey, total, now, chargeReference, submissionId).success
-    val adrReturnCreatedDetails = exampleReturnCreatedDetails(periodKey, total, now, chargeReference)
+
+    val returnCreatedDetailsMinimal =
+      exampleReturnCreatedSuccessfulResponse(periodKey, totalZero, now, chargeReference, submissionId).success
+
+    val adrReturnCreatedDetails        = exampleReturnCreatedDetails(periodKey, total, now, chargeReference)
+    val adrReturnCreatedDetailsMinimal = exampleReturnCreatedDetails(periodKey, totalZero, now, chargeReference)
   }
 }
