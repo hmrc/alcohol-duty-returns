@@ -17,6 +17,7 @@
 package uk.gov.hmrc.alcoholdutyreturns.controllers.actions
 
 import play.api.mvc._
+import uk.gov.hmrc.alcoholdutyreturns.models.requests.AuthorisedRequest
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
@@ -25,8 +26,10 @@ class FakeAuthorisedAction @Inject() (bodyParsers: PlayBodyParsers) extends Auth
 
   override def parser: BodyParser[AnyContent] = bodyParsers.defaultBodyParser
 
-  override def invokeBlock[A](request: Request[A], block: Request[A] => Future[Result]): Future[Result] =
-    block(request)
+  override def invokeBlock[A](request: Request[A], block: AuthorisedRequest[A] => Future[Result]): Future[Result] =
+    block(
+      AuthorisedRequest(request, "userId")
+    )
 
   override protected def executionContext: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
 

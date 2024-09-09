@@ -25,6 +25,7 @@ import uk.gov.hmrc.auth.core.AffinityGroup.Organisation
 import uk.gov.hmrc.auth.core.AuthProvider.GovernmentGateway
 import uk.gov.hmrc.auth.core.CredentialStrength.strong
 import uk.gov.hmrc.auth.core._
+import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals.{internalId => retriveInternalId}
 
 import scala.concurrent.Future
 
@@ -46,7 +47,7 @@ class AuthorisedActionSpec extends SpecBase {
 
     "execute the block and return OK if authorised" in {
       when(
-        mockAuthConnector.authorise[Unit](
+        mockAuthConnector.authorise[Option[String]](
           eqTo(
             AuthProviders(GovernmentGateway)
               and Enrolment(enrolment)
@@ -54,15 +55,39 @@ class AuthorisedActionSpec extends SpecBase {
               and Organisation
               and ConfidenceLevel.L50
           ),
-          any()
+          eqTo(
+            retriveInternalId
+          )
         )(any(), any())
       )
-        .thenReturn(Future(()))
+        .thenReturn(Future(Some(internalId)))
 
       val result: Future[Result] = authorisedAction.invokeBlock(fakeRequest, testAction)
 
       status(result)          shouldBe OK
       contentAsString(result) shouldBe testContent
+    }
+
+    "thrown an Authorized Exception if the authConnector return None as Internal Id" in {
+      when(
+        mockAuthConnector.authorise[Option[String]](
+          eqTo(
+            AuthProviders(GovernmentGateway)
+              and Enrolment(enrolment)
+              and CredentialStrength(strong)
+              and Organisation
+              and ConfidenceLevel.L50
+          ),
+          eqTo(
+            retriveInternalId
+          )
+        )(any(), any())
+      )
+        .thenReturn(Future(None))
+
+      val result = authorisedAction.invokeBlock(fakeRequest, testAction)
+      status(result) shouldBe UNAUTHORIZED
+
     }
   }
 

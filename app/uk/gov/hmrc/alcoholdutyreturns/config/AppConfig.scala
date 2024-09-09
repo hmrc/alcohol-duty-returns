@@ -41,7 +41,8 @@ class AppConfig @Inject() (config: Configuration, servicesConfig: ServicesConfig
   lazy val returnsGetReturnUrlFormat    = new MessageFormat(getConfStringAndThrowIfNotFound("returns.url.getReturn"))
   lazy val returnsSubmitReturnUrlFormat = new MessageFormat(getConfStringAndThrowIfNotFound("returns.url.submitReturn"))
 
-  val dbTimeToLiveInSeconds: Int = config.get[Int]("mongodb.timeToLiveInSeconds")
+  val dbTimeToLiveInSeconds: Int    = config.get[Int]("mongodb.timeToLiveInSeconds")
+  val lockingDurationInSeconds: Int = config.get[Int]("locking.durationInSeconds")
 
   def getSubscriptionSummaryUrl(appaId: String): String =
     s"$adrAccountHost/alcohol-duty-account/subscriptionSummary/$appaId"

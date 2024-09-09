@@ -18,6 +18,7 @@ package uk.gov.hmrc.alcoholdutyreturns.testonly.controllers
 
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import uk.gov.hmrc.alcoholdutyreturns.repositories.CacheRepository
+import uk.gov.hmrc.alcoholdutyreturns.service.LockingService
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import javax.inject.Inject
@@ -25,11 +26,19 @@ import scala.concurrent.ExecutionContext
 
 class TestOnlyController @Inject() (
   cc: ControllerComponents,
-  cacheRepository: CacheRepository
+  cacheRepository: CacheRepository,
+  lockingService: LockingService
 )(implicit ec: ExecutionContext)
     extends BackendController(cc) {
 
   def clearAllData: Action[AnyContent] = Action.async { _ =>
-    cacheRepository.collection.drop().toFuture().map(_ => Ok("All data cleared"))
+    for {
+      _ <- cacheRepository.collection.drop().toFuture()
+      _ <- lockingService.releaseAllLocks()
+    } yield Ok("All data cleared")
+  }
+
+  def clearAllLocks: Action[AnyContent] = Action.async {
+    lockingService.releaseAllLocks().map(_ => Ok("All locks are cleared"))
   }
 }

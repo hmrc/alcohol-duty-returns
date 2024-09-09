@@ -44,7 +44,7 @@ trait AuthStubs extends WireMockHelper {
        |  {
        |    "confidenceLevel":50
        |  }],
-       |  "retrieve":[]
+       |  "retrieve":[ "internalId" ]
        |}""".stripMargin
 
   val authOKResponse =

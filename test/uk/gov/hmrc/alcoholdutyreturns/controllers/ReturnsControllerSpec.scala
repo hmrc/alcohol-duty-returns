@@ -25,7 +25,7 @@ import uk.gov.hmrc.alcoholdutyreturns.base.SpecBase
 import uk.gov.hmrc.alcoholdutyreturns.connector.ReturnsConnector
 import uk.gov.hmrc.alcoholdutyreturns.models.returns.{GetReturnDetails, ReturnCreatedDetails}
 import uk.gov.hmrc.alcoholdutyreturns.models.ErrorResponse
-import uk.gov.hmrc.alcoholdutyreturns.service.ReturnsService
+import uk.gov.hmrc.alcoholdutyreturns.service.{FakeLockingService, LockingService, ReturnsService}
 
 import java.time.Instant
 import scala.concurrent.Future
@@ -105,6 +105,27 @@ class ReturnsControllerSpec extends SpecBase {
         status(result) shouldBe BAD_REQUEST
       }
 
+      "return 423 LOCKED when the return is locked by another user" in new SetUp {
+
+        override val mockLockingService: LockingService = mock[LockingService]
+        when(mockLockingService.withLockAndRelease(any(), any())(any())).thenReturn(Future.successful(None))
+
+        override val controller =
+          new ReturnsController(fakeAuthorisedAction, mockReturnsService, mockLockingService, mockReturnsConnector, cc)
+
+        when(
+          mockReturnsService.submitReturn(eqTo(adrReturnsSubmission), eqTo(returnId.copy(periodKey = periodKey)))(any())
+        )
+          .thenReturn(EitherT.leftT[Future, ReturnCreatedDetails](ErrorResponse.BadRequest))
+
+        val result: Future[Result] =
+          controller.submitReturn(appaId, periodKey)(
+            fakeRequestWithJsonBody(Json.toJson(adrReturnsSubmission))
+          )
+
+        status(result) shouldBe LOCKED
+      }
+
       "return 404 NOT_FOUND when not found" in new SetUp {
         when(
           mockReturnsService.submitReturn(eqTo(adrReturnsSubmission), eqTo(returnId.copy(periodKey = periodKey)))(any())
@@ -138,8 +159,10 @@ class ReturnsControllerSpec extends SpecBase {
   class SetUp {
     val mockReturnsService: ReturnsService     = mock[ReturnsService]
     val mockReturnsConnector: ReturnsConnector = mock[ReturnsConnector]
+    val mockLockingService: LockingService     = new FakeLockingService
 
-    val controller = new ReturnsController(fakeAuthorisedAction, mockReturnsService, mockReturnsConnector, cc)
+    val controller =
+      new ReturnsController(fakeAuthorisedAction, mockReturnsService, mockLockingService, mockReturnsConnector, cc)
 
     val periodKey: String = "24AC"
     val total             = BigDecimal("12345.67")
