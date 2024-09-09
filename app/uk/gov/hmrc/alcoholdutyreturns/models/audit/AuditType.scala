@@ -24,4 +24,5 @@ object AuditType extends Enum[AuditType] {
   val values = findValues
 
   case object ReturnStarted extends AuditType
+  case object ReturnSubmitted extends AuditType
 }

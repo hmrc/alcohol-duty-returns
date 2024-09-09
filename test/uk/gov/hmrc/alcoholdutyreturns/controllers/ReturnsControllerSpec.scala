@@ -89,6 +89,7 @@ class ReturnsControllerSpec extends SpecBase {
 
         status(result)        shouldBe CREATED
         contentAsJson(result) shouldBe Json.toJson(adrReturnCreatedDetails)
+
       }
 
       "return 400 BAD_REQUEST when there is a BAD_REQUEST" in new SetUp {
