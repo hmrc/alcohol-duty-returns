@@ -25,7 +25,7 @@ import uk.gov.hmrc.alcoholdutyreturns.controllers.actions.AuthorisedAction
 import uk.gov.hmrc.alcoholdutyreturns.models.audit.AuditReturnStarted
 import uk.gov.hmrc.alcoholdutyreturns.models.{ErrorResponse, ObligationData, ReturnAndUserDetails, ReturnId, UserAnswers}
 import uk.gov.hmrc.alcoholdutyreturns.repositories.{CacheRepository, UpdateFailure, UpdateSuccess}
-import uk.gov.hmrc.alcoholdutyreturns.service.{AccountService, AuditService}
+import uk.gov.hmrc.alcoholdutyreturns.service.{AccountService, AuditService, LockingService}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
@@ -35,6 +35,7 @@ import scala.concurrent.{ExecutionContext, Future}
 class CacheController @Inject() (
   authorise: AuthorisedAction,
   cacheRepository: CacheRepository,
+  lockingService: LockingService,
   accountService: AccountService,
   auditService: AuditService,
   override val controllerComponents: ControllerComponents
@@ -43,20 +44,35 @@ class CacheController @Inject() (
     with Logging {
 
   def get(appaId: String, periodKey: String): Action[AnyContent] =
-    authorise.async { _ =>
-      cacheRepository.get(ReturnId(appaId, periodKey)).map {
-        case Some(ua) => Ok(Json.toJson(ua))
-        case None     => NotFound
-      }
+    authorise.async { implicit request =>
+      val returnId = ReturnId(appaId, periodKey)
+      lockingService
+        .withLock(returnId, request.userId) {
+          cacheRepository.get(returnId).map {
+            case Some(ua) => Ok(Json.toJson(ua))
+            case None     => NotFound
+          }
+        }
+        .map {
+          case Some(result) => result
+          case None         => Locked
+        }
     }
 
   def set(): Action[JsValue] =
     authorise(parse.json).async { implicit request =>
       withJsonBody[UserAnswers] { userAnswers =>
-        cacheRepository.set(userAnswers).map {
-          case UpdateSuccess => Ok(Json.toJson(userAnswers))
-          case UpdateFailure => NotFound
-        }
+        lockingService
+          .withLock(userAnswers.returnId, request.userId) {
+            cacheRepository.set(userAnswers).map {
+              case UpdateSuccess => Ok(Json.toJson(userAnswers))
+              case UpdateFailure => NotFound
+            }
+          }
+          .map {
+            case Some(result) => result
+            case None         => Locked
+          }
       }
     }
 
@@ -64,29 +80,50 @@ class CacheController @Inject() (
     authorise(parse.json).async { implicit request =>
       withJsonBody[ReturnAndUserDetails] { returnAndUserDetails =>
         val returnId = returnAndUserDetails.returnId
+        lockingService
+          .withLock(returnId, request.userId) {
+            val eitherAccountDetails = for {
+              subscriptionSummary <- accountService.getSubscriptionSummaryAndCheckStatus(returnId.appaId)
+              obligationData      <- accountService.getOpenObligation(returnId)
+            } yield (subscriptionSummary, obligationData)
 
-        val eitherAccountDetails = for {
-          subscriptionSummary <- accountService.getSubscriptionSummaryAndCheckStatus(returnId.appaId)
-          obligationData      <- accountService.getOpenObligation(returnId)
-        } yield (subscriptionSummary, obligationData)
-
-        eitherAccountDetails.foldF(
-          err => {
-            logger.warn(
-              s"Unable to create userAnswers for ${returnId.appaId} ${returnId.periodKey} - ${err.status} ${err.body}"
+            eitherAccountDetails.foldF(
+              err => {
+                logger.warn(
+                  s"Unable to create userAnswers for ${returnId.appaId} ${returnId.periodKey} - ${err.status} ${err.body}"
+                )
+                Future.successful(error(err))
+              },
+              accountDetails => {
+                val (subscriptionSummary, obligationData) = accountDetails
+                val userAnswers                           =
+                  UserAnswers.createUserAnswers(returnAndUserDetails, subscriptionSummary, obligationData)
+                cacheRepository.add(userAnswers).map { userAnswers =>
+                  auditReturnStarted(userAnswers, obligationData)
+                  Created(Json.toJson(userAnswers))
+                }
+              }
             )
-            Future.successful(error(err))
-          },
-          accountDetails => {
-            val (subscriptionSummary, obligationData) = accountDetails
-            val userAnswers                           = UserAnswers.createUserAnswers(returnAndUserDetails, subscriptionSummary, obligationData)
-            cacheRepository.add(userAnswers).map { userAnswers =>
-              auditReturnStarted(userAnswers, obligationData)
-              Created(Json.toJson(userAnswers))
-            }
           }
-        )
+          .map {
+            case Some(result) => result
+            case None         => Locked
+          }
       }
+    }
+
+  def releaseReturnLock(appaId: String, periodKey: String): Action[AnyContent] =
+    authorise.async { implicit request =>
+      lockingService
+        .releaseLock(ReturnId(appaId, periodKey), request.userId)
+        .map(_ => Ok(s"Locked release for user ${request.userId} on return $appaId/$periodKey"))
+    }
+
+  def keepAlive(appaId: String, periodKey: String): Action[AnyContent] =
+    authorise.async { implicit request =>
+      lockingService
+        .keepAlive(ReturnId(appaId, periodKey), request.userId)
+        .map(_ => Ok("Lock refreshed"))
     }
 
   private def auditReturnStarted(userAnswers: UserAnswers, obligationData: ObligationData)(implicit

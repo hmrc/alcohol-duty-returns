@@ -25,7 +25,7 @@ import play.api.mvc.Result
 import uk.gov.hmrc.alcoholdutyreturns.base.SpecBase
 import uk.gov.hmrc.alcoholdutyreturns.models.{ApprovalStatus, ErrorResponse}
 import uk.gov.hmrc.alcoholdutyreturns.repositories.{CacheRepository, UpdateFailure, UpdateSuccess}
-import uk.gov.hmrc.alcoholdutyreturns.service.{AccountService, AuditService}
+import uk.gov.hmrc.alcoholdutyreturns.service.{AccountService, AuditService, FakeLockingService, LockingService}
 
 import java.time.LocalDate
 import scala.concurrent.Future
@@ -34,10 +34,12 @@ class CacheControllerSpec extends SpecBase {
   val mockCacheRepository: CacheRepository = mock[CacheRepository]
   val mockAccountService: AccountService   = mock[AccountService]
   val mockAuditService: AuditService       = mock[AuditService]
+  val mockLockingService: LockingService   = new FakeLockingService
 
   val controller = new CacheController(
     fakeAuthorisedAction,
     mockCacheRepository,
+    mockLockingService,
     mockAccountService,
     mockAuditService,
     cc
@@ -64,6 +66,28 @@ class CacheControllerSpec extends SpecBase {
 
       status(result) shouldBe NOT_FOUND
     }
+
+    "return 423 Locked when the user answers are locked by another user" in {
+      val mockLockingService = mock[LockingService]
+      when(mockLockingService.withLock(any(), any())(any())).thenReturn(Future.successful(None))
+
+      val controller = new CacheController(
+        fakeAuthorisedAction,
+        mockCacheRepository,
+        mockLockingService,
+        mockAccountService,
+        mockAuditService,
+        cc
+      )
+
+      when(mockCacheRepository.get(ArgumentMatchers.eq(returnId)))
+        .thenReturn(Future.successful(None))
+
+      val result: Future[Result] =
+        controller.get(appaId, periodKey)(fakeRequest)
+
+      status(result) shouldBe LOCKED
+    }
   }
 
   "set" should {
@@ -89,6 +113,28 @@ class CacheControllerSpec extends SpecBase {
 
       status(result) shouldBe NOT_FOUND
     }
+
+    "return 423 Locked if the user answers is locked by another user" in {
+      val lockingService = mock[LockingService]
+      when(lockingService.withLock(any(), any())(any())).thenReturn(Future.successful(None))
+      when(mockCacheRepository.set(any())).thenReturn(Future.successful(UpdateSuccess))
+
+      val controller = new CacheController(
+        fakeAuthorisedAction,
+        mockCacheRepository,
+        lockingService,
+        mockAccountService,
+        mockAuditService,
+        cc
+      )
+
+      val result: Future[Result] =
+        controller.set()(
+          fakeRequestWithJsonBody(Json.toJson(emptyUserAnswers))
+        )
+
+      status(result) shouldBe LOCKED
+    }
   }
 
   "createUserAnswers" should {
@@ -108,6 +154,33 @@ class CacheControllerSpec extends SpecBase {
         status(result)        shouldBe CREATED
         contentAsJson(result) shouldBe Json.toJson(userAnswers)
       }
+    }
+
+    "return 423 Not Found if the repository returns an error" in {
+      val mockLockingService = mock[LockingService]
+      when(mockLockingService.withLock(any(), any())(any())).thenReturn(Future.successful(None))
+
+      val controller = new CacheController(
+        fakeAuthorisedAction,
+        mockCacheRepository,
+        mockLockingService,
+        mockAccountService,
+        mockAuditService,
+        cc
+      )
+
+      when(mockCacheRepository.add(any())).thenReturn(Future.successful(userAnswers))
+      when(mockAccountService.getSubscriptionSummaryAndCheckStatus(eqTo(appaId))(any(), any()))
+        .thenReturn(EitherT.rightT(subscriptionSummary))
+      when(mockAccountService.getOpenObligation(eqTo(returnId))(any(), any()))
+        .thenReturn(EitherT.rightT(getObligationData(LocalDate.now(clock))))
+
+      val result: Future[Result] =
+        controller.createUserAnswers()(
+          fakeRequestWithJsonBody(Json.toJson(returnAndUserDetails))
+        )
+
+      status(result) shouldBe LOCKED
     }
 
     Seq(
@@ -153,6 +226,48 @@ class CacheControllerSpec extends SpecBase {
         status(result)        shouldBe errorResponse.status
         contentAsJson(result) shouldBe Json.toJson(errorResponse)
       }
+    }
+  }
+
+  "releaseReturnLock" should {
+    "release the lock for a return and return 200 OK" in {
+      val mockLockingService = mock[LockingService]
+      when(mockLockingService.releaseLock(any(), any())).thenReturn(Future.successful(()))
+
+      val controller = new CacheController(
+        fakeAuthorisedAction,
+        mockCacheRepository,
+        mockLockingService,
+        mockAccountService,
+        mockAuditService,
+        cc
+      )
+
+      val result: Future[Result] =
+        controller.releaseReturnLock(appaId, periodKey)(fakeRequest)
+
+      status(result) shouldBe OK
+    }
+  }
+
+  "keepAlive" should {
+    "call the method keepAlive in the locking service and return 200 OK" in {
+      val mockLockingService = mock[LockingService]
+      when(mockLockingService.keepAlive(any(), any())).thenReturn(Future.successful(true))
+
+      val controller = new CacheController(
+        fakeAuthorisedAction,
+        mockCacheRepository,
+        mockLockingService,
+        mockAccountService,
+        mockAuditService,
+        cc
+      )
+
+      val result: Future[Result] =
+        controller.keepAlive(appaId, periodKey)(fakeRequest)
+
+      status(result) shouldBe OK
     }
   }
 }

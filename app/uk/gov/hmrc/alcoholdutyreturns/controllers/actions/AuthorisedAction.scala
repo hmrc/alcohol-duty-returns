@@ -20,13 +20,15 @@ import com.google.inject.Inject
 import play.api.Logging
 import play.api.http.Status.UNAUTHORIZED
 import play.api.libs.json.Json
-import play.api.mvc.Results.Unauthorized
+import play.api.mvc.Results.{InternalServerError, Unauthorized}
 import play.api.mvc._
 import uk.gov.hmrc.alcoholdutyreturns.config.AppConfig
+import uk.gov.hmrc.alcoholdutyreturns.models.requests.AuthorisedRequest
 import uk.gov.hmrc.auth.core.AffinityGroup.Organisation
 import uk.gov.hmrc.auth.core.AuthProvider.GovernmentGateway
 import uk.gov.hmrc.auth.core.CredentialStrength.strong
 import uk.gov.hmrc.auth.core._
+import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals.internalId
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendHeaderCarrierProvider
 import uk.gov.hmrc.play.bootstrap.backend.http.ErrorResponse
@@ -34,9 +36,9 @@ import uk.gov.hmrc.play.bootstrap.backend.http.ErrorResponse
 import scala.concurrent.{ExecutionContext, Future}
 
 trait AuthorisedAction
-    extends ActionBuilder[Request, AnyContent]
+    extends ActionBuilder[AuthorisedRequest, AnyContent]
     with BackendHeaderCarrierProvider
-    with ActionFunction[Request, Request]
+    with ActionFunction[Request, AuthorisedRequest]
 
 class BaseAuthorisedAction @Inject() (
   override val authConnector: AuthConnector,
@@ -48,7 +50,7 @@ class BaseAuthorisedAction @Inject() (
     with AuthorisedFunctions
     with Logging {
 
-  override def invokeBlock[A](request: Request[A], block: Request[A] => Future[Result]): Future[Result] = {
+  override def invokeBlock[A](request: Request[A], block: AuthorisedRequest[A] => Future[Result]): Future[Result] = {
     implicit val headerCarrier: HeaderCarrier = hc(request)
 
     authorised(
@@ -57,8 +59,9 @@ class BaseAuthorisedAction @Inject() (
         and CredentialStrength(strong)
         and Organisation
         and ConfidenceLevel.L50
-    ) {
-      block(request)
+    ).retrieve(internalId) {
+      case Some(id) => block(AuthorisedRequest(request, id))
+      case None     => Future.successful(InternalServerError("Impossible to retrieve the internal id"))
     } recover { case e: AuthorisationException =>
       logger.debug(s"Got AuthorisationException: $e")
       Unauthorized(
