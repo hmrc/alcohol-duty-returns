@@ -59,7 +59,7 @@ class ReturnsController @Inject() (
       withJsonBody[AdrReturnSubmission] { returnSubmission =>
         val returnId = ReturnId(appaId, periodKey)
         lockingService
-          .withLockAndRelease(returnId, request.userId) {
+          .withLockExecuteAndRelease(returnId, request.userId) {
             returnsService
               .submitReturn(returnSubmission, returnId)
               .map(AdrReturnCreatedDetails.fromReturnCreatedDetails)

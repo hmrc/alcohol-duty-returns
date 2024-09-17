@@ -71,7 +71,7 @@ class LockingServiceSpec extends SpecBase {
         when(mongoLockRepository.takeLock(any(), any(), any())).thenReturn(Future.successful(Some(mock[Lock])))
         when(mongoLockRepository.releaseLock(any(), any())).thenReturn(Future.successful(()))
 
-        whenReady(lockingService.withLockAndRelease(returnId, internalId)(testData)) { result =>
+        whenReady(lockingService.withLockExecuteAndRelease(returnId, internalId)(testData)) { result =>
           result shouldBe successResponse
         }
 
@@ -82,7 +82,7 @@ class LockingServiceSpec extends SpecBase {
         when(mongoLockRepository.refreshExpiry(any(), any(), any())).thenReturn(Future.successful(true))
         when(mongoLockRepository.releaseLock(any(), any())).thenReturn(Future.successful(()))
 
-        whenReady(lockingService.withLockAndRelease(returnId, internalId)(testData)) { result =>
+        whenReady(lockingService.withLockExecuteAndRelease(returnId, internalId)(testData)) { result =>
           result shouldBe successResponse
         }
 
@@ -93,7 +93,7 @@ class LockingServiceSpec extends SpecBase {
         when(mongoLockRepository.refreshExpiry(any(), any(), any())).thenReturn(Future.successful(false))
         when(mongoLockRepository.takeLock(any(), any(), any())).thenReturn(Future.successful(None))
 
-        whenReady(lockingService.withLockAndRelease(returnId, internalId)(testData)) { result =>
+        whenReady(lockingService.withLockExecuteAndRelease(returnId, internalId)(testData)) { result =>
           result shouldBe None
         }
 
@@ -107,7 +107,8 @@ class LockingServiceSpec extends SpecBase {
         when(mongoLockRepository.takeLock(any(), any(), any()))
           .thenReturn(Future.failed(new Exception(exceptionMessage)))
 
-        val result: Throwable = lockingService.withLockAndRelease(returnId, internalId)(testData).failed.futureValue
+        val result: Throwable =
+          lockingService.withLockExecuteAndRelease(returnId, internalId)(testData).failed.futureValue
         result            shouldBe an[Exception]
         result.getMessage shouldBe exceptionMessage
 

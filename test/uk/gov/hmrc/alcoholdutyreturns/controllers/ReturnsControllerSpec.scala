@@ -109,7 +109,7 @@ class ReturnsControllerSpec extends SpecBase {
       "return 423 LOCKED when the return is locked by another user" in new SetUp {
 
         override val mockLockingService: LockingService = mock[LockingService]
-        when(mockLockingService.withLockAndRelease(any(), any())(any())).thenReturn(Future.successful(None))
+        when(mockLockingService.withLockExecuteAndRelease(any(), any())(any())).thenReturn(Future.successful(None))
 
         override val controller =
           new ReturnsController(fakeAuthorisedAction, mockReturnsService, mockLockingService, mockReturnsConnector, cc)

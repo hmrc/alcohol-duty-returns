@@ -30,7 +30,7 @@ import scala.language.{implicitConversions, postfixOps}
 @ImplementedBy(classOf[LockingServiceImpl])
 trait LockingService {
   def withLock[T](returnId: ReturnId, ownerId: String)(body: => Future[T]): Future[Option[T]]
-  def withLockAndRelease[T](returnId: ReturnId, userId: String)(body: => Future[T]): Future[Option[T]]
+  def withLockExecuteAndRelease[T](returnId: ReturnId, userId: String)(body: => Future[T]): Future[Option[T]]
   def keepAlive(returnId: ReturnId, ownerId: String): Future[Boolean]
   def releaseLock(returnId: ReturnId, ownerId: String): Future[Unit]
   def releaseAllLocks(): Future[Unit]
@@ -65,7 +65,7 @@ class LockingServiceImpl @Inject() (
       Future.failed(ex)
     }
 
-  def withLockAndRelease[T](returnId: ReturnId, userId: String)(body: => Future[T]): Future[Option[T]] =
+  def withLockExecuteAndRelease[T](returnId: ReturnId, userId: String)(body: => Future[T]): Future[Option[T]] =
     withLock(returnId, userId)(body).flatMap {
       case Some(value) =>
         mongoLockRepository

@@ -68,7 +68,7 @@ class AuthorisedActionSpec extends SpecBase {
       contentAsString(result) shouldBe testContent
     }
 
-    "thrown an Authorized Exception if the authConnector return None as Internal Id" in {
+    "thrown an Internal Server error if the authConnector return None as Internal Id" in {
       when(
         mockAuthConnector.authorise[Option[String]](
           eqTo(
@@ -86,7 +86,7 @@ class AuthorisedActionSpec extends SpecBase {
         .thenReturn(Future(None))
 
       val result = authorisedAction.invokeBlock(fakeRequest, testAction)
-      status(result) shouldBe UNAUTHORIZED
+      status(result) shouldBe INTERNAL_SERVER_ERROR
 
     }
   }

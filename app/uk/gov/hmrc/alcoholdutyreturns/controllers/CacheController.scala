@@ -48,7 +48,7 @@ class CacheController @Inject() (
       val returnId = ReturnId(appaId, periodKey)
       lockingService
         .withLock(returnId, request.userId) {
-          cacheRepository.get(ReturnId(appaId, periodKey)).map {
+          cacheRepository.get(returnId).map {
             case Some(ua) => Ok(Json.toJson(ua))
             case None     => NotFound
           }

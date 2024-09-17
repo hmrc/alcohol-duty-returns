@@ -37,8 +37,4 @@ class TestOnlyController @Inject() (
       _ <- lockingService.releaseAllLocks()
     } yield Ok("All data cleared")
   }
-
-  def clearAllLocks: Action[AnyContent] = Action.async {
-    lockingService.releaseAllLocks().map(_ => Ok("All locks are cleared"))
-  }
 }

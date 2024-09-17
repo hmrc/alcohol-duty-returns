@@ -20,7 +20,7 @@ import com.google.inject.Inject
 import play.api.Logging
 import play.api.http.Status.UNAUTHORIZED
 import play.api.libs.json.Json
-import play.api.mvc.Results.Unauthorized
+import play.api.mvc.Results.{InternalServerError, Unauthorized}
 import play.api.mvc._
 import uk.gov.hmrc.alcoholdutyreturns.config.AppConfig
 import uk.gov.hmrc.alcoholdutyreturns.models.requests.AuthorisedRequest
@@ -61,8 +61,7 @@ class BaseAuthorisedAction @Inject() (
         and ConfidenceLevel.L50
     ).retrieve(internalId) {
       case Some(id) => block(AuthorisedRequest(request, id))
-      case None     =>
-        throw InternalError("Impossible to retrieve the internal id")
+      case None     => Future.successful(InternalServerError("Impossible to retrieve the internal id"))
     } recover { case e: AuthorisationException =>
       logger.debug(s"Got AuthorisationException: $e")
       Unauthorized(

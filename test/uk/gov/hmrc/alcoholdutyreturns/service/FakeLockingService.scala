@@ -25,7 +25,7 @@ class FakeLockingService extends LockingService {
   override def withLock[T](returnId: ReturnId, ownerId: String)(body: => Future[T]): Future[Option[T]] =
     body.map(Some(_))
 
-  override def withLockAndRelease[T](returnId: ReturnId, userId: String)(body: => Future[T]): Future[Option[T]] =
+  override def withLockExecuteAndRelease[T](returnId: ReturnId, userId: String)(body: => Future[T]): Future[Option[T]] =
     body.map(Some(_))
 
   override def keepAlive(returnId: ReturnId, ownerId: String): Future[Boolean] = Future.successful(true)
