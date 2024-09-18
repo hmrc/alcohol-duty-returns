@@ -19,11 +19,12 @@ package uk.gov.hmrc.alcoholdutyreturns.connector
 import cats.data.EitherT
 import play.api.Logging
 import play.api.http.Status.BAD_REQUEST
-import play.api.libs.json.{Reads, Writes}
+import play.api.libs.json.{Json, Reads, Writes}
 import uk.gov.hmrc.alcoholdutyreturns.config.AppConfig
 import uk.gov.hmrc.alcoholdutyreturns.models.calculation.{CalculateDutyDueByTaxTypeRequest, CalculatedDutyDueByTaxType}
 import uk.gov.hmrc.alcoholdutyreturns.models.ErrorResponse
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReadsInstances, HttpResponse, UpstreamErrorResponse}
+import uk.gov.hmrc.http.client.HttpClientV2
+import uk.gov.hmrc.http.{HeaderCarrier, HttpReadsInstances, HttpResponse, StringContextOps, UpstreamErrorResponse}
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
@@ -31,7 +32,7 @@ import scala.util.{Failure, Success, Try}
 
 class CalculatorConnector @Inject() (
   config: AppConfig,
-  implicit val httpClient: HttpClient
+  implicit val httpClient: HttpClientV2
 )(implicit ec: ExecutionContext)
     extends HttpReadsInstances
     with Logging {
@@ -42,10 +43,9 @@ class CalculatorConnector @Inject() (
   )(implicit hc: HeaderCarrier, writes: Writes[I], reads: Reads[O]): EitherT[Future, ErrorResponse, O] =
     EitherT(
       httpClient
-        .POST[I, Either[UpstreamErrorResponse, HttpResponse]](
-          url = url,
-          body = requestBody
-        )
+        .post(url"$url")
+        .withBody(Json.toJson(requestBody))
+        .execute[Either[UpstreamErrorResponse, HttpResponse]]
         .map {
           case Right(response)                                                =>
             Try(response.json.as[O]) match {

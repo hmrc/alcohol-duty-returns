@@ -22,7 +22,8 @@ import play.api.http.Status.NOT_FOUND
 import play.api.libs.json.Reads
 import uk.gov.hmrc.alcoholdutyreturns.config.AppConfig
 import uk.gov.hmrc.alcoholdutyreturns.models.{ErrorResponse, ObligationData, ReturnId, SubscriptionSummary}
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReadsInstances, HttpResponse, UpstreamErrorResponse}
+import uk.gov.hmrc.http.client.HttpClientV2
+import uk.gov.hmrc.http.{HeaderCarrier, HttpReadsInstances, HttpResponse, StringContextOps, UpstreamErrorResponse}
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
@@ -30,7 +31,7 @@ import scala.util.Try
 
 class AccountConnector @Inject() (
   config: AppConfig,
-  implicit val httpClient: HttpClient
+  implicit val httpClient: HttpClientV2
 )(implicit ec: ExecutionContext)
     extends HttpReadsInstances
     with Logging {
@@ -40,7 +41,8 @@ class AccountConnector @Inject() (
   )(implicit hc: HeaderCarrier, reads: Reads[T]): EitherT[Future, ErrorResponse, T] =
     EitherT(
       httpClient
-        .GET[Either[UpstreamErrorResponse, HttpResponse]](url = url)
+        .get(url"$url")
+        .execute[Either[UpstreamErrorResponse, HttpResponse]]
         .map {
           case Right(response)                                              =>
             Try(response.json.as[T]).toOption

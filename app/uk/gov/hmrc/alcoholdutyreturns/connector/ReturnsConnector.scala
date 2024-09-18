@@ -19,11 +19,13 @@ package uk.gov.hmrc.alcoholdutyreturns.connector
 import cats.data.EitherT
 import play.api.Logging
 import play.api.http.Status.{BAD_REQUEST, NOT_FOUND}
+import play.api.libs.json.Json
 import uk.gov.hmrc.alcoholdutyreturns.config.AppConfig
 import uk.gov.hmrc.alcoholdutyreturns.connector.helpers.HIPHeaders
 import uk.gov.hmrc.alcoholdutyreturns.models.{ErrorResponse, ReturnId}
 import uk.gov.hmrc.alcoholdutyreturns.models.returns.{GetReturnDetails, GetReturnDetailsSuccess, ReturnCreate, ReturnCreatedDetails, ReturnCreatedSuccess}
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReadsInstances, HttpResponse, UpstreamErrorResponse}
+import uk.gov.hmrc.http.client.HttpClientV2
+import uk.gov.hmrc.http.{HeaderCarrier, HttpReadsInstances, HttpResponse, StringContextOps, UpstreamErrorResponse}
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
@@ -32,7 +34,7 @@ import scala.util.{Failure, Success, Try}
 class ReturnsConnector @Inject() (
   config: AppConfig,
   headers: HIPHeaders,
-  implicit val httpClient: HttpClient
+  implicit val httpClient: HttpClientV2
 )(implicit ec: ExecutionContext)
     extends HttpReadsInstances
     with Logging {
@@ -43,10 +45,9 @@ class ReturnsConnector @Inject() (
     logger.info(s"Getting return (appaId ${returnId.appaId}, periodKey ${returnId.periodKey})")
     EitherT(
       httpClient
-        .GET[Either[UpstreamErrorResponse, HttpResponse]](
-          url = config.getReturnUrl(returnId),
-          headers = headers.getReturnsHeaders
-        )
+        .get(url"${config.getReturnUrl(returnId)}")
+        .setHeader(headers.getReturnsHeaders: _*)
+        .execute[Either[UpstreamErrorResponse, HttpResponse]]
         .map {
           case Right(response)                                                =>
             Try(response.json.as[GetReturnDetailsSuccess]) match {
@@ -86,11 +87,15 @@ class ReturnsConnector @Inject() (
     logger.info(s"Submitting return (appaId $appaId, periodKey $periodKey)")
     EitherT(
       httpClient
-        .POST[ReturnCreate, Either[UpstreamErrorResponse, HttpResponse]](
-          url = config.submitReturnUrl,
-          body = returnToSubmit,
-          headers = headers.submitReturnHeaders(appaId)
-        )
+        .post(url"${config.submitReturnUrl}")
+        .setHeader(headers.submitReturnHeaders(appaId): _*)
+        .withBody(Json.toJson(returnToSubmit))
+        .execute[Either[UpstreamErrorResponse, HttpResponse]] //check this does returncreate come here?
+//        .POST[ReturnCreate, Either[UpstreamErrorResponse, HttpResponse]](
+//          url = config.submitReturnUrl,
+//          body = returnToSubmit,
+//          headers = headers.submitReturnHeaders(appaId)
+//        )
         .map {
           case Right(response)                                                =>
             Try(response.json.as[ReturnCreatedSuccess]) match {
