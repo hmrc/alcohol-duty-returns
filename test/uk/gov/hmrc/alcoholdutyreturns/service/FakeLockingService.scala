@@ -33,4 +33,6 @@ class FakeLockingService extends LockingService {
   override def releaseLock(returnId: ReturnId, ownerId: String): Future[Unit] = Future.successful(())
 
   override def releaseAllLocks(): Future[Unit] = Future.successful(())
+
+  override def releaseLock(returnId: ReturnId): Future[Unit] = Future.successful(())
 }

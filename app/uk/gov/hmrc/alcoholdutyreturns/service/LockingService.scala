@@ -20,12 +20,13 @@ import com.google.inject.{ImplementedBy, Singleton}
 import play.api.Logging
 import uk.gov.hmrc.alcoholdutyreturns.config.AppConfig
 import uk.gov.hmrc.alcoholdutyreturns.models.ReturnId
-import uk.gov.hmrc.mongo.lock.MongoLockRepository
+import uk.gov.hmrc.mongo.lock.{Lock, MongoLockRepository}
 
 import javax.inject.Inject
 import scala.concurrent.duration.DurationInt
 import scala.concurrent.{ExecutionContext, Future}
 import scala.language.{implicitConversions, postfixOps}
+import org.mongodb.scala.model.Filters._
 
 @ImplementedBy(classOf[LockingServiceImpl])
 trait LockingService {
@@ -33,6 +34,7 @@ trait LockingService {
   def withLockExecuteAndRelease[T](returnId: ReturnId, userId: String)(body: => Future[T]): Future[Option[T]]
   def keepAlive(returnId: ReturnId, ownerId: String): Future[Boolean]
   def releaseLock(returnId: ReturnId, ownerId: String): Future[Unit]
+  def releaseLock(returnId: ReturnId): Future[Unit]
   def releaseAllLocks(): Future[Unit]
 }
 
@@ -79,6 +81,20 @@ class LockingServiceImpl @Inject() (
 
   def releaseLock(returnId: ReturnId, ownerId: String): Future[Unit] =
     mongoLockRepository.releaseLock(returnId, ownerId)
+
+  //Test only
+  def releaseLock(returnId: ReturnId): Future[Unit] = {
+    logger.debug(s"Releasing lock for $returnId")
+
+    mongoLockRepository.collection
+      .deleteOne(
+        and(
+          equal(Lock.id, returnIdToLockId(returnId))
+        )
+      )
+      .toFuture()
+      .map(_ => ())
+  }
 
   def releaseAllLocks(): Future[Unit] =
     mongoLockRepository.collection.drop().toFuture()

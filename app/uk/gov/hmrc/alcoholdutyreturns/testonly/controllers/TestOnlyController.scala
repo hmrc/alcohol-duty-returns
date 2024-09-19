@@ -17,6 +17,7 @@
 package uk.gov.hmrc.alcoholdutyreturns.testonly.controllers
 
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
+import uk.gov.hmrc.alcoholdutyreturns.models.ReturnId
 import uk.gov.hmrc.alcoholdutyreturns.repositories.CacheRepository
 import uk.gov.hmrc.alcoholdutyreturns.service.LockingService
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
@@ -36,5 +37,13 @@ class TestOnlyController @Inject() (
       _ <- cacheRepository.collection.drop().toFuture()
       _ <- lockingService.releaseAllLocks()
     } yield Ok("All data cleared")
+  }
+
+  def clearReturnData(appaId: String, periodKey: String): Action[AnyContent] = Action.async { _ =>
+    val returnId = ReturnId(appaId, periodKey)
+    for {
+      _ <- cacheRepository.clearUserAnswersById(returnId)
+      _ <- lockingService.releaseLock(returnId)
+    } yield Ok("All return data is cleared")
   }
 }

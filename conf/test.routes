@@ -1,1 +1,2 @@
-DELETE        /cache/clear-all          uk.gov.hmrc.alcoholdutyreturns.testonly.controllers.TestOnlyController.clearAllData()
+DELETE        /cache/clear-all                              uk.gov.hmrc.alcoholdutyreturns.testonly.controllers.TestOnlyController.clearAllData()
+DELETE        /cache/clear-return/:appaId/:periodKey        uk.gov.hmrc.alcoholdutyreturns.testonly.controllers.TestOnlyController.clearReturnData(appaId: String, periodKey: String)
