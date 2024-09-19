@@ -26,8 +26,8 @@ import java.time.Instant
 case class AuditReturnSubmitted(
   appaId: String,
   periodKey: String,
-  governmentGatewayId: Option[String],
-  governmentGatewayGroupId: Option[String],
+  credentialId: Option[String],
+  groupId: Option[String],
   returnSubmittedTime: Instant,
   alcoholRegimes: Option[Set[AlcoholRegime]],
   requestPayload: ReturnCreate,

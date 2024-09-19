@@ -287,8 +287,8 @@ class ReturnsServiceSpec extends SpecBase {
     val expectedAuditEvent = AuditReturnSubmitted(
       appaId = retId.appaId,
       periodKey = periodKey,
-      governmentGatewayId = Some(userAnswers.internalId),
-      governmentGatewayGroupId = Some(userAnswers.groupId),
+      credentialId = Some(userAnswers.internalId),
+      groupId = Some(userAnswers.groupId),
       returnSubmittedTime = returnCreatedDetails.processingDate,
       alcoholRegimes = Some(userAnswers.regimes.regimes),
       requestPayload = returnToSubmit,
@@ -298,8 +298,8 @@ class ReturnsServiceSpec extends SpecBase {
     val expectedPartialAuditEvent = AuditReturnSubmitted(
       appaId = retId.appaId,
       periodKey = periodKey,
-      governmentGatewayId = None,
-      governmentGatewayGroupId = None,
+      credentialId = None,
+      groupId = None,
       returnSubmittedTime = returnCreatedDetails.processingDate,
       alcoholRegimes = None,
       requestPayload = returnToSubmit,
