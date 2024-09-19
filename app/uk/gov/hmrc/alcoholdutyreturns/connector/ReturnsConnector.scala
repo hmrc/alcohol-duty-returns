@@ -90,12 +90,7 @@ class ReturnsConnector @Inject() (
         .post(url"${config.submitReturnUrl}")
         .setHeader(headers.submitReturnHeaders(appaId): _*)
         .withBody(Json.toJson(returnToSubmit))
-        .execute[Either[UpstreamErrorResponse, HttpResponse]] //check this does returncreate come here?
-//        .POST[ReturnCreate, Either[UpstreamErrorResponse, HttpResponse]](
-//          url = config.submitReturnUrl,
-//          body = returnToSubmit,
-//          headers = headers.submitReturnHeaders(appaId)
-//        )
+        .execute[Either[UpstreamErrorResponse, HttpResponse]]
         .map {
           case Right(response)                                                =>
             Try(response.json.as[ReturnCreatedSuccess]) match {
