@@ -1,6 +1,6 @@
 # Get Return (For Period)
 
-Returns the return for the user for a specific period
+Returns the return for the user for a specific period.
 
 Calls to this API must be made by an authenticated and authorised user with an ADR enrolment in order for the data to be returned.
 
@@ -29,37 +29,37 @@ Calls to this API must be made by an authenticated and authorised user with an A
 
 **Response Body**
 
-The response body returns the return for the period with the data that should be displayed for the past return in the frontend
+The response body returns the return for the period, specifically the data that should be displayed in the frontend to show a past return.
 
 All quantities, volumes and monetary amounts are to 2 decimal places, except litres of pure alcohol which is to 4 decimal places.
 
-| Field Name                                                 | Description                                        | Data Type    | Mandatory/Optional | Notes                                                                  |
-|------------------------------------------------------------|----------------------------------------------------|--------------|--------------------|------------------------------------------------------------------------|
-| identification                                             | The identification details of the return           | Object       | Mandatory          |                                                                        |
-| identification.periodKey                                   | The period of the return                           | String       | Mandatory          | YYAM (year, 'A,' month A-L)                                            |
-| identification.submittedTime                               | The time of the submission                         | Timestamp    | Mandatory          | YYYY-MM-DDThh:mm:ss.nnnnnnZ                                            |
-| alcoholDeclared                                            | Details of the alcohol declared                    | Object       | Mandatory          |                                                                        |
-| alcoholDeclared.alcoholDeclaredDetails                     | The declared duty by tax code                      | Array(Items) | Mandatory          |                                                                        |
-| alcoholDeclared.alcoholDeclaredDetails.taxType             | The declared duty by tax code                      | String       | Mandatory          |                                                                        |
-| alcoholDeclared.alcoholDeclaredDetails.litresOfPureAlcohol | The litres of pure alcohol declared                | Numeric      | Mandatory          |                                                                        |
-| alcoholDeclared.alcoholDeclaredDetails.dutyRate            | The duty rate                                      | Numeric      | Mandatory          |                                                                        |
-| alcoholDeclared.alcoholDeclaredDetails.dutyValue           | The total duty due for this item                   | Numeric      | Mandatory          |                                                                        |
-| alcoholDeclared.total                                      | The total duty due across all items                | Numeric      | Mandatory          |                                                                        |
-| adjustments                                                | The adjustment section                             | Object       | Mandatory          |                                                                        |
-| adjustments.adjustmentDetails                              | The adjustment details                             | Array(Items) | Mandatory          |                                                                        |
-| adjustments.adjustmentDetails.adjustmentTypeKey            | The type of adjustment                             | Enum         | Mandatory          | underdeclaration, overdeclaration, repackagedDraught, spolit, drawback |
-| adjustments.adjustmentDetails.taxType                      | The user's id                                      | String       | Mandatory          |                                                                        |
-| adjustments.adjustmentDetails.litresOfPureAlcohol          | The litres of pure alcohol to adjust               | String       | Mandatory          |                                                                        |
-| adjustments.adjustmentDetails.dutyRate                     | The duty rate                                      | String       | Mandatory          |                                                                        |
-| adjustments.adjustmentDetails.dutyValue                    | The value of the duty                              | String       | Mandatory          | Positive if owing, negative if a refund                                |
-| adjustments.total                                          | The total of the adjustments                       | Numeric      | Mandatory          | Positive if owing, negative if a refund                                |
-| totalDutyDue                                               | The total duty due section                         | Object       | Mandatory          |                                                                        |
-| totalDutyDue.totalDue                                      | The total duty to pay or refund                    | Numeric      | Mandatory          | Positive if owing, negative if a refund                                |
+| Field Name                                                 | Description                              | Data Type    | Mandatory/Optional | Notes                                                                  |
+|------------------------------------------------------------|------------------------------------------|--------------|--------------------|------------------------------------------------------------------------|
+| identification                                             | The identification details of the return | Object       | Mandatory          |                                                                        |
+| identification.periodKey                                   | The period of the return                 | String       | Mandatory          | YYAM (year, 'A,' month A-L)                                            |
+| identification.submittedTime                               | The time of the submission               | Timestamp    | Mandatory          | YYYY-MM-DDThh:mm:ss.nnnnnnZ                                            |
+| alcoholDeclared                                            | Details of the alcohol declared          | Object       | Mandatory          |                                                                        |
+| alcoholDeclared.alcoholDeclaredDetails                     | The declared duty by tax code            | Array(Items) | Mandatory          |                                                                        |
+| alcoholDeclared.alcoholDeclaredDetails.taxType             | The three digit tax code                 | String       | Mandatory          |                                                                        |
+| alcoholDeclared.alcoholDeclaredDetails.litresOfPureAlcohol | The litres of pure alcohol declared      | Numeric      | Mandatory          |                                                                        |
+| alcoholDeclared.alcoholDeclaredDetails.dutyRate            | The duty rate                            | Numeric      | Mandatory          |                                                                        |
+| alcoholDeclared.alcoholDeclaredDetails.dutyValue           | The total duty due for this item         | Numeric      | Mandatory          |                                                                        |
+| alcoholDeclared.total                                      | The total duty due across all items      | Numeric      | Mandatory          |                                                                        |
+| adjustments                                                | The adjustment section                   | Object       | Mandatory          |                                                                        |
+| adjustments.adjustmentDetails                              | The adjustment details                   | Array(Items) | Mandatory          |                                                                        |
+| adjustments.adjustmentDetails.adjustmentTypeKey            | The type of adjustment                   | Enum         | Mandatory          | underdeclaration, overdeclaration, repackagedDraught, spolit, drawback |
+| adjustments.adjustmentDetails.taxType                      | The three digit tax code                 | String       | Mandatory          |                                                                        |
+| adjustments.adjustmentDetails.litresOfPureAlcohol          | The litres of pure alcohol to adjust     | String       | Mandatory          |                                                                        |
+| adjustments.adjustmentDetails.dutyRate                     | The duty rate                            | String       | Mandatory          |                                                                        |
+| adjustments.adjustmentDetails.dutyValue                    | The value of the duty                    | String       | Mandatory          | Positive if owing, negative if a refund                                |
+| adjustments.total                                          | The total of the adjustments             | Numeric      | Mandatory          | Positive if owing, negative if a refund                                |
+| totalDutyDue                                               | The total duty due section               | Object       | Mandatory          |                                                                        |
+| totalDutyDue.totalDue                                      | The total duty to pay or refund          | Numeric      | Mandatory          | Positive if owing, negative if a refund                                |
 
 
 **Response Body Examples**
 
-***An example return: ***
+***An example return:***
 
 ```json
 {
@@ -124,7 +124,7 @@ All quantities, volumes and monetary amounts are to 2 decimal places, except lit
 }
 ```
 
-*** A nil return (nothing declared case): ***
+*** A nil return (nothing declared case):***
 ```json
 {
   "identification": {
@@ -153,7 +153,7 @@ This response can occur when a call is made by any consumer without an authorize
 **Code**: `404 NOT_FOUND`
 No cache entry was found for the appaId,periodKey pair
 
-**Code**: `422 UUNPROCESSABLE_ENTITY`
+**Code**: `422 UNPROCESSABLE_ENTITY`
 The return could not be parsed
 
 **Code**: `500 INTERNAL_SERVER_ERROR`

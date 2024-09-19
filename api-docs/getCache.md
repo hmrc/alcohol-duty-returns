@@ -1,6 +1,6 @@
 # Get (User Answers) Cache
 
-Returns the user answers cache for a specific appaId and period key
+Returns the user answers cache for a specific appaId and period key if the user holds / can hold the lock.
 
 Calls to this API must be made by an authenticated and authorised user with an ADR enrolment in order for the data to be returned.
 
@@ -30,7 +30,8 @@ Calls to this API must be made by an authenticated and authorised user with an A
 **Response Body**
 
 The response body returns the user answers cache entry if set up which relates to details for a return for a specific appaId and period.
-The data section contains the actual user answers and other stored data. The content will depend on the specific questions answered and will not be documented in detail here
+
+The data section contains the actual user answers and other stored data. The content will depend on the specific questions answered and will not be documented in detail here.
 
 | Field Name                    | Description                                        | Data Type      | Mandatory/Optional | Notes                                             |
 |-------------------------------|----------------------------------------------------|----------------|--------------------|---------------------------------------------------|
@@ -46,14 +47,14 @@ The data section contains the actual user answers and other stored data. The con
 | data.obligationData.fromDate  | The date from which the period applies             | Date           | Mandatory          | YYYY-MM-DD                                        |
 | data.obligationData.toDate    | The date to which the period applies               | Date           | Mandatory          | YYYY-MM-DD                                        |
 | data.obligationData.dueDate   | The date the return is due to be filed and paid by | Date           | Mandatory          |                                                   |
-| data.obligationData.periodKey | The periodKey of the obligation                    | Date           | Mandatory          | YYAM (year, A, month A-L)                         |
+| data.obligationData.periodKey | The period key of the obligation                   | String         | Mandatory          | YYAM (year, A, month A-L)                         |
 | data.lastUpdated              | The timestamp of the last update                   | Timestamp      | Mandatory          | value inside $date.$numberLong                    |
 | data.validUntil               | The timestamp of the validity expiry               | Timestamp      | Mandatory          | value inside $date.$numberLong                    |
 
 
 **Response Body Examples**
 
-***An example entry with the rest of the data portion removed: ***
+***An example entry with the rest of the data portion removed:***
 
 ```json
 {
@@ -98,6 +99,9 @@ This response can occur when a call is made by any consumer without an authorize
 
 **Code**: `404 NOT_FOUND`
 No cache entry was found for the appaId,periodKey pair
+
+**Code**: `423 LOCKED`
+The return is locked
 
 **Code**: `500 INTERNAL_SERVER_ERROR`
 This response can occur if the query to the database fails

@@ -8,6 +8,8 @@ This is the backend microservice that handles Returns related operations for Alc
 - [Get (User Answers) Cache](api-docs/getCache.md): `GET /alcohol-duty-returns/cache/get/:appaId/:periodKey`
 - [Get Return For Period](api-docs/getReturn.md): `GET /alcohol-duty-returns/producers/:appaId/returns/:periodKey`
 - [Get Obligation Details](api-docs/obligationDetails.md): `GET /alcohol-duty-returns/obligationDetails/:appaId`
+- [Release Lock](api-docs/releaseLock.md): `DELETE /cache/lock/:appaId/:periodKey`
+- [Renew Lock (Keep Alive)](api-docs/renewLock.md): `PUT /cache/lock/:appaId/:periodKey/ttl`
 - [Set (User Answers) Cache](api-docs/setCache.md): `PUT /alcohol-duty-returns/cache/set`
 - [Submit Return](api-docs/submitReturn.md): `POST /alcohol-duty-returns/producers/:appaId/returns/:periodKey`
 

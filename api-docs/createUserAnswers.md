@@ -1,6 +1,6 @@
 # Create User Answers
 
-Creates the UserAnswers structure and stores in the cache
+Creates the UserAnswers structure and stores in the cache (the structure is locked by the user).
 
 Calls to this API must be made by an authenticated and authorised user with an ADR enrolment in order for the data to be returned.
 
@@ -19,7 +19,7 @@ Calls to this API must be made by an authenticated and authorised user with an A
 
 **Request Body Examples**
 
-***An example cache creation request: ***
+***An example cache creation request:***
 
 ```json
 {
@@ -69,7 +69,7 @@ The response body returns the user answers cache entry with regime and obligatio
 
 **Response Body Examples**
 
-***An example created entry: ***
+***An example created entry:***
 
 ```json
 {
@@ -123,6 +123,9 @@ The return is not Open i.e. Fulfilled
 
 **Code**: `422 UNPROCESSABLE_ENTITY`
 The subscription summary or obligations couldn't be parsed
+
+**Code**: `423 LOCKED`
+The return is locked
 
 **Code**: `500 INTERNAL_SERVER_ERROR`
 This response can occur if errors getting obligations or subscriptions, or if the write to the database fails
