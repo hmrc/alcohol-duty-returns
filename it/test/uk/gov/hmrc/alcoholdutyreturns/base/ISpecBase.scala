@@ -35,7 +35,7 @@ import play.api.test.Helpers.route
 import play.api.test.{DefaultAwaitTimeout, FakeRequest, ResultExtractors, Writeables}
 import uk.gov.hmrc.alcoholdutyreturns.config.AppConfig
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.http.test.{HttpClientSupport, WireMockSupport}
+import uk.gov.hmrc.http.test.{HttpClientV2Support, WireMockSupport}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -56,7 +56,7 @@ trait ISpecBase extends AnyWordSpec
     with MockitoSugar
     with ScalaCheckPropertyChecks
     with WireMockSupport
-    with HttpClientSupport
+    with HttpClientV2Support
     with AuthStubs
     with TestData
     with ModelGenerators {
