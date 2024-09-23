@@ -21,6 +21,10 @@ Calls to this API must be made by an authenticated and authorised user with an A
 |---------------|----------------|--------------------------------------------|
 | Authorization | Bearer {TOKEN} | A valid bearer token from the auth service |
 
+***Example request:***
+
+/alcohol-duty-returns/producers/AP0000000001/returns/24AF
+
 **Request Body**
 
 The details of the submitted return.

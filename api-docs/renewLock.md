@@ -21,6 +21,10 @@ Calls to this API must be made by an authenticated and authorised user with an A
 |---------------|----------------|--------------------------------------------|
 | Authorization | Bearer {TOKEN} | A valid bearer token from the auth service |
 
+***Example request:***
+
+/alcohol-duty-returns/cache/lock/AP0000000001/24AF/ttl
+
 ## Responses
 
 ### Success response
