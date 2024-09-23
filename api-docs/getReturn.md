@@ -21,6 +21,10 @@ Calls to this API must be made by an authenticated and authorised user with an A
 |---------------|----------------|--------------------------------------------|
 | Authorization | Bearer {TOKEN} | A valid bearer token from the auth service |
 
+***Example request:***
+
+/alcohol-duty-returns/producers/AP0000000001/returns/24AF
+
 ## Responses
 
 ### Success response
@@ -55,7 +59,6 @@ All quantities, volumes and monetary amounts are to 2 decimal places, except lit
 | adjustments.total                                          | The total of the adjustments             | Numeric      | Mandatory          | Positive if owing, negative if a refund                                |
 | totalDutyDue                                               | The total duty due section               | Object       | Mandatory          |                                                                        |
 | totalDutyDue.totalDue                                      | The total duty to pay or refund          | Numeric      | Mandatory          | Positive if owing, negative if a refund                                |
-
 
 **Response Body Examples**
 
