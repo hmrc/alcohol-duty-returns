@@ -132,8 +132,8 @@ class CacheController @Inject() (
     val eventDetail = AuditReturnStarted(
       appaId = userAnswers.returnId.appaId,
       periodKey = userAnswers.returnId.periodKey,
-      governmentGatewayId = userAnswers.internalId,
-      governmentGatewayGroupId = userAnswers.groupId,
+      credentialId = userAnswers.internalId,
+      groupId = userAnswers.groupId,
       obligationData = obligationData,
       alcoholRegimes = userAnswers.regimes.regimes,
       returnStartedTime = userAnswers.lastUpdated,

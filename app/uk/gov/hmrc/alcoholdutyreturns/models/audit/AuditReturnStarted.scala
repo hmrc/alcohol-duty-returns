@@ -25,8 +25,8 @@ import java.time.Instant
 case class AuditReturnStarted(
   appaId: String,
   periodKey: String,
-  governmentGatewayId: String,
-  governmentGatewayGroupId: String,
+  credentialId: String,
+  groupId: String,
   obligationData: ObligationData,
   alcoholRegimes: Set[AlcoholRegime],
   returnStartedTime: Instant,

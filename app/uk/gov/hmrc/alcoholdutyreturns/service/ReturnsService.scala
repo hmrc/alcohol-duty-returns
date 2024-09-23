@@ -105,8 +105,8 @@ class ReturnsService @Inject() (
     val eventDetail = AuditReturnSubmitted(
       appaId = returnId.appaId,
       periodKey = returnId.periodKey,
-      governmentGatewayId = userAnswers.map(_.internalId),
-      governmentGatewayGroupId = userAnswers.map(_.groupId),
+      credentialId = userAnswers.map(_.internalId),
+      groupId = userAnswers.map(_.groupId),
       returnSubmittedTime = returnCreatedDetails.processingDate,
       alcoholRegimes = userAnswers.map(_.regimes.regimes),
       requestPayload = returnToSubmit,
