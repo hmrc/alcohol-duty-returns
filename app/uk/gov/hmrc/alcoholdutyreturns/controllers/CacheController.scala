@@ -123,7 +123,9 @@ class CacheController @Inject() (
     authorise.async { implicit request =>
       lockingService
         .keepAlive(ReturnId(appaId, periodKey), request.userId)
-        .map(_ => Ok("Lock refreshed"))
+        .map { result =>
+          if (result) Ok("Lock refreshed") else Locked
+        }
     }
 
   private def auditReturnStarted(userAnswers: UserAnswers, obligationData: ObligationData)(implicit
