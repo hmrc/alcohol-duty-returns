@@ -45,6 +45,14 @@ class AdrReturnDetailsSpec extends SpecBase {
     "should convert a nil ReturnDetails (with present item sequences but no entries) to AdrReturnDetails" in new SetUp {
       AdrReturnDetails.fromGetReturnDetails(nilReturnWithPresentItemSequences.success) shouldBe adrNilReturnDetails
     }
+
+    "throw an IllegalArgumentException for invalid adjustment key" in {
+      val invalidKey = "invalidKey"
+      val exception  = intercept[IllegalArgumentException] {
+        AdrReturnAdjustments.isOwedToHmrc(invalidKey)
+      }
+      exception.getMessage shouldBe "Bad adjustment key when checking if amount is owed to HMRC"
+    }
   }
 
   class SetUp {
@@ -60,12 +68,31 @@ class AdrReturnDetailsSpec extends SpecBase {
     )
 
     val adrReturnDetails                  = exampleReturnDetails(periodKey, now)
+    val invalidReturnDetails              = adrReturnDetails.copy(adjustments =
+      AdrReturnAdjustments(
+        adjustmentDetails = Some(
+          Seq(
+            AdrReturnAdjustmentsRow(
+              adjustmentTypeKey = "underdeclarati0n",
+              taxType = "321",
+              litresOfPureAlcohol = BigDecimal(150),
+              dutyRate = BigDecimal("21.01"),
+              dutyValue = BigDecimal("3151.50")
+            )
+          )
+        ),
+        total = BigDecimal("-19434")
+      )
+    )
     val nilReturn                         = nilReturnExample(appaId, periodKey, submissionId, now)
     val nilReturnWithPresentItemSequences =
       nilReturnWithPresentItemSequencesExample(appaId, periodKey, submissionId, now)
     val adrNilReturnDetails               = nilReturnDetails(periodKey, now)
 
-    val json =
+    val json                         =
       s"""{"identification":{"periodKey":"$periodKey","submittedTime":"2024-06-11T15:07:47.838Z"},"alcoholDeclared":{"alcoholDeclaredDetails":[{"taxType":"311","litresOfPureAlcohol":450,"dutyRate":9.27,"dutyValue":4171.5},{"taxType":"321","litresOfPureAlcohol":450,"dutyRate":21.01,"dutyValue":9454.5},{"taxType":"331","litresOfPureAlcohol":450,"dutyRate":28.5,"dutyValue":12825},{"taxType":"341","litresOfPureAlcohol":450,"dutyRate":31.64,"dutyValue":14238},{"taxType":"351","litresOfPureAlcohol":450,"dutyRate":8.42,"dutyValue":3789},{"taxType":"356","litresOfPureAlcohol":450,"dutyRate":19.08,"dutyValue":8586},{"taxType":"361","litresOfPureAlcohol":450,"dutyRate":8.4,"dutyValue":3780},{"taxType":"366","litresOfPureAlcohol":450,"dutyRate":16.47,"dutyValue":7411.5},{"taxType":"371","litresOfPureAlcohol":450,"dutyRate":8.2,"dutyValue":3960},{"taxType":"376","litresOfPureAlcohol":450,"dutyRate":15.63,"dutyValue":7033.5}],"total":75249},"adjustments":{"adjustmentDetails":[{"adjustmentTypeKey":"underdeclaration","taxType":"321","litresOfPureAlcohol":150,"dutyRate":21.01,"dutyValue":3151.5},{"adjustmentTypeKey":"spoilt","taxType":"321","litresOfPureAlcohol":1150,"dutyRate":21.01,"dutyValue":-24161.5},{"adjustmentTypeKey":"spoilt","taxType":"321","litresOfPureAlcohol":75,"dutyRate":21.01,"dutyValue":-1575.5},{"adjustmentTypeKey":"repackagedDraught","taxType":"321","litresOfPureAlcohol":150,"dutyRate":21.01,"dutyValue":3151.5}],"total":-19434},"totalDutyDue":{"totalDue":55815}}"""
+    val jsonWithInvalidAdjustmentKey =
+      s"""{"identification":{"periodKey":"$periodKey","submittedTime":"2024-06-11T15:07:47.838Z"},"alcoholDeclared":{"alcoholDeclaredDetails":[{"taxType":"311","litresOfPureAlcohol":450,"dutyRate":9.27,"dutyValue":4171.5}],"total":4171.5},"adjustments":{"adjustmentDetails":[{"adjustmentTypeKey":"underdeclarati0n","taxType":"321","litresOfPureAlcohol":150,"dutyRate":21.01,"dutyValue":3151.5}],"total":3151.5},"totalDutyDue":{"totalDue":7323}}"""
+
   }
 }
