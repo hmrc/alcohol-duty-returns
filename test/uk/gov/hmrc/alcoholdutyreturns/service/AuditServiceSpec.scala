@@ -49,8 +49,8 @@ class AuditServiceSpec extends SpecBase {
       val auditDetail = AuditReturnStarted(
         appaId = appaIdGen.sample.get,
         periodKey = "24AC",
-        governmentGatewayId = "governmentGatewayId",
-        governmentGatewayGroupId = "governmentGatewayGroupId",
+        credentialId = "credentialId",
+        groupId = "groupId",
         obligationData = getObligationData(today),
         alcoholRegimes = allAlcoholRegimes.regimes,
         returnStartedTime = now,
