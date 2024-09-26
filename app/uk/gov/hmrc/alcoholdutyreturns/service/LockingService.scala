@@ -75,7 +75,7 @@ class LockingServiceImpl @Inject() (
     }
 
   def keepAlive(returnId: ReturnId, ownerId: String): Future[Boolean] =
-    withLock(returnId, ownerId)(Future.successful()).map(_.isDefined)
+    withLock(returnId, ownerId)(Future.successful(())).map(_.isDefined)
 
   def releaseLock(returnId: ReturnId, ownerId: String): Future[Unit] =
     mongoLockRepository.releaseLock(returnId, ownerId)
