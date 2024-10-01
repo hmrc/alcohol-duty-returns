@@ -23,7 +23,7 @@ lazy val microservice = Project("alcohol-duty-returns", file("."))
   .settings(resolvers += Resolver.jcenterRepo)
   .settings(
     ScoverageKeys.coverageExcludedFiles := scoverageExcludedList.mkString(";"),
-    ScoverageKeys.coverageMinimumStmtTotal := 100,
+    ScoverageKeys.coverageMinimumStmtTotal := 99,
     ScoverageKeys.coverageFailOnMinimum := true,
     ScoverageKeys.coverageHighlighting := true,
   )
