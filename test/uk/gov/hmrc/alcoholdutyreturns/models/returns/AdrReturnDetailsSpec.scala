@@ -45,6 +45,14 @@ class AdrReturnDetailsSpec extends SpecBase {
     "should convert a nil ReturnDetails (with present item sequences but no entries) to AdrReturnDetails" in new SetUp {
       AdrReturnDetails.fromGetReturnDetails(nilReturnWithPresentItemSequences.success) shouldBe adrNilReturnDetails
     }
+
+    "throw an IllegalArgumentException for invalid adjustment key" in {
+      val invalidKey = "invalidKey"
+      val exception  = intercept[IllegalArgumentException] {
+        AdrReturnAdjustments.isOwedToHmrc(invalidKey)
+      }
+      exception.getMessage shouldBe "Bad adjustment key when checking if amount is owed to HMRC"
+    }
   }
 
   class SetUp {
@@ -59,7 +67,8 @@ class AdrReturnDetailsSpec extends SpecBase {
       now
     )
 
-    val adrReturnDetails                  = exampleReturnDetails(periodKey, now)
+    val adrReturnDetails = exampleReturnDetails(periodKey, now)
+
     val nilReturn                         = nilReturnExample(appaId, periodKey, submissionId, now)
     val nilReturnWithPresentItemSequences =
       nilReturnWithPresentItemSequencesExample(appaId, periodKey, submissionId, now)
