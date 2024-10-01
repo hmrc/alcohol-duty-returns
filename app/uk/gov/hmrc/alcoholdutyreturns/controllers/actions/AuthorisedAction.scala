@@ -63,7 +63,7 @@ class BaseAuthorisedAction @Inject() (
       case Some(id) => block(AuthorisedRequest(request, id))
       case None     => Future.successful(InternalServerError("Impossible to retrieve the internal id"))
     } recover { case e: AuthorisationException =>
-      logger.debug(s"Got AuthorisationException: $e")
+      logger.debug("Got AuthorisationException:", e)
       Unauthorized(
         Json.toJson(
           ErrorResponse(
