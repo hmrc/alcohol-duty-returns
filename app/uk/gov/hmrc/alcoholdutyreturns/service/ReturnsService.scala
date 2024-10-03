@@ -22,10 +22,9 @@ import com.google.inject.{Inject, Singleton}
 import play.api.Logging
 import uk.gov.hmrc.alcoholdutyreturns.connector.{CalculatorConnector, ReturnsConnector}
 import uk.gov.hmrc.alcoholdutyreturns.models.ErrorResponse.BadRequest
-import uk.gov.hmrc.alcoholdutyreturns.models.audit.AuditReturnSubmitted
 import uk.gov.hmrc.alcoholdutyreturns.models.calculation.CalculateDutyDueByTaxTypeRequest
-import uk.gov.hmrc.alcoholdutyreturns.models.{ErrorResponse, ReturnId, UserAnswers}
-import uk.gov.hmrc.alcoholdutyreturns.models.returns.{AdrReturnCreatedDetails, AdrReturnSubmission, ReturnCreate, ReturnCreatedDetails, TotalDutyDuebyTaxType}
+import uk.gov.hmrc.alcoholdutyreturns.models.{ErrorResponse, ReturnId}
+import uk.gov.hmrc.alcoholdutyreturns.models.returns.{AdrReturnSubmission, ReturnCreate, ReturnCreatedDetails, TotalDutyDuebyTaxType}
 import uk.gov.hmrc.alcoholdutyreturns.repositories.CacheRepository
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -36,7 +35,6 @@ class ReturnsService @Inject() (
   returnsConnector: ReturnsConnector,
   calculatorConnector: CalculatorConnector,
   cacheRepository: CacheRepository,
-  auditService: AuditService,
   schemaValidationService: SchemaValidationService
 )(implicit
   ec: ExecutionContext
@@ -81,12 +79,6 @@ class ReturnsService @Inject() (
               None
             }
         )
-      _                           = auditReturnSubmitted(
-                                      userAnswers,
-                                      returnToSubmit,
-                                      AdrReturnCreatedDetails.fromReturnCreatedDetails(returnCreatedDetails),
-                                      returnId
-                                    )
       _                          <- EitherT.right[ErrorResponse](
                                       cacheRepository
                                         .clearUserAnswersById(returnId)
@@ -94,24 +86,4 @@ class ReturnsService @Inject() (
     } yield returnCreatedDetails
   }
 
-  private def auditReturnSubmitted(
-    userAnswers: Option[UserAnswers],
-    returnToSubmit: ReturnCreate,
-    returnCreatedDetails: AdrReturnCreatedDetails,
-    returnId: ReturnId
-  )(implicit
-    hc: HeaderCarrier
-  ): Unit = {
-    val eventDetail = AuditReturnSubmitted(
-      appaId = returnId.appaId,
-      periodKey = returnId.periodKey,
-      credentialId = userAnswers.map(_.internalId),
-      groupId = userAnswers.map(_.groupId),
-      returnSubmittedTime = returnCreatedDetails.processingDate,
-      alcoholRegimes = userAnswers.map(_.regimes.regimes),
-      requestPayload = returnToSubmit,
-      responsePayload = returnCreatedDetails
-    )
-    auditService.audit(eventDetail)
-  }
 }
