@@ -25,7 +25,7 @@ import play.api.mvc.Result
 import uk.gov.hmrc.alcoholdutyreturns.base.SpecBase
 import uk.gov.hmrc.alcoholdutyreturns.models.{ApprovalStatus, ErrorResponse}
 import uk.gov.hmrc.alcoholdutyreturns.repositories.{CacheRepository, UpdateFailure, UpdateSuccess}
-import uk.gov.hmrc.alcoholdutyreturns.service.{AccountService, AuditService, FakeLockingService, LockingService}
+import uk.gov.hmrc.alcoholdutyreturns.service.{AccountService, FakeLockingService, LockingService}
 
 import java.time.LocalDate
 import scala.concurrent.Future
@@ -33,7 +33,6 @@ import scala.concurrent.Future
 class CacheControllerSpec extends SpecBase {
   val mockCacheRepository: CacheRepository = mock[CacheRepository]
   val mockAccountService: AccountService   = mock[AccountService]
-  val mockAuditService: AuditService       = mock[AuditService]
   val mockLockingService: LockingService   = new FakeLockingService
 
   val controller = new CacheController(
@@ -41,7 +40,6 @@ class CacheControllerSpec extends SpecBase {
     mockCacheRepository,
     mockLockingService,
     mockAccountService,
-    mockAuditService,
     cc
   )
 
@@ -76,7 +74,6 @@ class CacheControllerSpec extends SpecBase {
         mockCacheRepository,
         mockLockingService,
         mockAccountService,
-        mockAuditService,
         cc
       )
 
@@ -124,7 +121,6 @@ class CacheControllerSpec extends SpecBase {
         mockCacheRepository,
         lockingService,
         mockAccountService,
-        mockAuditService,
         cc
       )
 
@@ -165,7 +161,6 @@ class CacheControllerSpec extends SpecBase {
         mockCacheRepository,
         mockLockingService,
         mockAccountService,
-        mockAuditService,
         cc
       )
 
@@ -239,7 +234,6 @@ class CacheControllerSpec extends SpecBase {
         mockCacheRepository,
         mockLockingService,
         mockAccountService,
-        mockAuditService,
         cc
       )
 
@@ -260,7 +254,6 @@ class CacheControllerSpec extends SpecBase {
         mockCacheRepository,
         mockLockingService,
         mockAccountService,
-        mockAuditService,
         cc
       )
 
