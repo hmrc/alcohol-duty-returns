@@ -124,8 +124,18 @@ class LockingServiceSpec extends SpecBase {
         }
       }
 
+      "return true if the clock hasn't been refreshed but it was possible to take a new Lock" in new SetUp {
+        when(mongoLockRepository.refreshExpiry(any(), any(), any())).thenReturn(Future.successful(false))
+        when(mongoLockRepository.takeLock(any(), any(), any())).thenReturn(Future.successful(Some(mock[Lock])))
+
+        whenReady(lockingService.keepAlive(returnId = returnId, ownerId = internalId)) { result =>
+          result shouldBe true
+        }
+      }
+
       "return false if the clock hasn't been refreshed" in new SetUp {
         when(mongoLockRepository.refreshExpiry(any(), any(), any())).thenReturn(Future.successful(false))
+        when(mongoLockRepository.takeLock(any(), any(), any())).thenReturn(Future.successful(None))
 
         whenReady(lockingService.keepAlive(returnId = returnId, ownerId = internalId)) { result =>
           result shouldBe false
