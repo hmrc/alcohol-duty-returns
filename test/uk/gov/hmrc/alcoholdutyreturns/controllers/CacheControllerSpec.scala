@@ -273,7 +273,6 @@ class CacheControllerSpec extends SpecBase {
       mockCacheRepository,
       mockLockingService,
       mockAccountService,
-      mockAuditService,
       cc
     )
 
