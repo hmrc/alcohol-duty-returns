@@ -22,11 +22,9 @@ import play.api.http.HttpEntity
 import play.api.libs.json._
 import play.api.mvc._
 import uk.gov.hmrc.alcoholdutyreturns.controllers.actions.AuthorisedAction
-import uk.gov.hmrc.alcoholdutyreturns.models.audit.AuditReturnStarted
-import uk.gov.hmrc.alcoholdutyreturns.models.{ErrorResponse, ObligationData, ReturnAndUserDetails, ReturnId, UserAnswers}
+import uk.gov.hmrc.alcoholdutyreturns.models.{ErrorResponse, ReturnAndUserDetails, ReturnId, UserAnswers}
 import uk.gov.hmrc.alcoholdutyreturns.repositories.{CacheRepository, UpdateFailure, UpdateSuccess}
-import uk.gov.hmrc.alcoholdutyreturns.service.{AccountService, AuditService, LockingService}
-import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.alcoholdutyreturns.service.{AccountService, LockingService}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import javax.inject.Inject
@@ -37,7 +35,6 @@ class CacheController @Inject() (
   cacheRepository: CacheRepository,
   lockingService: LockingService,
   accountService: AccountService,
-  auditService: AuditService,
   override val controllerComponents: ControllerComponents
 )(implicit executionContext: ExecutionContext)
     extends BackendController(controllerComponents)
@@ -99,7 +96,6 @@ class CacheController @Inject() (
                 val userAnswers                           =
                   UserAnswers.createUserAnswers(returnAndUserDetails, subscriptionSummary, obligationData)
                 cacheRepository.add(userAnswers).map { userAnswers =>
-                  auditReturnStarted(userAnswers, obligationData)
                   Created(Json.toJson(userAnswers))
                 }
               }
@@ -127,23 +123,6 @@ class CacheController @Inject() (
           if (result) Ok("Lock refreshed") else Locked
         }
     }
-
-  private def auditReturnStarted(userAnswers: UserAnswers, obligationData: ObligationData)(implicit
-    hc: HeaderCarrier
-  ): Unit = {
-    val eventDetail = AuditReturnStarted(
-      appaId = userAnswers.returnId.appaId,
-      periodKey = userAnswers.returnId.periodKey,
-      credentialId = userAnswers.internalId,
-      groupId = userAnswers.groupId,
-      obligationData = obligationData,
-      alcoholRegimes = userAnswers.regimes.regimes,
-      returnStartedTime = userAnswers.lastUpdated,
-      returnValidUntilTime = userAnswers.validUntil
-    )
-
-    auditService.audit(eventDetail)
-  }
 
   def error(errorResponse: ErrorResponse): Result = Result(
     header = ResponseHeader(errorResponse.status),

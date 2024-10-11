@@ -21,7 +21,6 @@ import org.mockito.ArgumentMatchers
 import org.mockito.ArgumentMatchers.any
 import uk.gov.hmrc.alcoholdutyreturns.base.SpecBase
 import uk.gov.hmrc.alcoholdutyreturns.connector.{CalculatorConnector, ReturnsConnector}
-import uk.gov.hmrc.alcoholdutyreturns.models.audit.AuditReturnSubmitted
 import uk.gov.hmrc.alcoholdutyreturns.models.{ErrorResponse, ReturnId}
 import uk.gov.hmrc.alcoholdutyreturns.models.calculation.CalculatedDutyDueByTaxType
 import uk.gov.hmrc.alcoholdutyreturns.models.returns.{AdrReturnCreatedDetails, ReturnCreate, ReturnCreatedDetails, TotalDutyDuebyTaxType}
@@ -54,7 +53,6 @@ class ReturnsServiceSpec extends SpecBase {
         verify(mockReturnsConnector).submitReturn(returnSubmission, retId.appaId)
         verify(mockCacheRespository).get(ReturnId(appaId, periodKey))
         verify(mockCacheRespository).clearUserAnswersById(retId)
-        verify(mockAuditService).audit(ArgumentMatchers.eq(expectedAuditEvent))(any(), any())
       }
 
     "trigger an audit event without user answers" in new SetUp {
@@ -77,7 +75,6 @@ class ReturnsServiceSpec extends SpecBase {
       verify(mockSchemaValidationService).validateAgainstSchema(returnSubmission)
       verify(mockReturnsConnector).submitReturn(returnSubmission, retId.appaId)
       verify(mockCacheRespository).get(ReturnId(appaId, periodKey))
-      verify(mockAuditService).audit(ArgumentMatchers.eq(expectedPartialAuditEvent))(any(), any())
       verify(mockCacheRespository).clearUserAnswersById(retId)
     }
 
@@ -101,7 +98,6 @@ class ReturnsServiceSpec extends SpecBase {
       verify(mockSchemaValidationService).validateAgainstSchema(returnSubmission)
       verify(mockReturnsConnector).submitReturn(returnSubmission, retId.appaId)
       verify(mockCacheRespository).get(ReturnId(appaId, periodKey))
-      verify(mockAuditService).audit(ArgumentMatchers.eq(expectedPartialAuditEvent))(any(), any())
       verify(mockCacheRespository).clearUserAnswersById(retId)
     }
 
@@ -123,7 +119,6 @@ class ReturnsServiceSpec extends SpecBase {
       verify(mockSchemaValidationService, never).validateAgainstSchema(returnSubmission)
       verify(mockReturnsConnector, never).submitReturn(any(), any())(any())
       verify(mockCacheRespository, never).get(any())
-      verify(mockAuditService, never).audit(any())(any(), any())
       verify(mockCacheRespository, never).clearUserAnswersById(any())
     }
 
@@ -145,7 +140,6 @@ class ReturnsServiceSpec extends SpecBase {
       verify(mockSchemaValidationService, never).validateAgainstSchema(returnSubmission)
       verify(mockReturnsConnector, never).submitReturn(any(), any())(any())
       verify(mockCacheRespository, never).get(any())
-      verify(mockAuditService, never).audit(any())(any(), any())
       verify(mockCacheRespository, never).clearUserAnswersById(any())
     }
 
@@ -167,7 +161,6 @@ class ReturnsServiceSpec extends SpecBase {
       verify(mockSchemaValidationService).validateAgainstSchema(returnSubmission)
       verify(mockReturnsConnector, never).submitReturn(any(), any())(any())
       verify(mockCacheRespository, never).get(any())
-      verify(mockAuditService, never).audit(any())(any(), any())
       verify(mockCacheRespository, never).clearUserAnswersById(any())
     }
 
@@ -189,7 +182,6 @@ class ReturnsServiceSpec extends SpecBase {
       verify(mockSchemaValidationService).validateAgainstSchema(returnSubmission)
       verify(mockReturnsConnector).submitReturn(returnSubmission, retId.appaId)
       verify(mockCacheRespository, never).get(any())
-      verify(mockAuditService, never).audit(any())(any(), any())
       verify(mockCacheRespository, never).clearUserAnswersById(any())
     }
 
@@ -211,7 +203,6 @@ class ReturnsServiceSpec extends SpecBase {
       verify(mockSchemaValidationService).validateAgainstSchema(returnSubmission)
       verify(mockReturnsConnector).submitReturn(returnSubmission, retId.appaId)
       verify(mockCacheRespository, never).get(any())
-      verify(mockAuditService, never).audit(any())(any(), any())
       verify(mockCacheRespository, never).clearUserAnswersById(any())
     }
 
@@ -238,7 +229,6 @@ class ReturnsServiceSpec extends SpecBase {
       verify(mockSchemaValidationService).validateAgainstSchema(returnSubmission)
       verify(mockReturnsConnector).submitReturn(returnSubmission, retId.appaId)
       verify(mockCacheRespository).get(ReturnId(appaId, periodKey))
-      verify(mockAuditService).audit(ArgumentMatchers.eq(expectedAuditEvent))(any(), any())
       verify(mockCacheRespository).clearUserAnswersById(retId)
     }
   }
@@ -247,14 +237,12 @@ class ReturnsServiceSpec extends SpecBase {
     val mockReturnsConnector        = mock[ReturnsConnector]
     val mockCalculatorConnector     = mock[CalculatorConnector]
     val mockCacheRespository        = mock[CacheRepository]
-    val mockAuditService            = mock[AuditService]
     val mockSchemaValidationService = mock[SchemaValidationService]
 
     val returnsService = new ReturnsService(
       mockReturnsConnector,
       mockCalculatorConnector,
       mockCacheRespository,
-      mockAuditService,
       mockSchemaValidationService
     )
 
@@ -283,28 +271,5 @@ class ReturnsServiceSpec extends SpecBase {
           )
         )
       )
-
-    val expectedAuditEvent = AuditReturnSubmitted(
-      appaId = retId.appaId,
-      periodKey = periodKey,
-      credentialId = Some(userAnswers.internalId),
-      groupId = Some(userAnswers.groupId),
-      returnSubmittedTime = returnCreatedDetails.processingDate,
-      alcoholRegimes = Some(userAnswers.regimes.regimes),
-      requestPayload = returnToSubmit,
-      responsePayload = AdrReturnCreatedDetails.fromReturnCreatedDetails(returnCreatedDetails)
-    )
-
-    val expectedPartialAuditEvent = AuditReturnSubmitted(
-      appaId = retId.appaId,
-      periodKey = periodKey,
-      credentialId = None,
-      groupId = None,
-      returnSubmittedTime = returnCreatedDetails.processingDate,
-      alcoholRegimes = None,
-      requestPayload = returnToSubmit,
-      responsePayload = AdrReturnCreatedDetails.fromReturnCreatedDetails(returnCreatedDetails)
-    )
-
   }
 }

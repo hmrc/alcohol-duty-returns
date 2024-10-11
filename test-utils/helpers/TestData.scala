@@ -52,6 +52,7 @@ trait TestData extends ModelGenerators {
     groupId,
     internalId,
     allAlcoholRegimes,
+    startedTime = Instant.now(clock),
     lastUpdated = Instant.now(clock)
   )
 
@@ -61,6 +62,7 @@ trait TestData extends ModelGenerators {
     internalId,
     allAlcoholRegimes,
     JsObject(Seq(ObligationData.toString -> Json.toJson(getObligationData(LocalDate.now(clock))))),
+    startedTime = Instant.now(clock),
     lastUpdated = Instant.now(clock)
   )
 

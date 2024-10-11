@@ -26,9 +26,9 @@ class UserAnswersSpec extends SpecBase {
 
   "UserAnswers" should {
     val json          =
-      s"""{"_id":{"appaId":"$appaId","periodKey":"$periodKey"},"groupId":"$groupId","internalId":"$internalId","regimes":["Spirits","Wine","Cider","OtherFermentedProduct","Beer"],"data":{"obligationData":{"status":"Open","fromDate":"2024-06-11","toDate":"2024-06-12","dueDate":"2024-06-13","periodKey":"24AA"}},"lastUpdated":{"$$date":{"$$numberLong":"1718118467838"}},"validUntil":{"$$date":{"$$numberLong":"1718118467839"}}}"""
+      s"""{"_id":{"appaId":"$appaId","periodKey":"$periodKey"},"groupId":"$groupId","internalId":"$internalId","regimes":["Spirits","Wine","Cider","OtherFermentedProduct","Beer"],"data":{"obligationData":{"status":"Open","fromDate":"2024-06-11","toDate":"2024-06-12","dueDate":"2024-06-13","periodKey":"24AA"}},"startedTime":{"$$date":{"$$numberLong":"1718118467838"}},"lastUpdated":{"$$date":{"$$numberLong":"1718118467838"}},"validUntil":{"$$date":{"$$numberLong":"1718118467839"}}}"""
     val noRegimesJson =
-      s"""{"_id":{"appaId":"$appaId","periodKey":"$periodKey"},"groupId":"$groupId","internalId":"$internalId","regimes":[],"data":{"obligationData":{"status":"Open","fromDate":"2024-06-11","toDate":"2024-06-12","dueDate":"2024-06-13","periodKey":"24AA"}},"lastUpdated":{"$$date":{"$$numberLong":"1718118467838"}},"validUntil":{"$$date":{"$$numberLong":"1718118467839"}}}"""
+      s"""{"_id":{"appaId":"$appaId","periodKey":"$periodKey"},"groupId":"$groupId","internalId":"$internalId","regimes":[],"data":{"obligationData":{"status":"Open","fromDate":"2024-06-11","toDate":"2024-06-12","dueDate":"2024-06-13","periodKey":"24AA"}},"startedTime":{"$$date":{"$$numberLong":"1718118467838"}},"lastUpdated":{"$$date":{"$$numberLong":"1718118467838"}},"validUntil":{"$$date":{"$$numberLong":"1718118467839"}}}"""
 
     "serialise to json" in {
       Json.toJson(ua).toString() shouldBe json
@@ -47,7 +47,10 @@ class UserAnswersSpec extends SpecBase {
         subscriptionSummary,
         getObligationData(LocalDate.now(clock))
       )
-      createdUserAnswers.copy(lastUpdated = userAnswers.lastUpdated) shouldBe userAnswers
+      createdUserAnswers.copy(
+        startedTime = userAnswers.startedTime,
+        lastUpdated = userAnswers.lastUpdated
+      ) shouldBe userAnswers
     }
 
   }
