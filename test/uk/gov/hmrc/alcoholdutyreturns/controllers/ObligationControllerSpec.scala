@@ -56,7 +56,7 @@ class ObligationControllerSpec extends SpecBase {
   class SetUp {
     val mockAccountService: AccountService = mock[AccountService]
 
-    val controller     = new ObligationController(fakeAuthorisedAction, mockAccountService, cc)
+    val controller     = new ObligationController(fakeAuthorisedAction, fakeCheckAppaIdAction, mockAccountService, cc)
     val obligationData = getObligationData(LocalDate.now())
   }
 }

@@ -18,7 +18,7 @@ package uk.gov.hmrc.alcoholdutyreturns.models
 
 import enumeratum.PlayJsonEnum
 import enumeratum.{Enum, EnumEntry}
-import play.api.http.Status.{BAD_REQUEST, FORBIDDEN, GONE, INTERNAL_SERVER_ERROR, NOT_FOUND, UNPROCESSABLE_ENTITY}
+import play.api.http.Status.{BAD_REQUEST, FORBIDDEN, GONE, INTERNAL_SERVER_ERROR, NOT_FOUND, UNAUTHORIZED, UNPROCESSABLE_ENTITY}
 
 sealed abstract class ErrorResponse(val status: Int, val body: String) extends EnumEntry
 
@@ -32,4 +32,5 @@ object ErrorResponse extends Enum[ErrorResponse] with PlayJsonEnum[ErrorResponse
   case object ObligationFulfilled extends ErrorResponse(GONE, "Obligation fulfilled")
   case class InvalidSubscriptionStatus(approvalStatus: ApprovalStatus)
       extends ErrorResponse(FORBIDDEN, s"Invalid subscription status: $approvalStatus")
+  case object UnauthorisedRequest extends ErrorResponse(UNAUTHORIZED, "Unauthorised request")
 }

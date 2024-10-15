@@ -112,7 +112,14 @@ class ReturnsControllerSpec extends SpecBase {
         when(mockLockingService.withLockExecuteAndRelease(any(), any())(any())).thenReturn(Future.successful(None))
 
         override val controller =
-          new ReturnsController(fakeAuthorisedAction, mockReturnsService, mockLockingService, mockReturnsConnector, cc)
+          new ReturnsController(
+            fakeAuthorisedAction,
+            fakeCheckAppaIdAction,
+            mockReturnsService,
+            mockLockingService,
+            mockReturnsConnector,
+            cc
+          )
 
         when(
           mockReturnsService.submitReturn(eqTo(adrReturnsSubmission), eqTo(returnId.copy(periodKey = periodKey)))(any())
@@ -163,7 +170,14 @@ class ReturnsControllerSpec extends SpecBase {
     val mockLockingService: LockingService     = new FakeLockingService
 
     val controller =
-      new ReturnsController(fakeAuthorisedAction, mockReturnsService, mockLockingService, mockReturnsConnector, cc)
+      new ReturnsController(
+        fakeAuthorisedAction,
+        fakeCheckAppaIdAction,
+        mockReturnsService,
+        mockLockingService,
+        mockReturnsConnector,
+        cc
+      )
 
     val periodKey: String = "24AC"
     val total             = BigDecimal("12345.67")
