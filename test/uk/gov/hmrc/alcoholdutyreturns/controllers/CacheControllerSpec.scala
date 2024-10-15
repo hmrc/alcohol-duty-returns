@@ -37,6 +37,7 @@ class CacheControllerSpec extends SpecBase {
 
   val controller = new CacheController(
     fakeAuthorisedAction,
+    fakeCheckAppaIdAction,
     mockCacheRepository,
     mockLockingService,
     mockAccountService,
@@ -71,6 +72,7 @@ class CacheControllerSpec extends SpecBase {
 
       val controller = new CacheController(
         fakeAuthorisedAction,
+        fakeCheckAppaIdAction,
         mockCacheRepository,
         mockLockingService,
         mockAccountService,
@@ -118,6 +120,7 @@ class CacheControllerSpec extends SpecBase {
 
       val controller = new CacheController(
         fakeAuthorisedAction,
+        fakeCheckAppaIdAction,
         mockCacheRepository,
         lockingService,
         mockAccountService,
@@ -158,6 +161,7 @@ class CacheControllerSpec extends SpecBase {
 
       val controller = new CacheController(
         fakeAuthorisedAction,
+        fakeCheckAppaIdAction,
         mockCacheRepository,
         mockLockingService,
         mockAccountService,
@@ -231,6 +235,7 @@ class CacheControllerSpec extends SpecBase {
 
       val controller = new CacheController(
         fakeAuthorisedAction,
+        fakeCheckAppaIdAction,
         mockCacheRepository,
         mockLockingService,
         mockAccountService,
@@ -251,6 +256,7 @@ class CacheControllerSpec extends SpecBase {
 
       val controller = new CacheController(
         fakeAuthorisedAction,
+        fakeCheckAppaIdAction,
         mockCacheRepository,
         mockLockingService,
         mockAccountService,

@@ -69,6 +69,7 @@ class AppConfig @Inject() (config: Configuration, servicesConfig: ServicesConfig
   }
 
   val enrolmentServiceName: String = config.get[String]("enrolment.serviceName")
+  val enrolmentIdentifierKey       = config.get[String]("enrolment.identifierKey")
 
   val regime: String = config.get[String]("downstream-apis.regimeType")
 

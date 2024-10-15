@@ -18,7 +18,7 @@ package uk.gov.hmrc.alcoholdutyreturns.controllers
 
 import play.api.Logging
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
-import uk.gov.hmrc.alcoholdutyreturns.controllers.actions.AuthorisedAction
+import uk.gov.hmrc.alcoholdutyreturns.controllers.actions.{AuthorisedAction, CheckAppaIdAction}
 import uk.gov.hmrc.alcoholdutyreturns.service.AccountService
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import play.api.libs.json._
@@ -28,13 +28,14 @@ import scala.concurrent.ExecutionContext
 
 class ObligationController @Inject() (
   authorise: AuthorisedAction,
+  checkAppaId: CheckAppaIdAction,
   accountService: AccountService,
   override val controllerComponents: ControllerComponents
 )(implicit executionContext: ExecutionContext)
     extends BackendController(controllerComponents)
     with Logging {
   def getObligationDetails(appaId: String): Action[AnyContent] =
-    authorise.async { implicit request =>
+    (authorise andThen checkAppaId(appaId)).async { implicit request =>
       accountService.getObligations(appaId).value.map {
         case Left(errorResponse) =>
           logger.warn(s"Unable to get obligation data for $appaId - ${errorResponse.status} ${errorResponse.body}")

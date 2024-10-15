@@ -26,7 +26,7 @@ class ReturnsIntegrationSpec extends ISpecBase {
   "ReturnsController" when {
     "calling getReturn" should {
       "return 200 OK and the return response when successful" in new SetUp {
-        stubAuthorised()
+        stubAuthorised(appaId)
 
         stubGet(getReturnUrl, OK, returnSuccessJson)
 
@@ -42,7 +42,7 @@ class ReturnsIntegrationSpec extends ISpecBase {
       }
 
       "return 200 OK and the return response when successful for nil return" in new SetUp {
-        stubAuthorised()
+        stubAuthorised(appaId)
 
         stubGet(getReturnUrl, OK, nilReturnSuccessJson)
 
@@ -60,7 +60,7 @@ class ReturnsIntegrationSpec extends ISpecBase {
 
     "calling submitReturn" should {
       "return 201 CREATED and the submission created response when successful" in new SetUp {
-        stubAuthorised()
+        stubAuthorised(appaId)
 
         stubPost(
           calculateDutyDueByTaxTypeUrl,
@@ -84,7 +84,7 @@ class ReturnsIntegrationSpec extends ISpecBase {
       }
 
       "return 201 CREATED and the submission created response when successful for a nilReturn" in new SetUp {
-        stubAuthorised()
+        stubAuthorised(appaId)
 
         stubPost(
           calculateDutyDueByTaxTypeUrl,
@@ -108,7 +108,7 @@ class ReturnsIntegrationSpec extends ISpecBase {
       }
 
       "return 400 BAD_REQUEST when the response fails schema validation" in new SetUp {
-        stubAuthorised()
+        stubAuthorised(appaId)
 
         stubPost(
           calculateDutyDueByTaxTypeUrl,

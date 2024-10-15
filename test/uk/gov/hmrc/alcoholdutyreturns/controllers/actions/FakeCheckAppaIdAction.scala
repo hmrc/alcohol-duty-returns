@@ -19,18 +19,16 @@ package uk.gov.hmrc.alcoholdutyreturns.controllers.actions
 import play.api.mvc._
 import uk.gov.hmrc.alcoholdutyreturns.models.requests.IdentifierRequest
 
-import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-class FakeAuthorisedAction @Inject() (bodyParsers: PlayBodyParsers) extends AuthorisedAction {
-
-  override def parser: BodyParser[AnyContent] = bodyParsers.defaultBodyParser
-
-  override def invokeBlock[A](request: Request[A], block: IdentifierRequest[A] => Future[Result]): Future[Result] =
-    block(
-      IdentifierRequest(request, "appaId", "userId")
-    )
+class FakeCheckAppaIdActionImpl private[actions] extends ActionRefiner[IdentifierRequest, IdentifierRequest] {
+  override protected def refine[A](request: IdentifierRequest[A]): Future[Either[Result, IdentifierRequest[A]]] =
+    Future.successful(Right(request))
 
   override protected def executionContext: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
+}
 
+class FakeCheckAppaIdAction extends CheckAppaIdAction()(scala.concurrent.ExecutionContext.Implicits.global) {
+  override def apply(appaId: String): ActionRefiner[IdentifierRequest, IdentifierRequest] =
+    new FakeCheckAppaIdActionImpl()
 }
