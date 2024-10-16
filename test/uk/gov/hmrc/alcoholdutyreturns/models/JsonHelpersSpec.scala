@@ -24,7 +24,7 @@ class JsonHelpersSpec extends SpecBase {
     Seq((false, """"0""""), (true, """"1"""")).foreach { case (v, code) =>
       s"deserialise the code $code to boolean $v" in {
         import JsonHelpers.booleanReads
-blah
+        blah
         Json.parse(code).as[Boolean] shouldBe v
       }
 
