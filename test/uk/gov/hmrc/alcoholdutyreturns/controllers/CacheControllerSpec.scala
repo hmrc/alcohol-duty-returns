@@ -276,6 +276,7 @@ class CacheControllerSpec extends SpecBase {
 
     val controller = new CacheController(
       fakeAuthorisedAction,
+      fakeCheckAppaIdAction,
       mockCacheRepository,
       mockLockingService,
       mockAccountService,
