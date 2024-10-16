@@ -27,6 +27,7 @@ class ReturnsIntegrationSpec extends ISpecBase {
     "calling getReturn" should {
       "return 200 OK and the return response when successful" in new SetUp {
         stubAuthorised(appaId)
+        blah
 
         stubGet(getReturnUrl, OK, returnSuccessJson)
 
