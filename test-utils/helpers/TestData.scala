@@ -412,7 +412,9 @@ trait TestData extends ModelGenerators {
       )
     )
 
-  def convertedReturnDetails(periodKey: String, now: Instant): AdrReturnDetails =
+  def convertedReturnDetails(periodKey: String, now: Instant): AdrReturnDetails = {
+    val periodDate = LocalDate.of(periodKey.take(2).toInt + 2000, periodKey.charAt(3) - 'A' + 1, 1)
+
     AdrReturnDetails(
       identification = AdrReturnDetailsIdentification(periodKey = periodKey, submittedTime = now),
       alcoholDeclared = AdrReturnAlcoholDeclared(
@@ -433,6 +435,7 @@ trait TestData extends ModelGenerators {
           Seq(
             AdrReturnAdjustmentsRow(
               adjustmentTypeKey = "underdeclaration",
+              returnPeriodAffected = periodKeyFromDate(periodFrom(2, periodDate)),
               taxType = "301",
               litresOfPureAlcohol = BigDecimal("989"),
               dutyRate = BigDecimal("5.27"),
@@ -440,6 +443,7 @@ trait TestData extends ModelGenerators {
             ),
             AdrReturnAdjustmentsRow(
               adjustmentTypeKey = "overdeclaration",
+              returnPeriodAffected = periodKeyFromDate(periodFrom(1, periodDate)),
               taxType = "302",
               litresOfPureAlcohol = BigDecimal("100.58"),
               dutyRate = BigDecimal("3.56"),
@@ -447,6 +451,7 @@ trait TestData extends ModelGenerators {
             ),
             AdrReturnAdjustmentsRow(
               adjustmentTypeKey = "repackagedDraught",
+              returnPeriodAffected = periodKeyFromDate(periodFrom(5, periodDate)),
               taxType = "304",
               litresOfPureAlcohol = BigDecimal("100.81"),
               dutyRate = BigDecimal("12.76"),
@@ -454,6 +459,7 @@ trait TestData extends ModelGenerators {
             ),
             AdrReturnAdjustmentsRow(
               adjustmentTypeKey = "spoilt",
+              returnPeriodAffected = periodKeyFromDate(periodFrom(3, periodDate)),
               taxType = "305",
               litresOfPureAlcohol = BigDecimal("1000.94"),
               dutyRate = BigDecimal("1.75"),
@@ -461,6 +467,7 @@ trait TestData extends ModelGenerators {
             ),
             AdrReturnAdjustmentsRow(
               adjustmentTypeKey = "drawback",
+              returnPeriodAffected = periodKeyFromDate(periodFrom(4, periodDate)),
               taxType = "309",
               litresOfPureAlcohol = BigDecimal("1301.11"),
               dutyRate = BigDecimal("5.12"),
@@ -474,8 +481,11 @@ trait TestData extends ModelGenerators {
         totalDue = BigDecimal("61118.51")
       )
     )
+  }
 
-  def exampleReturnDetails(periodKey: String, now: Instant): AdrReturnDetails =
+  def exampleReturnDetails(periodKey: String, now: Instant): AdrReturnDetails = {
+    val periodDate = LocalDate.of(periodKey.take(2).toInt + 2000, periodKey.charAt(3) - 'A' + 1, 1)
+
     AdrReturnDetails(
       identification = AdrReturnDetailsIdentification(periodKey = periodKey, submittedTime = now),
       alcoholDeclared = AdrReturnAlcoholDeclared(
@@ -550,6 +560,7 @@ trait TestData extends ModelGenerators {
           Seq(
             AdrReturnAdjustmentsRow(
               adjustmentTypeKey = AdrReturnAdjustments.underDeclaredKey,
+              returnPeriodAffected = periodKeyFromDate(periodFrom(1, periodDate)),
               taxType = "321",
               litresOfPureAlcohol = BigDecimal(150),
               dutyRate = BigDecimal("21.01"),
@@ -557,6 +568,7 @@ trait TestData extends ModelGenerators {
             ),
             AdrReturnAdjustmentsRow(
               adjustmentTypeKey = AdrReturnAdjustments.spoiltKey,
+              returnPeriodAffected = periodKeyFromDate(periodFrom(2, periodDate)),
               taxType = "321",
               litresOfPureAlcohol = BigDecimal(1150),
               dutyRate = BigDecimal("21.01"),
@@ -564,6 +576,7 @@ trait TestData extends ModelGenerators {
             ),
             AdrReturnAdjustmentsRow(
               adjustmentTypeKey = AdrReturnAdjustments.spoiltKey,
+              returnPeriodAffected = periodKeyFromDate(periodFrom(3, periodDate)),
               taxType = "321",
               litresOfPureAlcohol = BigDecimal(75),
               dutyRate = BigDecimal("21.01"),
@@ -571,6 +584,7 @@ trait TestData extends ModelGenerators {
             ),
             AdrReturnAdjustmentsRow(
               adjustmentTypeKey = AdrReturnAdjustments.repackagedDraughtKey,
+              returnPeriodAffected = periodKeyFromDate(periodFrom(4, periodDate)),
               taxType = "321",
               litresOfPureAlcohol = BigDecimal(150),
               dutyRate = BigDecimal("21.01"),
@@ -582,6 +596,7 @@ trait TestData extends ModelGenerators {
       ),
       totalDutyDue = AdrReturnTotalDutyDue(totalDue = BigDecimal("55815"))
     )
+  }
 
   def nilReturnDetails(periodKey: String, now: Instant): AdrReturnDetails =
     AdrReturnDetails(

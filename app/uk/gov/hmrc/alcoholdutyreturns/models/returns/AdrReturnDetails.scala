@@ -174,6 +174,7 @@ object AdrReturnAdjustments {
 
 case class AdrReturnAdjustmentsRow(
   adjustmentTypeKey: String,
+  returnPeriodAffected: String,
   taxType: String,
   litresOfPureAlcohol: BigDecimal,
   dutyRate: BigDecimal,
@@ -184,6 +185,7 @@ object AdrReturnAdjustmentsRow {
   def fromReturnDetails(key: String, returnDetails: ReturnDetails): AdrReturnAdjustmentsRow =
     AdrReturnAdjustmentsRow(
       adjustmentTypeKey = key,
+      returnPeriodAffected = returnDetails.returnPeriodAffected,
       taxType = returnDetails.taxType,
       litresOfPureAlcohol = returnDetails.litresOfPureAlcohol,
       dutyRate = returnDetails.dutyRate,
