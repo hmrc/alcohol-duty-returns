@@ -24,14 +24,20 @@ import uk.gov.hmrc.alcoholdutyreturns.base.SpecBase
 import uk.gov.hmrc.auth.core.AffinityGroup.Organisation
 import uk.gov.hmrc.auth.core.AuthProvider.GovernmentGateway
 import uk.gov.hmrc.auth.core.CredentialStrength.strong
+import uk.gov.hmrc.auth.core.retrieve.~
 import uk.gov.hmrc.auth.core._
-import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals.{internalId => retriveInternalId}
+import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals.{authorisedEnrolments, internalId => retriveInternalId}
 
 import scala.concurrent.Future
 
 class AuthorisedActionSpec extends SpecBase {
-  val enrolment   = "HMRC-AD-ORG"
-  val testContent = "Test"
+  val enrolment               = "HMRC-AD-ORG"
+  val appaIdKey               = "APPAID"
+  val state                   = "Activated"
+  val enrolments              = Enrolments(Set(Enrolment(enrolment, Seq(EnrolmentIdentifier(appaIdKey, appaId)), state)))
+  val emptyEnrolments         = Enrolments(Set.empty)
+  val enrolmentsWithoutAppaId = Enrolments(Set(Enrolment(enrolment, Seq.empty, state)))
+  val testContent             = "Test"
 
   val defaultBodyParser: BodyParsers.Default = app.injector.instanceOf[BodyParsers.Default]
   val mockAuthConnector: AuthConnector       = mock[AuthConnector]
@@ -47,7 +53,7 @@ class AuthorisedActionSpec extends SpecBase {
 
     "execute the block and return OK if authorised" in {
       when(
-        mockAuthConnector.authorise[Option[String]](
+        mockAuthConnector.authorise(
           eqTo(
             AuthProviders(GovernmentGateway)
               and Enrolment(enrolment)
@@ -56,11 +62,11 @@ class AuthorisedActionSpec extends SpecBase {
               and ConfidenceLevel.L50
           ),
           eqTo(
-            retriveInternalId
+            retriveInternalId and authorisedEnrolments
           )
         )(any(), any())
       )
-        .thenReturn(Future(Some(internalId)))
+        .thenReturn(Future(new ~(Some(internalId), enrolments)))
 
       val result: Future[Result] = authorisedAction.invokeBlock(fakeRequest, testAction)
 
@@ -68,9 +74,9 @@ class AuthorisedActionSpec extends SpecBase {
       contentAsString(result) shouldBe testContent
     }
 
-    "thrown an Internal Server error if the authConnector return None as Internal Id" in {
+    "execute the block and throw IllegalStateException if cannot get the enrolment" in {
       when(
-        mockAuthConnector.authorise[Option[String]](
+        mockAuthConnector.authorise(
           eqTo(
             AuthProviders(GovernmentGateway)
               and Enrolment(enrolment)
@@ -79,15 +85,59 @@ class AuthorisedActionSpec extends SpecBase {
               and ConfidenceLevel.L50
           ),
           eqTo(
-            retriveInternalId
+            retriveInternalId and authorisedEnrolments
           )
         )(any(), any())
       )
-        .thenReturn(Future(None))
+        .thenReturn(Future(new ~(Some(internalId), emptyEnrolments)))
 
-      val result = authorisedAction.invokeBlock(fakeRequest, testAction)
-      status(result) shouldBe INTERNAL_SERVER_ERROR
+      intercept[IllegalStateException] {
+        await(authorisedAction.invokeBlock(fakeRequest, testAction))
+      }
+    }
 
+    "execute the block and throw IllegalStateException if cannot get the APPAID enrolment" in {
+      when(
+        mockAuthConnector.authorise(
+          eqTo(
+            AuthProviders(GovernmentGateway)
+              and Enrolment(enrolment)
+              and CredentialStrength(strong)
+              and Organisation
+              and ConfidenceLevel.L50
+          ),
+          eqTo(
+            retriveInternalId and authorisedEnrolments
+          )
+        )(any(), any())
+      )
+        .thenReturn(Future(new ~(Some(internalId), enrolmentsWithoutAppaId)))
+
+      intercept[IllegalStateException] {
+        await(authorisedAction.invokeBlock(fakeRequest, testAction))
+      }
+    }
+
+    "thrown IllegalStateException if the authConnector returns None as Internal Id" in {
+      when(
+        mockAuthConnector.authorise(
+          eqTo(
+            AuthProviders(GovernmentGateway)
+              and Enrolment(enrolment)
+              and CredentialStrength(strong)
+              and Organisation
+              and ConfidenceLevel.L50
+          ),
+          eqTo(
+            retriveInternalId and authorisedEnrolments
+          )
+        )(any(), any())
+      )
+        .thenReturn(Future(new ~(None, enrolments)))
+
+      intercept[IllegalStateException] {
+        await(authorisedAction.invokeBlock(fakeRequest, testAction))
+      }
     }
   }
 

@@ -22,7 +22,7 @@ import play.api.http.HttpEntity
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc._
 import uk.gov.hmrc.alcoholdutyreturns.connector.ReturnsConnector
-import uk.gov.hmrc.alcoholdutyreturns.controllers.actions.AuthorisedAction
+import uk.gov.hmrc.alcoholdutyreturns.controllers.actions.{AuthorisedAction, CheckAppaIdAction}
 import uk.gov.hmrc.alcoholdutyreturns.models.returns.{AdrReturnCreatedDetails, AdrReturnDetails, AdrReturnSubmission}
 import uk.gov.hmrc.alcoholdutyreturns.models.{ErrorResponse, ReturnId}
 import uk.gov.hmrc.alcoholdutyreturns.service.{LockingService, ReturnsService}
@@ -33,6 +33,7 @@ import scala.concurrent.ExecutionContext
 
 class ReturnsController @Inject() (
   authorise: AuthorisedAction,
+  checkAppaId: CheckAppaIdAction,
   returnsService: ReturnsService,
   lockingService: LockingService,
   returnsConnector: ReturnsConnector,
@@ -41,7 +42,7 @@ class ReturnsController @Inject() (
     extends BackendController(controllerComponents)
     with Logging {
   def getReturn(appaId: String, periodKey: String): Action[AnyContent] =
-    authorise.async { implicit request =>
+    (authorise andThen checkAppaId(appaId)).async { implicit request =>
       returnsConnector
         .getReturn(ReturnId(appaId, periodKey))
         .map(AdrReturnDetails.fromGetReturnDetails)
@@ -55,7 +56,7 @@ class ReturnsController @Inject() (
     }
 
   def submitReturn(appaId: String, periodKey: String): Action[JsValue] =
-    authorise(parse.json).async { implicit request =>
+    (authorise(parse.json) andThen checkAppaId(appaId)).async { implicit request =>
       withJsonBody[AdrReturnSubmission] { returnSubmission =>
         val returnId = ReturnId(appaId, periodKey)
         lockingService

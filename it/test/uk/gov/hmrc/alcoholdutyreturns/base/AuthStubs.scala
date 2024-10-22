@@ -44,23 +44,26 @@ trait AuthStubs extends WireMockHelper {
        |  {
        |    "confidenceLevel":50
        |  }],
-       |  "retrieve":[ "internalId" ]
+       |  "retrieve":[ "internalId", "authorisedEnrolments" ]
        |}""".stripMargin
 
-  val authOKResponse =
-    s"""|{
-        |  "internalId": "$testAuthInternalId",
-        |  "loginTimes": {
-        |     "currentLogin": "2016-11-27T09:00:00.000Z",
-        |     "previousLogin": "2016-11-01T12:00:00.000Z"
-        |  },
-        |  "agentInformation": {},
-        |  "confidenceLevel": 50
-        |}
+  def authOKResponse(appaId: String) =
+    s"""|  {
+        |    "internalId": "$testAuthInternalId",
+        |    "authorisedEnrolments" : [ {
+        |      "key" : "HMRC-AD-ORG",
+        |      "identifiers" : [ {
+        |        "key" : "APPAID",
+        |        "value" : "$appaId"
+        |      } ],
+        |      "state" : "Activated",
+        |      "confidenceLevel" : 50
+        |    } ]
+        |  }
          """.stripMargin
 
-  def stubAuthorised(): Unit =
-    stubPost(authUrl, OK, authRequest, authOKResponse)
+  def stubAuthorised(appaId: String): Unit =
+    stubPost(authUrl, OK, authRequest, authOKResponse(appaId))
 
   def verifyAuthorised(): Unit =
     verifyPost(authUrl)

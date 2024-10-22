@@ -37,6 +37,7 @@ class CacheControllerSpec extends SpecBase {
 
   val controller = new CacheController(
     fakeAuthorisedAction,
+    fakeCheckAppaIdAction,
     mockCacheRepository,
     mockLockingService,
     mockAccountService,
@@ -71,6 +72,7 @@ class CacheControllerSpec extends SpecBase {
 
       val controller = new CacheController(
         fakeAuthorisedAction,
+        fakeCheckAppaIdAction,
         mockCacheRepository,
         mockLockingService,
         mockAccountService,
@@ -118,6 +120,7 @@ class CacheControllerSpec extends SpecBase {
 
       val controller = new CacheController(
         fakeAuthorisedAction,
+        fakeCheckAppaIdAction,
         mockCacheRepository,
         lockingService,
         mockAccountService,
@@ -158,6 +161,7 @@ class CacheControllerSpec extends SpecBase {
 
       val controller = new CacheController(
         fakeAuthorisedAction,
+        fakeCheckAppaIdAction,
         mockCacheRepository,
         mockLockingService,
         mockAccountService,
@@ -231,6 +235,7 @@ class CacheControllerSpec extends SpecBase {
 
       val controller = new CacheController(
         fakeAuthorisedAction,
+        fakeCheckAppaIdAction,
         mockCacheRepository,
         mockLockingService,
         mockAccountService,
@@ -245,12 +250,13 @@ class CacheControllerSpec extends SpecBase {
   }
 
   "keepAlive" should {
-    "call the method keepAlive in the locking service and return 200 OK" in {
+    "call the method keepAlive in the locking service and return 200 OK if the lock is refreshed" in {
       val mockLockingService = mock[LockingService]
       when(mockLockingService.keepAlive(any(), any())).thenReturn(Future.successful(true))
 
       val controller = new CacheController(
         fakeAuthorisedAction,
+        fakeCheckAppaIdAction,
         mockCacheRepository,
         mockLockingService,
         mockAccountService,
@@ -262,5 +268,24 @@ class CacheControllerSpec extends SpecBase {
 
       status(result) shouldBe OK
     }
+  }
+
+  "call the method keepAlive in the locking service and return 423 LOCKED if the lock is not refreshed" in {
+    val mockLockingService = mock[LockingService]
+    when(mockLockingService.keepAlive(any(), any())).thenReturn(Future.successful(false))
+
+    val controller = new CacheController(
+      fakeAuthorisedAction,
+      fakeCheckAppaIdAction,
+      mockCacheRepository,
+      mockLockingService,
+      mockAccountService,
+      cc
+    )
+
+    val result: Future[Result] =
+      controller.keepAlive(appaId, periodKey)(fakeRequest)
+
+    status(result) shouldBe LOCKED
   }
 }

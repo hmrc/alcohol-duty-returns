@@ -47,5 +47,8 @@ Lock refreshed
 **Code**: `401 UNAUTHORIZED`
 This response can occur when a call is made by any consumer without an authorized session that has an ADR enrolment.
 
+**Code**: `423 LOCKED`
+This response can occur when the lock cannot be refreshed because another lock is already in place for the same return
+
 **Code**: `500 INTERNAL_SERVER_ERROR`
 This response can occur if the query to the database fails
