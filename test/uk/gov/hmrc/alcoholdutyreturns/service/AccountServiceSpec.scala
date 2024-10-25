@@ -23,8 +23,7 @@ import uk.gov.hmrc.alcoholdutyreturns.base.SpecBase
 import uk.gov.hmrc.alcoholdutyreturns.connector.AccountConnector
 import uk.gov.hmrc.alcoholdutyreturns.models.ApprovalStatus.{Approved, DeRegistered, Insolvent, Revoked, SmallCiderProducer}
 import uk.gov.hmrc.alcoholdutyreturns.models.ObligationStatus.Fulfilled
-import uk.gov.hmrc.alcoholdutyreturns.models.ApprovalStatus
-import uk.gov.hmrc.alcoholdutyreturns.models.ErrorResponse
+import uk.gov.hmrc.alcoholdutyreturns.models.{ApprovalStatus, ErrorCodes}
 
 import java.time.LocalDate
 
@@ -47,17 +46,17 @@ class AccountServiceSpec extends SpecBase {
         when(accountConnector.getSubscriptionSummary(eqTo(returnId.appaId))(any())).thenReturn(EitherT.rightT(ss))
 
         whenReady(accountService.getSubscriptionSummaryAndCheckStatus(returnId.appaId).value) { result =>
-          result shouldBe Left(ErrorResponse.InvalidSubscriptionStatus(status))
+          result shouldBe Left(ErrorCodes.invalidSubscriptionStatus(status))
         }
       }
     }
 
     "return any error if the connector returns" in new SetUp {
       when(accountConnector.getSubscriptionSummary(eqTo(returnId.appaId))(any()))
-        .thenReturn(EitherT.leftT(ErrorResponse.InvalidJson))
+        .thenReturn(EitherT.leftT(ErrorCodes.invalidJson))
 
       whenReady(accountService.getSubscriptionSummaryAndCheckStatus(returnId.appaId).value) { result =>
-        result shouldBe Left(ErrorResponse.InvalidJson)
+        result shouldBe Left(ErrorCodes.invalidJson)
       }
     }
   }
@@ -77,16 +76,16 @@ class AccountServiceSpec extends SpecBase {
         .thenReturn(EitherT.rightT(obligationData.copy(status = Fulfilled)))
 
       whenReady(accountService.getOpenObligation(returnId).value) { result =>
-        result shouldBe Left(ErrorResponse.ObligationFulfilled)
+        result shouldBe Left(ErrorCodes.obligationFulfilled)
       }
     }
 
     "return any error if the connector returns" in new SetUp {
       when(accountConnector.getOpenObligationData(eqTo(returnId))(any()))
-        .thenReturn(EitherT.leftT(ErrorResponse.InvalidJson))
+        .thenReturn(EitherT.leftT(ErrorCodes.invalidJson))
 
       whenReady(accountService.getOpenObligation(returnId).value) { result =>
-        result shouldBe Left(ErrorResponse.InvalidJson)
+        result shouldBe Left(ErrorCodes.invalidJson)
       }
     }
   }
@@ -101,9 +100,9 @@ class AccountServiceSpec extends SpecBase {
     }
 
     "return unexpectedResponse if the connector returns an error" in new SetUp {
-      when(accountConnector.getObligationData(any())(any())).thenReturn(EitherT.leftT(ErrorResponse.InvalidJson))
+      when(accountConnector.getObligationData(any())(any())).thenReturn(EitherT.leftT(ErrorCodes.invalidJson))
       whenReady(accountService.getObligations(appaId).value) { result =>
-        result shouldBe Left(ErrorResponse.UnexpectedResponse)
+        result shouldBe Left(ErrorCodes.unexpectedResponse)
       }
     }
   }

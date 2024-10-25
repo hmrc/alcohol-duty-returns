@@ -22,8 +22,9 @@ import play.api.Logging
 import uk.gov.hmrc.alcoholdutyreturns.connector.AccountConnector
 import uk.gov.hmrc.alcoholdutyreturns.models.ApprovalStatus.{Approved, Insolvent}
 import uk.gov.hmrc.alcoholdutyreturns.models.ObligationStatus.{Fulfilled, Open}
-import uk.gov.hmrc.alcoholdutyreturns.models.{ErrorResponse, ObligationData, ReturnId, SubscriptionSummary}
+import uk.gov.hmrc.alcoholdutyreturns.models.{ErrorCodes, ObligationData, ReturnId, SubscriptionSummary}
 import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.play.bootstrap.backend.http.ErrorResponse
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -38,7 +39,7 @@ class AccountService @Inject() (
       .getSubscriptionSummary(appaId)
       .fold(
         error => {
-          logger.warn(s"Unable to get subscription summary for $appaId - ${error.status} ${error.body}")
+          logger.warn(s"Unable to get subscription summary for $appaId - ${error.statusCode} ${error.message}")
           Left(error)
         },
         subscriptionSummary =>
@@ -46,7 +47,7 @@ class AccountService @Inject() (
             case Approved | Insolvent => Right(subscriptionSummary)
             case status               =>
               logger.warn(s"Invalid subscription status for $appaId ${status.entryName}")
-              Left(ErrorResponse.InvalidSubscriptionStatus(status))
+              Left(ErrorCodes.invalidSubscriptionStatus(status))
           }
       )
   }
@@ -60,7 +61,7 @@ class AccountService @Inject() (
         .fold(
           error => {
             logger.warn(
-              s"Unable to get an open obligation for ${returnId.appaId} ${returnId.periodKey} - ${error.status} ${error.body}"
+              s"Unable to get an open obligation for ${returnId.appaId} ${returnId.periodKey} - ${error.statusCode} ${error.message}"
             )
             Left(error)
           },
@@ -71,7 +72,7 @@ class AccountService @Inject() (
                 logger.warn(
                   s"Unexpected fulfilled obligation returned (expected open) for ${returnId.appaId} ${returnId.periodKey}"
                 )
-                Left(ErrorResponse.ObligationFulfilled)
+                Left(ErrorCodes.obligationFulfilled)
             }
         )
     }
@@ -80,7 +81,7 @@ class AccountService @Inject() (
     appaId: String
   )(implicit hc: HeaderCarrier, ec: ExecutionContext): EitherT[Future, ErrorResponse, Seq[ObligationData]] =
     accountConnector.getObligationData(appaId).leftFlatMap { error =>
-      logger.warn(s"Unable to get an obligations for $appaId - ${error.status} ${error.body}")
-      EitherT.leftT[Future, Seq[ObligationData]](ErrorResponse.UnexpectedResponse)
+      logger.warn(s"Unable to get an obligations for $appaId - ${error.statusCode} ${error.message}")
+      EitherT.leftT[Future, Seq[ObligationData]](ErrorCodes.unexpectedResponse)
     }
 }

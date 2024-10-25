@@ -21,12 +21,12 @@ import cats.data.EitherT
 import com.google.inject.{Inject, Singleton}
 import play.api.Logging
 import uk.gov.hmrc.alcoholdutyreturns.connector.{CalculatorConnector, ReturnsConnector}
-import uk.gov.hmrc.alcoholdutyreturns.models.ErrorResponse.BadRequest
 import uk.gov.hmrc.alcoholdutyreturns.models.calculation.CalculateDutyDueByTaxTypeRequest
-import uk.gov.hmrc.alcoholdutyreturns.models.{ErrorResponse, ReturnId}
+import uk.gov.hmrc.alcoholdutyreturns.models.{ErrorCodes, ReturnId}
 import uk.gov.hmrc.alcoholdutyreturns.models.returns.{AdrReturnSubmission, ReturnCreate, ReturnCreatedDetails, TotalDutyDuebyTaxType}
 import uk.gov.hmrc.alcoholdutyreturns.repositories.CacheRepository
 import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.play.bootstrap.backend.http.ErrorResponse
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -51,7 +51,7 @@ class ReturnsService @Inject() (
     EitherT(
       Future(
         if (!schemaValidationService.validateAgainstSchema(returnToSubmit)) {
-          Left(BadRequest)
+          Left(ErrorCodes.badRequest)
         } else {
           Right(())
         }
