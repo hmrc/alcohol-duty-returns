@@ -23,9 +23,10 @@ import play.api.libs.json.Json
 import play.api.mvc.Result
 import uk.gov.hmrc.alcoholdutyreturns.base.SpecBase
 import uk.gov.hmrc.alcoholdutyreturns.connector.ReturnsConnector
+import uk.gov.hmrc.alcoholdutyreturns.models.ErrorCodes
 import uk.gov.hmrc.alcoholdutyreturns.models.returns.{GetReturnDetails, ReturnCreatedDetails}
-import uk.gov.hmrc.alcoholdutyreturns.models.ErrorResponse
 import uk.gov.hmrc.alcoholdutyreturns.service.{FakeLockingService, LockingService, ReturnsService}
+import uk.gov.hmrc.play.bootstrap.backend.http.ErrorResponse
 
 import java.time.Instant
 import scala.concurrent.Future
@@ -46,7 +47,7 @@ class ReturnsControllerSpec extends SpecBase {
 
       "return 400 BAD_REQUEST when there is a BAD_REQUEST" in new SetUp {
         when(mockReturnsConnector.getReturn(eqTo(returnId.copy(periodKey = periodKey)))(any()))
-          .thenReturn(EitherT.leftT[Future, GetReturnDetails](ErrorResponse.BadRequest))
+          .thenReturn(EitherT.leftT[Future, GetReturnDetails](ErrorCodes.badRequest))
 
         val result: Future[Result] =
           controller.getReturn(appaId, periodKey)(fakeRequest)
@@ -56,7 +57,7 @@ class ReturnsControllerSpec extends SpecBase {
 
       "return 404 NOT_FOUND when not found" in new SetUp {
         when(mockReturnsConnector.getReturn(eqTo(returnId.copy(periodKey = periodKey)))(any()))
-          .thenReturn(EitherT.leftT[Future, GetReturnDetails](ErrorResponse.EntityNotFound))
+          .thenReturn(EitherT.leftT[Future, GetReturnDetails](ErrorCodes.entityNotFound))
 
         val result: Future[Result] =
           controller.getReturn(appaId, periodKey)(fakeRequest)
@@ -66,7 +67,7 @@ class ReturnsControllerSpec extends SpecBase {
 
       "return 500 INTERNAL_SERVER_ERROR when an unexpected response" in new SetUp {
         when(mockReturnsConnector.getReturn(eqTo(returnId.copy(periodKey = periodKey)))(any()))
-          .thenReturn(EitherT.leftT[Future, GetReturnDetails](ErrorResponse.UnexpectedResponse))
+          .thenReturn(EitherT.leftT[Future, GetReturnDetails](ErrorCodes.unexpectedResponse))
 
         val result: Future[Result] =
           controller.getReturn(appaId, periodKey)(fakeRequest)
@@ -96,7 +97,7 @@ class ReturnsControllerSpec extends SpecBase {
         when(
           mockReturnsService.submitReturn(eqTo(adrReturnsSubmission), eqTo(returnId.copy(periodKey = periodKey)))(any())
         )
-          .thenReturn(EitherT.leftT[Future, ReturnCreatedDetails](ErrorResponse.BadRequest))
+          .thenReturn(EitherT.leftT[Future, ReturnCreatedDetails](ErrorCodes.badRequest))
 
         val result: Future[Result] =
           controller.submitReturn(appaId, periodKey)(
@@ -124,7 +125,7 @@ class ReturnsControllerSpec extends SpecBase {
         when(
           mockReturnsService.submitReturn(eqTo(adrReturnsSubmission), eqTo(returnId.copy(periodKey = periodKey)))(any())
         )
-          .thenReturn(EitherT.leftT[Future, ReturnCreatedDetails](ErrorResponse.BadRequest))
+          .thenReturn(EitherT.leftT[Future, ReturnCreatedDetails](ErrorCodes.badRequest))
 
         val result: Future[Result] =
           controller.submitReturn(appaId, periodKey)(
@@ -138,7 +139,7 @@ class ReturnsControllerSpec extends SpecBase {
         when(
           mockReturnsService.submitReturn(eqTo(adrReturnsSubmission), eqTo(returnId.copy(periodKey = periodKey)))(any())
         )
-          .thenReturn(EitherT.leftT[Future, ReturnCreatedDetails](ErrorResponse.EntityNotFound))
+          .thenReturn(EitherT.leftT[Future, ReturnCreatedDetails](ErrorCodes.entityNotFound))
 
         val result: Future[Result] =
           controller.submitReturn(appaId, periodKey)(
@@ -152,7 +153,7 @@ class ReturnsControllerSpec extends SpecBase {
         when(
           mockReturnsService.submitReturn(eqTo(adrReturnsSubmission), eqTo(returnId.copy(periodKey = periodKey)))(any())
         )
-          .thenReturn(EitherT.leftT[Future, ReturnCreatedDetails](ErrorResponse.UnexpectedResponse))
+          .thenReturn(EitherT.leftT[Future, ReturnCreatedDetails](ErrorCodes.unexpectedResponse))
 
         val result: Future[Result] =
           controller.submitReturn(appaId, periodKey)(

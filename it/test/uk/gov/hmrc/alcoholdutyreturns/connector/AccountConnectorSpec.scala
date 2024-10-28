@@ -21,7 +21,7 @@ import org.scalatest.matchers.must.Matchers.convertToAnyMustWrapper
 import org.scalatest.time.{Seconds, Span}
 import play.api.libs.json.Json
 import uk.gov.hmrc.alcoholdutyreturns.base.ISpecBase
-import uk.gov.hmrc.alcoholdutyreturns.models.{ErrorResponse, SubscriptionSummary}
+import uk.gov.hmrc.alcoholdutyreturns.models.{ErrorCodes, SubscriptionSummary}
 
 import java.time.LocalDate
 
@@ -31,7 +31,7 @@ class AccountConnectorSpec extends ISpecBase {
     "return an InvalidJson error if the call returns an invalid response" in new SetUp {
       stubGet(dataTestUrl, OK, "invalid")
       whenReady(connector.getData[DataTestType](dataTestUrl).value) { result =>
-        result mustBe Left(ErrorResponse.InvalidJson)
+        result mustBe Left(ErrorCodes.invalidJson)
         verifyGet(dataTestUrl)
       }
     }
@@ -39,7 +39,7 @@ class AccountConnectorSpec extends ISpecBase {
     "return a NotFound error if the call returns a 404 response" in new SetUp {
       stubGet(dataTestUrl, NOT_FOUND, "")
       whenReady(connector.getData[DataTestType](dataTestUrl).value) { result =>
-        result mustBe Left(ErrorResponse.EntityNotFound)
+        result mustBe Left(ErrorCodes.entityNotFound)
         verifyGet(dataTestUrl)
       }
     }
@@ -47,7 +47,7 @@ class AccountConnectorSpec extends ISpecBase {
     "return a UnexpectedResponse error if the call returns a 500 response" in new SetUp {
       stubGet(dataTestUrl, INTERNAL_SERVER_ERROR, "")
       whenReady(connector.getData[DataTestType](dataTestUrl).value) { result =>
-        result mustBe Left(ErrorResponse.UnexpectedResponse)
+        result mustBe Left(ErrorCodes.unexpectedResponse)
         verifyGet(dataTestUrl)
       }
     }

@@ -21,9 +21,10 @@ import play.api.Logging
 import play.api.http.Status.NOT_FOUND
 import play.api.libs.json.Reads
 import uk.gov.hmrc.alcoholdutyreturns.config.AppConfig
-import uk.gov.hmrc.alcoholdutyreturns.models.{ErrorResponse, ObligationData, ReturnId, SubscriptionSummary}
+import uk.gov.hmrc.alcoholdutyreturns.models.{ErrorCodes, ObligationData, ReturnId, SubscriptionSummary}
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReadsInstances, HttpResponse, StringContextOps, UpstreamErrorResponse}
+import uk.gov.hmrc.play.bootstrap.backend.http.ErrorResponse
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
@@ -46,13 +47,13 @@ class AccountConnector @Inject() (
         .map {
           case Right(response)                                              =>
             Try(response.json.as[T]).toOption
-              .fold[Either[ErrorResponse, T]](Left(ErrorResponse.InvalidJson))(Right(_))
-          case Left(errorResponse) if errorResponse.statusCode == NOT_FOUND => Left(ErrorResponse.EntityNotFound)
+              .fold[Either[ErrorResponse, T]](Left(ErrorCodes.invalidJson))(Right(_))
+          case Left(errorResponse) if errorResponse.statusCode == NOT_FOUND => Left(ErrorCodes.entityNotFound)
           case Left(errorResponse)                                          =>
             logger.warn(
               s"Received unexpected response from accounts API: ${errorResponse.statusCode} ${errorResponse.message}"
             )
-            Left(ErrorResponse.UnexpectedResponse)
+            Left(ErrorCodes.unexpectedResponse)
         }
     )
 

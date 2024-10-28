@@ -38,8 +38,9 @@ class ObligationController @Inject() (
     (authorise andThen checkAppaId(appaId)).async { implicit request =>
       accountService.getObligations(appaId).value.map {
         case Left(errorResponse) =>
-          logger.warn(s"Unable to get obligation data for $appaId - ${errorResponse.status} ${errorResponse.body}")
-          NotFound(s"Error: {${errorResponse.status},${errorResponse.body}}")
+          logger
+            .warn(s"Unable to get obligation data for $appaId - ${errorResponse.statusCode} ${errorResponse.message}")
+          NotFound(s"Error: {${errorResponse.statusCode},${errorResponse.message}}")
         case Right(obligations)  => Ok(Json.toJson(obligations))
       }
     }

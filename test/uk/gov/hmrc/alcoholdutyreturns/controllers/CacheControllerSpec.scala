@@ -23,7 +23,7 @@ import org.mockito.ArgumentMatchersSugar.eqTo
 import play.api.libs.json.Json
 import play.api.mvc.Result
 import uk.gov.hmrc.alcoholdutyreturns.base.SpecBase
-import uk.gov.hmrc.alcoholdutyreturns.models.{ApprovalStatus, ErrorResponse}
+import uk.gov.hmrc.alcoholdutyreturns.models.{ApprovalStatus, ErrorCodes}
 import uk.gov.hmrc.alcoholdutyreturns.repositories.{CacheRepository, UpdateFailure, UpdateSuccess}
 import uk.gov.hmrc.alcoholdutyreturns.service.{AccountService, FakeLockingService, LockingService}
 
@@ -183,12 +183,12 @@ class CacheControllerSpec extends SpecBase {
     }
 
     Seq(
-      ("EntityNotFound", ErrorResponse.EntityNotFound),
-      ("InvalidJson", ErrorResponse.InvalidJson),
-      ("UnexpectedResponse", ErrorResponse.UnexpectedResponse),
-      ("InvalidSubscriptionStatus(Insolvent)", ErrorResponse.InvalidSubscriptionStatus(ApprovalStatus.Insolvent))
+      ("EntityNotFound", ErrorCodes.entityNotFound),
+      ("InvalidJson", ErrorCodes.invalidJson),
+      ("UnexpectedResponse", ErrorCodes.unexpectedResponse),
+      ("InvalidSubscriptionStatus(Insolvent)", ErrorCodes.invalidSubscriptionStatus(ApprovalStatus.Insolvent))
     ).foreach { case (errorName, errorResponse) =>
-      s"return status ${errorResponse.status} if the account service returns the error $errorName when getting the subscription summary" in {
+      s"return status ${errorResponse.statusCode} if the account service returns the error $errorName when getting the subscription summary" in {
         when(mockCacheRepository.add(any())).thenReturn(Future.successful(userAnswers))
         when(mockAccountService.getSubscriptionSummaryAndCheckStatus(eqTo(appaId))(any(), any()))
           .thenReturn(EitherT.leftT(errorResponse))
@@ -198,19 +198,19 @@ class CacheControllerSpec extends SpecBase {
             fakeRequestWithJsonBody(Json.toJson(returnAndUserDetails))
           )
 
-        status(result)        shouldBe errorResponse.status
+        status(result)        shouldBe errorResponse.statusCode
         contentAsJson(result) shouldBe Json.toJson(errorResponse)
       }
     }
 
     Seq(
-      ("EntityNotFound", ErrorResponse.EntityNotFound),
-      ("InvalidJson", ErrorResponse.InvalidJson),
-      ("UnexpectedResponse", ErrorResponse.UnexpectedResponse),
-      ("ObligationFulfilled", ErrorResponse.ObligationFulfilled),
-      ("InvalidSubscriptionStatus(Insolvent)", ErrorResponse.InvalidSubscriptionStatus(ApprovalStatus.Insolvent))
+      ("EntityNotFound", ErrorCodes.entityNotFound),
+      ("InvalidJson", ErrorCodes.invalidJson),
+      ("UnexpectedResponse", ErrorCodes.unexpectedResponse),
+      ("ObligationFulfilled", ErrorCodes.obligationFulfilled),
+      ("InvalidSubscriptionStatus(Insolvent)", ErrorCodes.invalidSubscriptionStatus(ApprovalStatus.Insolvent))
     ).foreach { case (errorName, errorResponse) =>
-      s"return the status ${errorResponse.status} if the account service returns the error $errorName when getting the open obligations" in {
+      s"return the status ${errorResponse.statusCode} if the account service returns the error $errorName when getting the open obligations" in {
         when(mockCacheRepository.add(any())).thenReturn(Future.successful(userAnswers))
         when(mockAccountService.getSubscriptionSummaryAndCheckStatus(eqTo(appaId))(any(), any()))
           .thenReturn(EitherT.rightT(subscriptionSummary))
@@ -222,7 +222,7 @@ class CacheControllerSpec extends SpecBase {
             fakeRequestWithJsonBody(Json.toJson(returnAndUserDetails))
           )
 
-        status(result)        shouldBe errorResponse.status
+        status(result)        shouldBe errorResponse.statusCode
         contentAsJson(result) shouldBe Json.toJson(errorResponse)
       }
     }
