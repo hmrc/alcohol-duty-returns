@@ -16,21 +16,13 @@
 
 package uk.gov.hmrc.alcoholdutyreturns
 
-import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
-import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.ws.WSClient
+import uk.gov.hmrc.alcoholdutyreturns.base.ISpecBase
 
-class HealthEndpointIntegrationSpec
-    extends AnyWordSpec
-    with Matchers
-    with ScalaFutures
-    with IntegrationPatience
-    with GuiceOneServerPerSuite {
-
+class HealthEndpointIntegrationSpec extends ISpecBase {
   private val wsClient = app.injector.instanceOf[WSClient]
   private val baseUrl  = s"http://localhost:$port"
 
@@ -39,7 +31,7 @@ class HealthEndpointIntegrationSpec
       .configure("metrics.enabled" -> false)
       .build()
 
-  "service health endpoint" should {
+  "service health endpoint should" - {
     "respond with 200 status" in {
       val response =
         wsClient
@@ -47,7 +39,7 @@ class HealthEndpointIntegrationSpec
           .get()
           .futureValue
 
-      response.status shouldBe 200
+      response.status mustBe 200
     }
   }
 }

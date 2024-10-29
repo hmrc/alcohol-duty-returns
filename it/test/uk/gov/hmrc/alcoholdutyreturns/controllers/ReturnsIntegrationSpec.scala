@@ -23,8 +23,8 @@ import uk.gov.hmrc.alcoholdutyreturns.base.ISpecBase
 import java.time.Instant
 
 class ReturnsIntegrationSpec extends ISpecBase {
-  "ReturnsController" when {
-    "calling getReturn" should {
+  "ReturnsController when" - {
+    "calling getReturn must" - {
       "return 200 OK and the return response when successful" in new SetUp {
         stubAuthorised(appaId)
 
@@ -35,8 +35,8 @@ class ReturnsIntegrationSpec extends ISpecBase {
             .withHeaders("Authorization" -> "Bearer 12345")
         )
 
-        status(response)        shouldBe OK
-        contentAsJson(response) shouldBe Json.toJson(adrReturnDetails)
+        status(response)        mustBe OK
+        contentAsJson(response) mustBe Json.toJson(adrReturnDetails)
 
         verifyGet(getReturnUrl)
       }
@@ -51,14 +51,14 @@ class ReturnsIntegrationSpec extends ISpecBase {
             .withHeaders("Authorization" -> "Bearer 12345")
         )
 
-        status(response)        shouldBe OK
-        contentAsJson(response) shouldBe Json.toJson(nilAdrReturnDetails)
+        status(response)        mustBe OK
+        contentAsJson(response) mustBe Json.toJson(nilAdrReturnDetails)
 
         verifyGet(getReturnUrl)
       }
     }
 
-    "calling submitReturn" should {
+    "calling submitReturn must" - {
       "return 201 CREATED and the submission created response when successful" in new SetUp {
         stubAuthorised(appaId)
 
@@ -76,8 +76,8 @@ class ReturnsIntegrationSpec extends ISpecBase {
             .withBody(Json.toJson(adrReturnsSubmission))
         )
 
-        status(response)        shouldBe CREATED
-        contentAsJson(response) shouldBe Json.toJson(adrReturnCreatedDetails)
+        status(response)        mustBe CREATED
+        contentAsJson(response) mustBe Json.toJson(adrReturnCreatedDetails)
 
         verifyPost(calculateDutyDueByTaxTypeUrl)
         verifyPost(submitReturnUrl)
@@ -100,8 +100,8 @@ class ReturnsIntegrationSpec extends ISpecBase {
             .withBody(Json.toJson(nilAdrReturnsSubmission))
         )
 
-        status(response)        shouldBe CREATED
-        contentAsJson(response) shouldBe Json.toJson(nilAdrReturnCreatedDetails)
+        status(response)        mustBe CREATED
+        contentAsJson(response) mustBe Json.toJson(nilAdrReturnCreatedDetails)
 
         verifyPostNeverCalled(calculateDutyDueByTaxTypeUrl)
         verifyPost(submitReturnUrl)
@@ -124,7 +124,7 @@ class ReturnsIntegrationSpec extends ISpecBase {
             .withBody(Json.toJson(badAdrReturnsSubmission))
         )
 
-        status(response) shouldBe BAD_REQUEST
+        status(response) mustBe BAD_REQUEST
 
         verifyPost(calculateDutyDueByTaxTypeUrl)
         verifyPostNeverCalled(submitReturnUrl)

@@ -20,13 +20,13 @@ import play.api.libs.json.Json
 import uk.gov.hmrc.alcoholdutyreturns.base.SpecBase
 
 class CalculateDutyDueByTaxTypeRequestSpec extends SpecBase {
-  "CalculatedDutyDueByTaxType" should {
+  "CalculatedDutyDueByTaxType must" - {
     "serialise to json" in new SetUp {
-      Json.toJson(calculateDutyDueByTaxTypeRequest).toString shouldBe json
+      Json.toJson(calculateDutyDueByTaxTypeRequest).toString mustBe json
     }
 
     "populate data from a returns submission when duty declared and all adjustment data is present" in {
-      CalculateDutyDueByTaxTypeRequest.fromReturnsSubmission(exampleReturnSubmissionRequest) shouldBe Some(
+      CalculateDutyDueByTaxTypeRequest.fromReturnsSubmission(exampleReturnSubmissionRequest) mustBe Some(
         calculateDutyDueByTaxTypeRequestForExampleSubmission
       )
     }
@@ -36,7 +36,7 @@ class CalculateDutyDueByTaxTypeRequestSpec extends SpecBase {
         .fromReturnsSubmission(
           exampleReturnSubmissionRequest.copy(adjustments = exampleNilReturnSubmissionRequest.adjustments)
         )
-        .nonEmpty shouldBe true
+        .nonEmpty mustBe true
     }
 
     "populate data from a returns submission when no duty declared and adjustments are present" in {
@@ -44,7 +44,7 @@ class CalculateDutyDueByTaxTypeRequestSpec extends SpecBase {
         .fromReturnsSubmission(
           exampleReturnSubmissionRequest.copy(dutyDeclared = exampleNilReturnSubmissionRequest.dutyDeclared)
         )
-        .nonEmpty shouldBe true
+        .nonEmpty mustBe true
     }
 
     /* Regression */
@@ -57,11 +57,11 @@ class CalculateDutyDueByTaxTypeRequestSpec extends SpecBase {
               exampleReturnSubmissionRequest.adjustments.copy(spoiltProductDeclared = false, spoiltProducts = Seq.empty)
           )
         )
-        .nonEmpty shouldBe true
+        .nonEmpty mustBe true
     }
 
     "not populate data from a returns submission when a nil return" in {
-      CalculateDutyDueByTaxTypeRequest.fromReturnsSubmission(exampleNilReturnSubmissionRequest) shouldBe None
+      CalculateDutyDueByTaxTypeRequest.fromReturnsSubmission(exampleNilReturnSubmissionRequest) mustBe None
     }
   }
 

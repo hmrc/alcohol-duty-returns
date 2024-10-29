@@ -22,7 +22,7 @@ import uk.gov.hmrc.alcoholdutyreturns.base.SpecBase
 import java.time.Instant
 
 class AdrReturnSubmissionSpec extends SpecBase {
-  "AdrAdjustments" should {
+  "AdrAdjustments must" - {
     "return it has adjustments if any adjustment has entries" in new SetUp {
       adrReturnSubmission.adjustments
         .copy(
@@ -31,7 +31,7 @@ class AdrReturnSubmissionSpec extends SpecBase {
           drawbackProducts = Seq.empty,
           repackagedDraughtProducts = Seq.empty
         )
-        .hasAdjustments shouldBe true
+        .hasAdjustments mustBe true
       adrReturnSubmission.adjustments
         .copy(
           overDeclarationProducts = Seq.empty,
@@ -39,7 +39,7 @@ class AdrReturnSubmissionSpec extends SpecBase {
           drawbackProducts = Seq.empty,
           repackagedDraughtProducts = Seq.empty
         )
-        .hasAdjustments shouldBe true
+        .hasAdjustments mustBe true
       adrReturnSubmission.adjustments
         .copy(
           overDeclarationProducts = Seq.empty,
@@ -47,7 +47,7 @@ class AdrReturnSubmissionSpec extends SpecBase {
           drawbackProducts = Seq.empty,
           repackagedDraughtProducts = Seq.empty
         )
-        .hasAdjustments shouldBe true
+        .hasAdjustments mustBe true
       adrReturnSubmission.adjustments
         .copy(
           overDeclarationProducts = Seq.empty,
@@ -55,7 +55,7 @@ class AdrReturnSubmissionSpec extends SpecBase {
           spoiltProducts = Seq.empty,
           repackagedDraughtProducts = Seq.empty
         )
-        .hasAdjustments shouldBe true
+        .hasAdjustments mustBe true
       adrReturnSubmission.adjustments
         .copy(
           overDeclarationProducts = Seq.empty,
@@ -63,7 +63,7 @@ class AdrReturnSubmissionSpec extends SpecBase {
           spoiltProducts = Seq.empty,
           drawbackProducts = Seq.empty
         )
-        .hasAdjustments shouldBe true
+        .hasAdjustments mustBe true
     }
 
     "return it doesn't have adjustments if no adjustment has entries" in new SetUp {
@@ -75,33 +75,33 @@ class AdrReturnSubmissionSpec extends SpecBase {
           drawbackProducts = Seq.empty,
           repackagedDraughtProducts = Seq.empty
         )
-        .hasAdjustments shouldBe false
+        .hasAdjustments mustBe false
     }
   }
 
-  "AdrReturnSubmission" should {
+  "AdrReturnSubmission must" - {
     "deserialise from json" in new SetUp {
-      Json.parse(adrReturnSubmissionJson).as[AdrReturnSubmission] shouldBe adrReturnSubmission
+      Json.parse(adrReturnSubmissionJson).as[AdrReturnSubmission] mustBe adrReturnSubmission
     }
   }
 
-  "AdrReturnCreatedDetails" should {
+  "AdrReturnCreatedDetails must" - {
     "serialise to json" in new SetUp {
-      Json.toJson(adrReturnCreatedDetails).toString() shouldBe adrReturnCreatedDetailsJson
+      Json.toJson(adrReturnCreatedDetails).toString() mustBe adrReturnCreatedDetailsJson
     }
 
     "serialise to json with minimal payload" in new SetUp {
-      Json.toJson(adrReturnCreatedDetailsMinimal).toString() shouldBe adrReturnCreatedDetailsMinimalJson
+      Json.toJson(adrReturnCreatedDetailsMinimal).toString() mustBe adrReturnCreatedDetailsMinimalJson
     }
 
     "convert from ReturnCreatedDetails to AdrReturnCreatedDetails" in new SetUp {
-      AdrReturnCreatedDetails.fromReturnCreatedDetails(returnCreatedDetails) shouldBe adrReturnCreatedDetails
+      AdrReturnCreatedDetails.fromReturnCreatedDetails(returnCreatedDetails) mustBe adrReturnCreatedDetails
     }
 
     "convert from ReturnCreatedDetails to AdrReturnCreatedDetails with minimal payload" in new SetUp {
       AdrReturnCreatedDetails.fromReturnCreatedDetails(
         returnCreatedDetailsMinimal
-      ) shouldBe adrReturnCreatedDetailsMinimal
+      ) mustBe adrReturnCreatedDetailsMinimal
     }
   }
 
