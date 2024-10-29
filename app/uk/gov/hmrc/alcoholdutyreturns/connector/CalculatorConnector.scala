@@ -22,9 +22,10 @@ import play.api.http.Status.BAD_REQUEST
 import play.api.libs.json.{Json, Reads, Writes}
 import uk.gov.hmrc.alcoholdutyreturns.config.AppConfig
 import uk.gov.hmrc.alcoholdutyreturns.models.calculation.{CalculateDutyDueByTaxTypeRequest, CalculatedDutyDueByTaxType}
-import uk.gov.hmrc.alcoholdutyreturns.models.ErrorResponse
+import uk.gov.hmrc.alcoholdutyreturns.models.ErrorCodes
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReadsInstances, HttpResponse, StringContextOps, UpstreamErrorResponse}
+import uk.gov.hmrc.play.bootstrap.backend.http.ErrorResponse
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
@@ -53,18 +54,18 @@ class CalculatorConnector @Inject() (
                 Right(result)
               case Failure(e)      =>
                 logger.warn(s"Parsing failed for calculation result", e)
-                Left(ErrorResponse.InvalidJson)
+                Left(ErrorCodes.invalidJson)
             }
           case Left(errorResponse) if errorResponse.statusCode == BAD_REQUEST =>
             logger.warn(
               s"Received bad request from calculator API: ${errorResponse.message}"
             )
-            Left(ErrorResponse.BadRequest)
+            Left(ErrorCodes.badRequest)
           case Left(errorResponse)                                            =>
             logger.warn(
               s"Received unexpected response from calculator API: ${errorResponse.statusCode} ${errorResponse.message}"
             )
-            Left(ErrorResponse.UnexpectedResponse)
+            Left(ErrorCodes.unexpectedResponse)
         }
     )
 

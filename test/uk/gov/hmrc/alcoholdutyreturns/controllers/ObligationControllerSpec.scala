@@ -19,11 +19,12 @@ package uk.gov.hmrc.alcoholdutyreturns.controllers
 import cats.data.EitherT
 import play.api.mvc.Result
 import uk.gov.hmrc.alcoholdutyreturns.base.SpecBase
-import uk.gov.hmrc.alcoholdutyreturns.models.{ErrorResponse, ObligationData}
+import uk.gov.hmrc.alcoholdutyreturns.models.{ErrorCodes, ObligationData}
 import uk.gov.hmrc.alcoholdutyreturns.service.AccountService
 import play.api.libs.json.Json
 import org.mockito.ArgumentMatchers.any
 import org.mockito.ArgumentMatchersSugar.eqTo
+import uk.gov.hmrc.play.bootstrap.backend.http.ErrorResponse
 
 import java.time.LocalDate
 import scala.concurrent.Future
@@ -43,7 +44,7 @@ class ObligationControllerSpec extends SpecBase {
 
     "return 404 NOT_FOUND when there is an issue" in new SetUp {
       when(mockAccountService.getObligations(eqTo(appaId))(any(), any()))
-        .thenReturn(EitherT.leftT[Future, Seq[ObligationData]](ErrorResponse.UnexpectedResponse))
+        .thenReturn(EitherT.leftT[Future, Seq[ObligationData]](ErrorCodes.unexpectedResponse))
 
       val result: Future[Result] =
         controller.getObligationDetails(appaId)(fakeRequest)

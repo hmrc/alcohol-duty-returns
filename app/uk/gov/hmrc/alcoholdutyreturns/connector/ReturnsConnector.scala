@@ -22,10 +22,11 @@ import play.api.http.Status.{BAD_REQUEST, NOT_FOUND}
 import play.api.libs.json.Json
 import uk.gov.hmrc.alcoholdutyreturns.config.AppConfig
 import uk.gov.hmrc.alcoholdutyreturns.connector.helpers.HIPHeaders
-import uk.gov.hmrc.alcoholdutyreturns.models.{ErrorResponse, ReturnId}
+import uk.gov.hmrc.alcoholdutyreturns.models.{ErrorCodes, ReturnId}
 import uk.gov.hmrc.alcoholdutyreturns.models.returns.{GetReturnDetails, GetReturnDetailsSuccess, ReturnCreate, ReturnCreatedDetails, ReturnCreatedSuccess}
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReadsInstances, HttpResponse, StringContextOps, UpstreamErrorResponse}
+import uk.gov.hmrc.play.bootstrap.backend.http.ErrorResponse
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
@@ -60,22 +61,22 @@ class ReturnsConnector @Inject() (
                   s"Parsing failed for return (appaId ${returnId.appaId}, periodKey ${returnId.periodKey})",
                   e
                 )
-                Left(ErrorResponse.InvalidJson)
+                Left(ErrorCodes.invalidJson)
             }
           case Left(errorResponse) if errorResponse.statusCode == BAD_REQUEST =>
             logger.warn(
               s"Bad request returned for get return (appaId ${returnId.appaId}, periodKey ${returnId.periodKey}): ${errorResponse.message}"
             )
-            Left(ErrorResponse.BadRequest)
+            Left(ErrorCodes.badRequest)
           case Left(errorResponse) if errorResponse.statusCode == NOT_FOUND   =>
             logger.warn(s"Return not found (appaId ${returnId.appaId}, periodKey ${returnId.periodKey})")
-            Left(ErrorResponse.EntityNotFound)
+            Left(ErrorCodes.entityNotFound)
           case Left(errorResponse)                                            =>
             logger.warn(
               s"Received unexpected response from returns API (appaId ${returnId.appaId}, " +
                 s"periodKey ${returnId.periodKey}): ${errorResponse.statusCode} ${errorResponse.message}"
             )
-            Left(ErrorResponse.UnexpectedResponse)
+            Left(ErrorCodes.unexpectedResponse)
         }
     )
   }
@@ -100,21 +101,21 @@ class ReturnsConnector @Inject() (
               case Failure(e)                    =>
                 logger
                   .warn(s"Parsing failed for submit return response (appaId $appaId, periodKey $periodKey)", e)
-                Left(ErrorResponse.InvalidJson)
+                Left(ErrorCodes.invalidJson)
             }
           case Left(errorResponse) if errorResponse.statusCode == BAD_REQUEST =>
             logger.warn(
               s"Bad request returned for submit return (appaId $appaId, periodKey $periodKey): ${errorResponse.message}"
             )
-            Left(ErrorResponse.BadRequest)
+            Left(ErrorCodes.badRequest)
           case Left(errorResponse) if errorResponse.statusCode == NOT_FOUND   =>
             logger.warn(s"Not found returned for submit return (appaId $appaId, periodKey $periodKey)")
-            Left(ErrorResponse.EntityNotFound)
+            Left(ErrorCodes.entityNotFound)
           case Left(errorResponse)                                            =>
             logger.warn(
               s"Received unexpected response from submitReturn API (appaId $appaId, periodKey $periodKey): ${errorResponse.statusCode} ${errorResponse.message}"
             )
-            Left(ErrorResponse.UnexpectedResponse)
+            Left(ErrorCodes.unexpectedResponse)
         }
     )
   }

@@ -27,7 +27,8 @@ case class AdrReturnDetails(
   identification: AdrReturnDetailsIdentification,
   alcoholDeclared: AdrReturnAlcoholDeclared,
   adjustments: AdrReturnAdjustments,
-  totalDutyDue: AdrReturnTotalDutyDue
+  totalDutyDue: AdrReturnTotalDutyDue,
+  netDutySuspension: Option[AdrNetDutySuspension]
 )
 
 object AdrReturnDetails {
@@ -36,7 +37,8 @@ object AdrReturnDetails {
       identification = AdrReturnDetailsIdentification.fromReturnDetailsSuccess(returnDetailsSuccess),
       alcoholDeclared = AdrReturnAlcoholDeclared.fromReturnDetailsSuccess(returnDetailsSuccess),
       adjustments = AdrReturnAdjustments.fromReturnDetailsSuccess(returnDetailsSuccess),
-      totalDutyDue = AdrReturnTotalDutyDue.fromReturnDetailsSuccess(returnDetailsSuccess)
+      totalDutyDue = AdrReturnTotalDutyDue.fromReturnDetailsSuccess(returnDetailsSuccess),
+      netDutySuspension = AdrNetDutySuspension.fromReturnDetailsSuccess(returnDetailsSuccess)
     )
 
   implicit val adrReturnDetailsFormat: OFormat[AdrReturnDetails] = Json.format[AdrReturnDetails]
@@ -204,4 +206,41 @@ object AdrReturnTotalDutyDue {
     )
 
   implicit val adrReturnTotalDutyDueFormat: OFormat[AdrReturnTotalDutyDue] = Json.format[AdrReturnTotalDutyDue]
+}
+
+case class AdrNetDutySuspension(
+  totalLtsBeer: Option[BigDecimal],
+  totalLtsWine: Option[BigDecimal],
+  totalLtsCider: Option[BigDecimal],
+  totalLtsSpirit: Option[BigDecimal],
+  totalLtsOtherFermented: Option[BigDecimal],
+  totalLtsPureAlcoholBeer: Option[BigDecimal],
+  totalLtsPureAlcoholWine: Option[BigDecimal],
+  totalLtsPureAlcoholCider: Option[BigDecimal],
+  totalLtsPureAlcoholSpirit: Option[BigDecimal],
+  totalLtsPureAlcoholOtherFermented: Option[BigDecimal]
+)
+
+object AdrNetDutySuspension {
+  def fromReturnDetailsSuccess(returnDetailsSuccess: GetReturnDetails): Option[AdrNetDutySuspension] =
+    if (returnDetailsSuccess.netDutySuspension.netDutySuspensionFilled) {
+      returnDetailsSuccess.netDutySuspension.netDutySuspensionProducts.map(dutySuspension =>
+        AdrNetDutySuspension(
+          totalLtsBeer = dutySuspension.totalLtsBeer,
+          totalLtsWine = dutySuspension.totalLtsWine,
+          totalLtsCider = dutySuspension.totalLtsCider,
+          totalLtsSpirit = dutySuspension.totalLtsSpirit,
+          totalLtsOtherFermented = dutySuspension.totalLtsOtherFermented,
+          totalLtsPureAlcoholBeer = dutySuspension.totalLtsPureAlcoholBeer,
+          totalLtsPureAlcoholWine = dutySuspension.totalLtsPureAlcoholWine,
+          totalLtsPureAlcoholCider = dutySuspension.totalLtsPureAlcoholCider,
+          totalLtsPureAlcoholSpirit = dutySuspension.totalLtsPureAlcoholSpirit,
+          totalLtsPureAlcoholOtherFermented = dutySuspension.totalLtsPureAlcoholOtherFermented
+        )
+      )
+    } else {
+      None
+    }
+
+  implicit val adrNetDutySuspensionFormat: OFormat[AdrNetDutySuspension] = Json.format[AdrNetDutySuspension]
 }
