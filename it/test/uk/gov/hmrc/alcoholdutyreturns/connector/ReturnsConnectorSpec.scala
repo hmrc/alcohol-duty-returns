@@ -26,8 +26,8 @@ import uk.gov.hmrc.alcoholdutyreturns.models.ErrorCodes
 import java.time.Instant
 
 class ReturnsConnectorSpec extends ISpecBase {
-  "Returns Connector" when {
-    "getReturn is called" should {
+  "Returns Connector when" - {
+    "getReturn is called must" - {
       "successfully get a return" in new SetUp {
         stubGet(getReturnUrl, OK, Json.toJson(returnData).toString())
         whenReady(connector.getReturn(returnId).value, timeout = Timeout(Span(3, Seconds))) { result =>
@@ -69,7 +69,7 @@ class ReturnsConnectorSpec extends ISpecBase {
       }
     }
 
-    "submitReturn is called" should {
+    "submitReturn is called must" - {
       "successfully submit a return" in new SetUp {
         stubPost(submitReturnUrl, CREATED, Json.toJson(returnSubmission).toString(), Json.toJson(returnCreated).toString())
         whenReady(connector.submitReturn(returnSubmission, appaId).value, timeout = Timeout(Span(3, Seconds))) { result =>
@@ -102,7 +102,7 @@ class ReturnsConnectorSpec extends ISpecBase {
         }
       }
 
-      "return a UnexpectedResponse error if the call returns a 500 response" in new SetUp {
+      "return an UnexpectedResponse error if the call returns a 500 response" in new SetUp {
         stubPost(submitReturnUrl, INTERNAL_SERVER_ERROR, Json.toJson(returnSubmission).toString(), Json.toJson(internalServerError).toString())
         whenReady(connector.submitReturn(returnSubmission, id).value) { result =>
           result mustBe Left(ErrorCodes.unexpectedResponse)

@@ -20,31 +20,31 @@ import play.api.libs.json.{JsResultException, Json}
 import uk.gov.hmrc.alcoholdutyreturns.base.SpecBase
 
 class JsonHelpersSpec extends SpecBase {
-  "SubscriptionSummary" should {
+  "SubscriptionSummary must" - {
     Seq((false, """"0""""), (true, """"1"""")).foreach { case (v, code) =>
       s"deserialise the code $code to boolean $v" in {
         import JsonHelpers.booleanReads
 
-        Json.parse(code).as[Boolean] shouldBe v
+        Json.parse(code).as[Boolean] mustBe v
       }
 
       s"serialise boolean $v to the code $code" in {
         import JsonHelpers.booleanWrites
 
-        Json.toJson(v).toString shouldBe code
+        Json.toJson(v).toString mustBe code
       }
     }
 
     "return an error if a read value is an invalid string" in {
       import JsonHelpers.booleanReads
 
-      a[JsResultException] shouldBe thrownBy(Json.parse(""""2"""").as[Boolean])
+      a[JsResultException] mustBe thrownBy(Json.parse(""""2"""").as[Boolean])
     }
 
     "return an error if a read value is an invalid type" in {
       import JsonHelpers.booleanReads
 
-      a[JsResultException] shouldBe thrownBy(Json.parse("""1""").as[Boolean])
+      a[JsResultException] mustBe thrownBy(Json.parse("""1""").as[Boolean])
     }
   }
 }

@@ -22,15 +22,15 @@ import uk.gov.hmrc.alcoholdutyreturns.base.SpecBase
 import java.time.Instant
 
 class ReturnDetailsSpec extends SpecBase {
-  "GetReturnDetailsSuccess" should {
+  "GetReturnDetailsSuccess must" - {
     "serialise to json" in new SetUp {
       Json
         .toJson(successfulReturnExample(appaId, periodKey, submissionId, chargeReference, Instant.now(clock)))
-        .toString shouldBe json
+        .toString mustBe json
     }
 
-    "should deserialise from json" in new SetUp {
-      Json.parse(json).as[GetReturnDetailsSuccess] shouldBe successfulReturnExample(
+    "deserialise from json" in new SetUp {
+      Json.parse(json).as[GetReturnDetailsSuccess] mustBe successfulReturnExample(
         appaId,
         periodKey,
         submissionId,
@@ -40,46 +40,46 @@ class ReturnDetailsSpec extends SpecBase {
     }
   }
 
-  "ReturnCreate" should {
-    "should be obtained from the submission data" in new SetUp {
-      ReturnCreate.fromAdrReturnSubmission(returnSubmissionData, periodKey) shouldBe returnCreateSubmissionData
+  "ReturnCreate must" - {
+    "be obtained from the submission data" in new SetUp {
+      ReturnCreate.fromAdrReturnSubmission(returnSubmissionData, periodKey) mustBe returnCreateSubmissionData
         .copy(totalDutyDuebyTaxType = None)
     }
 
-    "should be obtained from the submission data when a nil return" in new SetUp {
-      ReturnCreate.fromAdrReturnSubmission(nilReturnSubmissionData, periodKey) shouldBe nilReturnCreateSubmissionData
+    "be obtained from the submission data when a nil return" in new SetUp {
+      ReturnCreate.fromAdrReturnSubmission(nilReturnSubmissionData, periodKey) mustBe nilReturnCreateSubmissionData
         .copy(totalDutyDuebyTaxType = None)
     }
   }
 
-  "OtherMaterialsUomType" should {
+  "OtherMaterialsUomType must" - {
     Seq(
       (OtherMaterialsUomType.Tonnes: OtherMaterialsUomType, """"01"""", AdrUnitOfMeasure.Tonnes),
       (OtherMaterialsUomType.Litres: OtherMaterialsUomType, """"02"""", AdrUnitOfMeasure.Litres)
     ).foreach { case (v, code, submissionValue) =>
       s"deserialise the code $code to OtherMaterialsUomType $v" in {
-        Json.parse(code).as[OtherMaterialsUomType] shouldBe v
+        Json.parse(code).as[OtherMaterialsUomType] mustBe v
       }
 
       s"serialise OtherMaterialsUomType $v to the code $code" in {
-        Json.toJson(v).toString shouldBe code
+        Json.toJson(v).toString mustBe code
       }
 
       s"be converted from the submission value $submissionValue to $v" in {
-        OtherMaterialsUomType.fromAdrUnitOfMeasure(submissionValue) shouldBe v
+        OtherMaterialsUomType.fromAdrUnitOfMeasure(submissionValue) mustBe v
       }
     }
 
     "return an error if a read value is an invalid string" in {
-      a[JsResultException] shouldBe thrownBy(Json.parse(""""03"""").as[OtherMaterialsUomType])
+      a[JsResultException] mustBe thrownBy(Json.parse(""""03"""").as[OtherMaterialsUomType])
     }
 
     "return an error if a read value is an invalid type" in {
-      a[JsResultException] shouldBe thrownBy(Json.parse("""1""").as[OtherMaterialsUomType])
+      a[JsResultException] mustBe thrownBy(Json.parse("""1""").as[OtherMaterialsUomType])
     }
   }
 
-  "TypeOfSpiritType" should {
+  "TypeOfSpiritType must" - {
     Seq(
       (TypeOfSpiritType.MaltSpirit: TypeOfSpiritType, """"01"""", AdrTypeOfSpirit.Malt),
       (TypeOfSpiritType.GrainSpirit: TypeOfSpiritType, """"02"""", AdrTypeOfSpirit.Grain),
@@ -91,132 +91,132 @@ class ReturnDetailsSpec extends SpecBase {
       (TypeOfSpiritType.Other: TypeOfSpiritType, """"08"""", AdrTypeOfSpirit.Other)
     ).foreach { case (v, code, submissionValue) =>
       s"deserialise the code $code to TypeOfSpiritType $v" in {
-        Json.parse(code).as[TypeOfSpiritType] shouldBe v
+        Json.parse(code).as[TypeOfSpiritType] mustBe v
       }
 
       s"serialise TypeOfSpiritType $v to the code $code" in {
-        Json.toJson(v).toString shouldBe code
+        Json.toJson(v).toString mustBe code
       }
 
       s"be converted from the submission value $submissionValue to $v" in {
-        TypeOfSpiritType.fromAdrTypeOfSpirit(submissionValue) shouldBe v
+        TypeOfSpiritType.fromAdrTypeOfSpirit(submissionValue) mustBe v
       }
     }
 
     "return an error if a read value is an invalid string" in {
-      a[JsResultException] shouldBe thrownBy(Json.parse(""""09"""").as[TypeOfSpiritType])
+      a[JsResultException] mustBe thrownBy(Json.parse(""""09"""").as[TypeOfSpiritType])
     }
 
     "return an error if a read value is an invalid type" in {
-      a[JsResultException] shouldBe thrownBy(Json.parse("""1""").as[TypeOfSpiritType])
+      a[JsResultException] mustBe thrownBy(Json.parse("""1""").as[TypeOfSpiritType])
     }
   }
 
-  "AlcoholProducts" should {
+  "AlcoholProducts must" - {
     "convert from AdrDutyDeclared" in new SetUp {
       AlcoholProducts.fromAdrDutyDeclared(
         returnSubmissionData.dutyDeclared
-      ) shouldBe returnCreateSubmissionData.alcoholProducts
+      ) mustBe returnCreateSubmissionData.alcoholProducts
     }
 
     "not convert when not declared" in new SetUp {
       AlcoholProducts.fromAdrDutyDeclared(
         exampleNilReturnSubmissionRequest.dutyDeclared
-      ) shouldBe nilReturnDetails.alcoholProducts
+      ) mustBe nilReturnDetails.alcoholProducts
     }
   }
 
-  "OverDeclaration" should {
+  "OverDeclaration must" - {
     "convert from AdrAdjustments" in new SetUp {
       OverDeclaration.fromAdrAdjustments(
         returnSubmissionData.adjustments
-      ) shouldBe returnCreateSubmissionData.overDeclaration
+      ) mustBe returnCreateSubmissionData.overDeclaration
     }
 
     "not convert when not declared" in new SetUp {
       OverDeclaration.fromAdrAdjustments(
         exampleNilReturnSubmissionRequest.adjustments
-      ) shouldBe nilReturnDetails.overDeclaration
+      ) mustBe nilReturnDetails.overDeclaration
     }
   }
 
-  "UnderDeclaration" should {
+  "UnderDeclaration must" - {
     "convert from AdrAdjustments" in new SetUp {
       UnderDeclaration.fromAdrAdjustments(
         returnSubmissionData.adjustments
-      ) shouldBe returnCreateSubmissionData.underDeclaration
+      ) mustBe returnCreateSubmissionData.underDeclaration
     }
 
     "not convert when not declared" in new SetUp {
       UnderDeclaration.fromAdrAdjustments(
         exampleNilReturnSubmissionRequest.adjustments
-      ) shouldBe nilReturnDetails.underDeclaration
+      ) mustBe nilReturnDetails.underDeclaration
     }
   }
 
-  "SpoiltProduct" should {
+  "SpoiltProduct must" - {
     "convert from AdrAdjustments" in new SetUp {
       SpoiltProduct.fromAdrAdjustments(
         returnSubmissionData.adjustments
-      ) shouldBe returnCreateSubmissionData.spoiltProduct
+      ) mustBe returnCreateSubmissionData.spoiltProduct
     }
 
     "not convert when not declared" in new SetUp {
       SpoiltProduct.fromAdrAdjustments(
         exampleNilReturnSubmissionRequest.adjustments
-      ) shouldBe nilReturnDetails.spoiltProduct
+      ) mustBe nilReturnDetails.spoiltProduct
     }
   }
 
-  "Drawback" should {
+  "Drawback must" - {
     "convert from AdrAdjustments" in new SetUp {
-      Drawback.fromAdrAdjustments(returnSubmissionData.adjustments) shouldBe returnCreateSubmissionData.drawback
+      Drawback.fromAdrAdjustments(returnSubmissionData.adjustments) mustBe returnCreateSubmissionData.drawback
     }
 
     "not convert when not declared" in new SetUp {
-      Drawback.fromAdrAdjustments(exampleNilReturnSubmissionRequest.adjustments) shouldBe nilReturnDetails.drawback
+      Drawback.fromAdrAdjustments(exampleNilReturnSubmissionRequest.adjustments) mustBe nilReturnDetails.drawback
     }
   }
 
-  "RepackagedDraught" should {
+  "RepackagedDraught must" - {
     "convert from AdrAdjustments" in new SetUp {
       RepackagedDraught.fromAdrAdjustments(
         returnSubmissionData.adjustments
-      ) shouldBe returnCreateSubmissionData.repackagedDraught
+      ) mustBe returnCreateSubmissionData.repackagedDraught
     }
 
     "not convert when not declared" in new SetUp {
       RepackagedDraught.fromAdrAdjustments(
         exampleNilReturnSubmissionRequest.adjustments
-      ) shouldBe nilReturnDetails.repackagedDraught
+      ) mustBe nilReturnDetails.repackagedDraught
     }
   }
 
-  "TotalDutyDue" should {
+  "TotalDutyDue must" - {
     "convert from AdrTotals" in new SetUp {
-      TotalDutyDue.fromAdrTotals(returnSubmissionData.totals) shouldBe returnCreateSubmissionData.totalDutyDue
+      TotalDutyDue.fromAdrTotals(returnSubmissionData.totals) mustBe returnCreateSubmissionData.totalDutyDue
     }
   }
 
-  "NetDutySuspension" should {
+  "NetDutySuspension must" - {
     "convert from AdrDutySuspended" in new SetUp {
       NetDutySuspension.fromAdrDutySuspended(
         returnSubmissionData.dutySuspended
-      ) shouldBe returnCreateSubmissionData.netDutySuspension
+      ) mustBe returnCreateSubmissionData.netDutySuspension
     }
 
     "not convert when not declared" in new SetUp {
       NetDutySuspension.fromAdrDutySuspended(
         exampleNilReturnSubmissionRequest.dutySuspended
-      ) shouldBe nilReturnDetails.netDutySuspension
+      ) mustBe nilReturnDetails.netDutySuspension
     }
   }
 
-  "SpiritsProduced" should {
+  "SpiritsProduced must" - {
     "convert from AdrSpirits" in new SetUp {
       SpiritsProduced.fromAdrSpirits(
         returnSubmissionData.spirits.get
-      ) shouldBe returnCreateSubmissionData.spiritsProduced.get
+      ) mustBe returnCreateSubmissionData.spiritsProduced.get
     }
   }
 

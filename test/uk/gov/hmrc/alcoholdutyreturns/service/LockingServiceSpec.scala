@@ -25,82 +25,82 @@ import uk.gov.hmrc.mongo.lock.{Lock, MongoLockRepository}
 import scala.concurrent.Future
 
 class LockingServiceSpec extends SpecBase {
-  "LockingService" should {
-    "withLock method" should {
-      "should execute the block of code if the lock is available" in new SetUp {
+  "LockingService when calling" - {
+    "withLock must" - {
+      "execute the block of code if the lock is available" in new SetUp {
         when(mongoLockRepository.refreshExpiry(any(), any(), any())).thenReturn(Future.successful(false))
         when(mongoLockRepository.takeLock(any(), any(), any())).thenReturn(Future.successful(Some(mock[Lock])))
 
         whenReady(lockingService.withLock(returnId, internalId)(testData)) { result =>
-          result shouldBe successResponse
+          result mustBe successResponse
         }
       }
 
-      "should execute the block of code if user owns the lock and is refreshed" in new SetUp {
+      "execute the block of code if user owns the lock and is refreshed" in new SetUp {
         when(mongoLockRepository.refreshExpiry(any(), any(), any())).thenReturn(Future.successful(true))
 
         whenReady(lockingService.withLock(returnId, internalId)(testData)) { result =>
-          result shouldBe successResponse
+          result mustBe successResponse
         }
       }
 
-      "should return None if the lock is owned by another user" in new SetUp {
+      "return None if the lock is owned by another user" in new SetUp {
         when(mongoLockRepository.refreshExpiry(any(), any(), any())).thenReturn(Future.successful(false))
         when(mongoLockRepository.takeLock(any(), any(), any())).thenReturn(Future.successful(None))
 
         whenReady(lockingService.withLock(returnId, internalId)(testData)) { result =>
-          result shouldBe None
+          result mustBe None
         }
       }
 
-      "should return a Future failure if the lock repository return an error" in new SetUp {
+      "return a Future failure if the lock repository return an error" in new SetUp {
         val exceptionMessage = "Exception"
 
         when(mongoLockRepository.refreshExpiry(any(), any(), any())).thenReturn(Future.successful(false))
         when(mongoLockRepository.takeLock(any(), any(), any())).thenThrow(new Exception(exceptionMessage))
 
         val result: Throwable = lockingService.withLock(returnId, internalId)(testData).failed.futureValue
-        result            shouldBe an[Exception]
-        result.getMessage shouldBe exceptionMessage
+        result            mustBe an[Exception]
+        result.getMessage mustBe exceptionMessage
       }
     }
 
-    "withLockAndRelease method" should {
-      "should execute the block of code if the lock is available and then release the lock" in new SetUp {
+    "withLockAndRelease must" - {
+      "execute the block of code if the lock is available and then release the lock" in new SetUp {
         when(mongoLockRepository.refreshExpiry(any(), any(), any())).thenReturn(Future.successful(false))
         when(mongoLockRepository.takeLock(any(), any(), any())).thenReturn(Future.successful(Some(mock[Lock])))
         when(mongoLockRepository.releaseLock(any(), any())).thenReturn(Future.successful(()))
 
         whenReady(lockingService.withLockExecuteAndRelease(returnId, internalId)(testData)) { result =>
-          result shouldBe successResponse
+          result mustBe successResponse
         }
 
         verify(mongoLockRepository).releaseLock(any(), any())
       }
 
-      "should execute the block of code if user owns the lock and is refreshed and then release the lock" in new SetUp {
+      "execute the block of code if user owns the lock and is refreshed and then release the lock" in new SetUp {
         when(mongoLockRepository.refreshExpiry(any(), any(), any())).thenReturn(Future.successful(true))
         when(mongoLockRepository.releaseLock(any(), any())).thenReturn(Future.successful(()))
 
         whenReady(lockingService.withLockExecuteAndRelease(returnId, internalId)(testData)) { result =>
-          result shouldBe successResponse
+          result mustBe successResponse
         }
 
         verify(mongoLockRepository).releaseLock(any(), any())
       }
 
-      "should return None if the lock is owned by another user and not release the lock" in new SetUp {
+      "return None if the lock is owned by another user and not release the lock" in new SetUp {
         when(mongoLockRepository.refreshExpiry(any(), any(), any())).thenReturn(Future.successful(false))
         when(mongoLockRepository.takeLock(any(), any(), any())).thenReturn(Future.successful(None))
 
         whenReady(lockingService.withLockExecuteAndRelease(returnId, internalId)(testData)) { result =>
-          result shouldBe None
+          result mustBe None
         }
 
         verify(mongoLockRepository, times(0)).releaseLock(any(), any())
       }
 
-      "should return a Future failure if the lock repository return an error and not release the lock" in new SetUp {
+      "return a Future failure if the lock repository return an error and not release the lock" in new SetUp {
         val exceptionMessage = "Exception"
 
         when(mongoLockRepository.refreshExpiry(any(), any(), any())).thenReturn(Future.successful(false))
@@ -109,18 +109,18 @@ class LockingServiceSpec extends SpecBase {
 
         val result: Throwable =
           lockingService.withLockExecuteAndRelease(returnId, internalId)(testData).failed.futureValue
-        result            shouldBe an[Exception]
-        result.getMessage shouldBe exceptionMessage
+        result            mustBe an[Exception]
+        result.getMessage mustBe exceptionMessage
 
         verify(mongoLockRepository, times(0)).releaseLock(any(), any())
       }
     }
 
-    "keepAlive method" should {
+    "keepAlive must" - {
       "return true if the lock has been refreshed" in new SetUp {
         when(mongoLockRepository.refreshExpiry(any(), any(), any())).thenReturn(Future.successful(true))
         whenReady(lockingService.keepAlive(returnId = returnId, ownerId = internalId)) { result =>
-          result shouldBe true
+          result mustBe true
         }
       }
 
@@ -129,7 +129,7 @@ class LockingServiceSpec extends SpecBase {
         when(mongoLockRepository.takeLock(any(), any(), any())).thenReturn(Future.successful(Some(mock[Lock])))
 
         whenReady(lockingService.keepAlive(returnId = returnId, ownerId = internalId)) { result =>
-          result shouldBe true
+          result mustBe true
         }
       }
 
@@ -138,7 +138,7 @@ class LockingServiceSpec extends SpecBase {
         when(mongoLockRepository.takeLock(any(), any(), any())).thenReturn(Future.successful(None))
 
         whenReady(lockingService.keepAlive(returnId = returnId, ownerId = internalId)) { result =>
-          result shouldBe false
+          result mustBe false
         }
       }
 
@@ -148,16 +148,16 @@ class LockingServiceSpec extends SpecBase {
           .thenReturn(Future.failed(new Exception(exceptionMessage)))
 
         val result: Throwable = lockingService.keepAlive(returnId, internalId).failed.futureValue
-        result            shouldBe an[Exception]
-        result.getMessage shouldBe exceptionMessage
+        result            mustBe an[Exception]
+        result.getMessage mustBe exceptionMessage
       }
     }
 
-    "releaseLock method" should {
+    "releaseLock must" - {
       "return a successful future, if the lock repository returns a successful future" in new SetUp {
         when(mongoLockRepository.releaseLock(any(), any())).thenReturn(Future.successful(()))
         whenReady(lockingService.releaseLock(returnId = returnId, ownerId = internalId)) { result =>
-          result shouldBe ()
+          result mustBe ()
         }
       }
 
@@ -166,12 +166,12 @@ class LockingServiceSpec extends SpecBase {
         when(mongoLockRepository.releaseLock(any(), any())).thenReturn(Future.failed(new Exception(exceptionMessage)))
 
         val result: Throwable = lockingService.releaseLock(returnId, internalId).failed.futureValue
-        result            shouldBe an[Exception]
-        result.getMessage shouldBe exceptionMessage
+        result            mustBe an[Exception]
+        result.getMessage mustBe exceptionMessage
       }
     }
 
-    "releaseAllLocks method" should {
+    "releaseAllLocks must" - {
       "drop the lock collection in the mongo lock repository" in new SetUp {
         val mongoCollection = mock[MongoCollection[Lock]]
         when(mongoLockRepository.collection).thenReturn(mongoCollection)
@@ -182,7 +182,7 @@ class LockingServiceSpec extends SpecBase {
         when(mongoCollection.drop()).thenReturn(singleObservableUnit)
 
         whenReady(lockingService.releaseAllLocks()) { result =>
-          result shouldBe ()
+          result mustBe ()
         }
       }
     }

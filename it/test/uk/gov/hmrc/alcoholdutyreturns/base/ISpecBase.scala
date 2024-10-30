@@ -23,9 +23,9 @@ import org.apache.pekko.stream.Materializer
 import org.mockito.MockitoSugar
 import org.scalatest.{OptionValues, TryValues}
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpec
-import org.scalatestplus.play.guice.GuiceOneAppPerSuite
+import org.scalatest.freespec.AnyFreeSpec
+import org.scalatest.matchers.must.Matchers
+import org.scalatestplus.play.guice.{GuiceOneAppPerSuite, GuiceOneServerPerSuite}
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import play.api.{Application, Mode}
 import play.api.http.{HeaderNames, Status, Writeable}
@@ -41,18 +41,18 @@ import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.ExecutionContext.global
 
-trait ISpecBase extends AnyWordSpec
+trait ISpecBase extends AnyFreeSpec
     with Matchers
     with TryValues
     with OptionValues
     with ScalaFutures
     with Results
+    with GuiceOneServerPerSuite
     with DefaultAwaitTimeout
     with Writeables
     with ResultExtractors
     with Status
     with HeaderNames
-    with GuiceOneAppPerSuite
     with MockitoSugar
     with ScalaCheckPropertyChecks
     with WireMockSupport

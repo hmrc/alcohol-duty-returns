@@ -30,7 +30,7 @@ import java.time.Instant
 import scala.concurrent.Future
 
 class ReturnsServiceSpec extends SpecBase {
-  "ReturnsService" should {
+  "ReturnsService must" - {
     "calculate dutyDueByTaxType, validate against the schema, submit a return successfully, audit the event, " +
       "clear the cache and return the created response" in new SetUp {
         when(mockCalculatorConnector.calculateDutyDueByTaxType(any())(any()))
@@ -46,7 +46,7 @@ class ReturnsServiceSpec extends SpecBase {
         when(mockCacheRespository.get(retId)).thenReturn(Future.successful(Some(userAnswers)))
 
         whenReady(returnsService.submitReturn(adrReturnSubmission, retId).value) {
-          _ shouldBe Right[ErrorResponse, ReturnCreatedDetails](returnCreatedDetails)
+          _ mustBe Right[ErrorResponse, ReturnCreatedDetails](returnCreatedDetails)
         }
 
         verify(mockSchemaValidationService).validateAgainstSchema(returnSubmission)
@@ -55,7 +55,7 @@ class ReturnsServiceSpec extends SpecBase {
         verify(mockCacheRespository).clearUserAnswersById(retId)
       }
 
-    "trigger an audit event without user answers" in new SetUp {
+    "trigger an audit event when unable to get UserAnswers" in new SetUp {
       when(mockCalculatorConnector.calculateDutyDueByTaxType(any())(any()))
         .thenReturn(EitherT.right[ErrorResponse](Future.successful(calculatedDutyDueByTaxTypeForExampleSubmission)))
 
@@ -69,7 +69,7 @@ class ReturnsServiceSpec extends SpecBase {
       when(mockCacheRespository.clearUserAnswersById(retId)).thenReturn(Future.unit)
 
       whenReady(returnsService.submitReturn(adrReturnSubmission, retId).value) {
-        _ shouldBe Right[ErrorResponse, ReturnCreatedDetails](returnCreatedDetails)
+        _ mustBe Right[ErrorResponse, ReturnCreatedDetails](returnCreatedDetails)
       }
 
       verify(mockSchemaValidationService).validateAgainstSchema(returnSubmission)
@@ -92,7 +92,7 @@ class ReturnsServiceSpec extends SpecBase {
       when(mockCacheRespository.clearUserAnswersById(retId)).thenReturn(Future.unit)
 
       whenReady(returnsService.submitReturn(adrReturnSubmission, retId).value) {
-        _ shouldBe Right[ErrorResponse, ReturnCreatedDetails](returnCreatedDetails)
+        _ mustBe Right[ErrorResponse, ReturnCreatedDetails](returnCreatedDetails)
       }
 
       verify(mockSchemaValidationService).validateAgainstSchema(returnSubmission)
@@ -113,7 +113,7 @@ class ReturnsServiceSpec extends SpecBase {
       when(mockCacheRespository.clearUserAnswersById(retId)).thenReturn(Future.unit)
 
       whenReady(returnsService.submitReturn(adrReturnSubmission, retId).value) {
-        _ shouldBe Left[ErrorResponse, ReturnCreatedDetails](ErrorCodes.entityNotFound)
+        _ mustBe Left[ErrorResponse, ReturnCreatedDetails](ErrorCodes.entityNotFound)
       }
 
       verify(mockSchemaValidationService, never).validateAgainstSchema(returnSubmission)
@@ -134,7 +134,7 @@ class ReturnsServiceSpec extends SpecBase {
       when(mockCacheRespository.clearUserAnswersById(retId)).thenReturn(Future.unit)
 
       whenReady(returnsService.submitReturn(adrReturnSubmission, retId).value.failed) {
-        _ shouldBe a[RuntimeException]
+        _ mustBe a[RuntimeException]
       }
 
       verify(mockSchemaValidationService, never).validateAgainstSchema(returnSubmission)
@@ -155,7 +155,7 @@ class ReturnsServiceSpec extends SpecBase {
       when(mockCacheRespository.clearUserAnswersById(retId)).thenReturn(Future.unit)
 
       whenReady(returnsService.submitReturn(adrReturnSubmission, retId).value) {
-        _ shouldBe Left[ErrorResponse, ReturnCreatedDetails](ErrorCodes.badRequest)
+        _ mustBe Left[ErrorResponse, ReturnCreatedDetails](ErrorCodes.badRequest)
       }
 
       verify(mockSchemaValidationService).validateAgainstSchema(returnSubmission)
@@ -176,7 +176,7 @@ class ReturnsServiceSpec extends SpecBase {
       when(mockCacheRespository.clearUserAnswersById(retId)).thenReturn(Future.unit)
 
       whenReady(returnsService.submitReturn(adrReturnSubmission, retId).value) {
-        _ shouldBe Left[ErrorResponse, ReturnCreatedDetails](ErrorCodes.entityNotFound)
+        _ mustBe Left[ErrorResponse, ReturnCreatedDetails](ErrorCodes.entityNotFound)
       }
 
       verify(mockSchemaValidationService).validateAgainstSchema(returnSubmission)
@@ -197,7 +197,7 @@ class ReturnsServiceSpec extends SpecBase {
       when(mockCacheRespository.clearUserAnswersById(retId)).thenReturn(Future.unit)
 
       whenReady(returnsService.submitReturn(adrReturnSubmission, retId).value.failed) {
-        _ shouldBe a[RuntimeException]
+        _ mustBe a[RuntimeException]
       }
 
       verify(mockSchemaValidationService).validateAgainstSchema(returnSubmission)
@@ -223,7 +223,7 @@ class ReturnsServiceSpec extends SpecBase {
       when(mockCacheRespository.clearUserAnswersById(retId)).thenReturn(Future.failed(new RuntimeException("Fail!")))
 
       whenReady(returnsService.submitReturn(adrReturnSubmission, retId).value.failed) {
-        _ shouldBe a[RuntimeException]
+        _ mustBe a[RuntimeException]
       }
 
       verify(mockSchemaValidationService).validateAgainstSchema(returnSubmission)

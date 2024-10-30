@@ -22,36 +22,36 @@ import uk.gov.hmrc.alcoholdutyreturns.base.SpecBase
 import java.time.Instant
 
 class AdrReturnDetailsSpec extends SpecBase {
-  "AdrReturnDetails" when {
-    "should serialise to json" in new SetUp {
-      Json.toJson(adrReturnDetails).toString shouldBe json
+  "AdrReturnDetails must" - {
+    "serialise to json" in new SetUp {
+      Json.toJson(adrReturnDetails).toString mustBe json
     }
 
-    "should deserialise from json" in new SetUp {
-      Json.parse(json).as[AdrReturnDetails] shouldBe adrReturnDetails
+    "deserialise from json" in new SetUp {
+      Json.parse(json).as[AdrReturnDetails] mustBe adrReturnDetails
     }
 
-    "should convert ReturnDetails to AdrReturnDetails" in new SetUp {
-      AdrReturnDetails.fromGetReturnDetails(returnDetails.success) shouldBe convertedReturnDetails(
+    "convert ReturnDetails to AdrReturnDetails" in new SetUp {
+      AdrReturnDetails.fromGetReturnDetails(returnDetails.success) mustBe convertedReturnDetails(
         periodKey,
         now
       )
     }
 
-    "should convert a nil ReturnDetails to AdrReturnDetails" in new SetUp {
-      AdrReturnDetails.fromGetReturnDetails(nilReturn.success) shouldBe adrNilReturnDetails
+    "convert a nil ReturnDetails to AdrReturnDetails" in new SetUp {
+      AdrReturnDetails.fromGetReturnDetails(nilReturn.success) mustBe adrNilReturnDetails
     }
 
-    "should convert a nil ReturnDetails (with present item sequences but no entries) to AdrReturnDetails" in new SetUp {
-      AdrReturnDetails.fromGetReturnDetails(nilReturnWithPresentItemSequences.success) shouldBe adrNilReturnDetails
+    "convert a nil ReturnDetails (with present item sequences but no entries) to AdrReturnDetails" in new SetUp {
+      AdrReturnDetails.fromGetReturnDetails(nilReturnWithPresentItemSequences.success) mustBe adrNilReturnDetails
     }
 
-    "throw an IllegalArgumentException for invalid adjustment key" in {
+    "throw an IllegalArgumentException if the adjustment key is invalid" in {
       val invalidKey = "invalidKey"
       val exception  = intercept[IllegalArgumentException] {
         AdrReturnAdjustments.isOwedToHmrc(invalidKey)
       }
-      exception.getMessage shouldBe "Bad adjustment key when checking if amount is owed to HMRC"
+      exception.getMessage mustBe "Bad adjustment key when checking if amount is owed to HMRC"
     }
   }
 

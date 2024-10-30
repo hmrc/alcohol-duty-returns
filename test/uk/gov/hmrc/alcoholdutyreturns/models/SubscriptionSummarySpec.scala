@@ -20,22 +20,22 @@ import play.api.libs.json.Json
 import uk.gov.hmrc.alcoholdutyreturns.base.SpecBase
 
 class SubscriptionSummarySpec extends SpecBase {
-  "SubscriptionSummary" should {
+  "SubscriptionSummary must" - {
     val json          =
       """{"approvalStatus":"Approved","regimes":["Spirits","Wine","Cider","OtherFermentedProduct","Beer"]}"""
     val noRegimesJson =
       """{"approvalStatus":"Approved","regimes":[]}"""
 
     "serialise to json" in {
-      Json.toJson(subscriptionSummary).toString() shouldBe json
+      Json.toJson(subscriptionSummary).toString() mustBe json
     }
 
     "deserialise from json" in {
-      Json.parse(json).as[SubscriptionSummary] shouldBe subscriptionSummary
+      Json.parse(json).as[SubscriptionSummary] mustBe subscriptionSummary
     }
 
     "throw an error if no regimes" in {
-      an[IllegalArgumentException] shouldBe thrownBy(Json.parse(noRegimesJson).as[SubscriptionSummary])
+      an[IllegalArgumentException] mustBe thrownBy(Json.parse(noRegimesJson).as[SubscriptionSummary])
     }
   }
 }
