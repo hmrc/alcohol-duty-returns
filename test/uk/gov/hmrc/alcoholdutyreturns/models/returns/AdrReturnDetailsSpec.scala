@@ -56,8 +56,12 @@ class AdrReturnDetailsSpec extends SpecBase {
   }
 
   class SetUp {
-    val periodKey: String = "24AC"
-    val now               = Instant.now(clock)
+    val periodKey: String  = "24AC"
+    val periodKey2: String = "24AB"
+    val periodKey3: String = "24AA"
+    val periodKey4: String = "23AL"
+    val periodKey5: String = "23AK"
+    val now                = Instant.now(clock)
 
     val returnDetails = successfulReturnExample(
       appaId,
@@ -75,6 +79,6 @@ class AdrReturnDetailsSpec extends SpecBase {
     val adrNilReturnDetails               = nilReturnDetails(periodKey, now)
 
     val json =
-      s"""{"identification":{"periodKey":"$periodKey","submittedTime":"2024-06-11T15:07:47.838Z"},"alcoholDeclared":{"alcoholDeclaredDetails":[{"taxType":"311","litresOfPureAlcohol":450,"dutyRate":9.27,"dutyValue":4171.5},{"taxType":"321","litresOfPureAlcohol":450,"dutyRate":21.01,"dutyValue":9454.5},{"taxType":"331","litresOfPureAlcohol":450,"dutyRate":28.5,"dutyValue":12825},{"taxType":"341","litresOfPureAlcohol":450,"dutyRate":31.64,"dutyValue":14238},{"taxType":"351","litresOfPureAlcohol":450,"dutyRate":8.42,"dutyValue":3789},{"taxType":"356","litresOfPureAlcohol":450,"dutyRate":19.08,"dutyValue":8586},{"taxType":"361","litresOfPureAlcohol":450,"dutyRate":8.4,"dutyValue":3780},{"taxType":"366","litresOfPureAlcohol":450,"dutyRate":16.47,"dutyValue":7411.5},{"taxType":"371","litresOfPureAlcohol":450,"dutyRate":8.2,"dutyValue":3960},{"taxType":"376","litresOfPureAlcohol":450,"dutyRate":15.63,"dutyValue":7033.5}],"total":75249},"adjustments":{"adjustmentDetails":[{"adjustmentTypeKey":"underdeclaration","taxType":"321","litresOfPureAlcohol":150,"dutyRate":21.01,"dutyValue":3151.5},{"adjustmentTypeKey":"spoilt","taxType":"321","litresOfPureAlcohol":1150,"dutyRate":21.01,"dutyValue":-24161.5},{"adjustmentTypeKey":"spoilt","taxType":"321","litresOfPureAlcohol":75,"dutyRate":21.01,"dutyValue":-1575.5},{"adjustmentTypeKey":"repackagedDraught","taxType":"321","litresOfPureAlcohol":150,"dutyRate":21.01,"dutyValue":3151.5}],"total":-19434},"totalDutyDue":{"totalDue":55815},"netDutySuspension":{"totalLtsBeer":0.15,"totalLtsWine":0.44,"totalLtsCider":0.38,"totalLtsSpirit":0.02,"totalLtsOtherFermented":0.02,"totalLtsPureAlcoholBeer":0.4248,"totalLtsPureAlcoholWine":0.5965,"totalLtsPureAlcoholCider":0.0379,"totalLtsPureAlcoholSpirit":0.2492,"totalLtsPureAlcoholOtherFermented":0.1894}}"""
+      s"""{"identification":{"periodKey":"$periodKey","submittedTime":"2024-06-11T15:07:47.838Z"},"alcoholDeclared":{"alcoholDeclaredDetails":[{"taxType":"311","litresOfPureAlcohol":450,"dutyRate":9.27,"dutyValue":4171.5},{"taxType":"321","litresOfPureAlcohol":450,"dutyRate":21.01,"dutyValue":9454.5},{"taxType":"331","litresOfPureAlcohol":450,"dutyRate":28.5,"dutyValue":12825},{"taxType":"341","litresOfPureAlcohol":450,"dutyRate":31.64,"dutyValue":14238},{"taxType":"351","litresOfPureAlcohol":450,"dutyRate":8.42,"dutyValue":3789},{"taxType":"356","litresOfPureAlcohol":450,"dutyRate":19.08,"dutyValue":8586},{"taxType":"361","litresOfPureAlcohol":450,"dutyRate":8.4,"dutyValue":3780},{"taxType":"366","litresOfPureAlcohol":450,"dutyRate":16.47,"dutyValue":7411.5},{"taxType":"371","litresOfPureAlcohol":450,"dutyRate":8.2,"dutyValue":3960},{"taxType":"376","litresOfPureAlcohol":450,"dutyRate":15.63,"dutyValue":7033.5}],"total":75249},"adjustments":{"adjustmentDetails":[{"adjustmentTypeKey":"underdeclaration","returnPeriodAffected":"$periodKey2","taxType":"321","litresOfPureAlcohol":150,"dutyRate":21.01,"dutyValue":3151.5},{"adjustmentTypeKey":"spoilt","returnPeriodAffected":"$periodKey3","taxType":"321","litresOfPureAlcohol":1150,"dutyRate":21.01,"dutyValue":-24161.5},{"adjustmentTypeKey":"spoilt","returnPeriodAffected":"$periodKey4","taxType":"321","litresOfPureAlcohol":75,"dutyRate":21.01,"dutyValue":-1575.5},{"adjustmentTypeKey":"repackagedDraught","returnPeriodAffected":"$periodKey5","taxType":"321","litresOfPureAlcohol":150,"dutyRate":21.01,"dutyValue":3151.5}],"total":-19434},"totalDutyDue":{"totalDue":55815},"netDutySuspension":{"totalLtsBeer":0.15,"totalLtsWine":0.44,"totalLtsCider":0.38,"totalLtsSpirit":0.02,"totalLtsOtherFermented":0.02,"totalLtsPureAlcoholBeer":0.4248,"totalLtsPureAlcoholWine":0.5965,"totalLtsPureAlcoholCider":0.0379,"totalLtsPureAlcoholSpirit":0.2492,"totalLtsPureAlcoholOtherFermented":0.1894}}"""
   }
 }
