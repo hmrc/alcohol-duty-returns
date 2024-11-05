@@ -23,16 +23,17 @@ import play.api.libs.json.Json
 import play.api.mvc.Result
 import uk.gov.hmrc.alcoholdutyreturns.base.SpecBase
 import uk.gov.hmrc.alcoholdutyreturns.connector.ReturnsConnector
+import uk.gov.hmrc.alcoholdutyreturns.models.ErrorCodes
 import uk.gov.hmrc.alcoholdutyreturns.models.returns.{GetReturnDetails, ReturnCreatedDetails}
-import uk.gov.hmrc.alcoholdutyreturns.models.ErrorResponse
 import uk.gov.hmrc.alcoholdutyreturns.service.{FakeLockingService, LockingService, ReturnsService}
+import uk.gov.hmrc.play.bootstrap.backend.http.ErrorResponse
 
 import java.time.Instant
 import scala.concurrent.Future
 
 class ReturnsControllerSpec extends SpecBase {
-  "ReturnsController" when {
-    "calling getReturn" should {
+  "ReturnsController when" - {
+    "calling getReturn must" - {
       "return 200 OK and the return when successful" in new SetUp {
         when(mockReturnsConnector.getReturn(eqTo(returnId.copy(periodKey = periodKey)))(any()))
           .thenReturn(EitherT.rightT[Future, ErrorResponse](returnDetails.success))
@@ -40,42 +41,42 @@ class ReturnsControllerSpec extends SpecBase {
         val result: Future[Result] =
           controller.getReturn(appaId, periodKey)(fakeRequest)
 
-        status(result)        shouldBe OK
-        contentAsJson(result) shouldBe Json.toJson(adrReturnDetails)
+        status(result)        mustBe OK
+        contentAsJson(result) mustBe Json.toJson(adrReturnDetails)
       }
 
       "return 400 BAD_REQUEST when there is a BAD_REQUEST" in new SetUp {
         when(mockReturnsConnector.getReturn(eqTo(returnId.copy(periodKey = periodKey)))(any()))
-          .thenReturn(EitherT.leftT[Future, GetReturnDetails](ErrorResponse.BadRequest))
+          .thenReturn(EitherT.leftT[Future, GetReturnDetails](ErrorCodes.badRequest))
 
         val result: Future[Result] =
           controller.getReturn(appaId, periodKey)(fakeRequest)
 
-        status(result) shouldBe BAD_REQUEST
+        status(result) mustBe BAD_REQUEST
       }
 
       "return 404 NOT_FOUND when not found" in new SetUp {
         when(mockReturnsConnector.getReturn(eqTo(returnId.copy(periodKey = periodKey)))(any()))
-          .thenReturn(EitherT.leftT[Future, GetReturnDetails](ErrorResponse.EntityNotFound))
+          .thenReturn(EitherT.leftT[Future, GetReturnDetails](ErrorCodes.entityNotFound))
 
         val result: Future[Result] =
           controller.getReturn(appaId, periodKey)(fakeRequest)
 
-        status(result) shouldBe NOT_FOUND
+        status(result) mustBe NOT_FOUND
       }
 
       "return 500 INTERNAL_SERVER_ERROR when an unexpected response" in new SetUp {
         when(mockReturnsConnector.getReturn(eqTo(returnId.copy(periodKey = periodKey)))(any()))
-          .thenReturn(EitherT.leftT[Future, GetReturnDetails](ErrorResponse.UnexpectedResponse))
+          .thenReturn(EitherT.leftT[Future, GetReturnDetails](ErrorCodes.unexpectedResponse))
 
         val result: Future[Result] =
           controller.getReturn(appaId, periodKey)(fakeRequest)
 
-        status(result) shouldBe INTERNAL_SERVER_ERROR
+        status(result) mustBe INTERNAL_SERVER_ERROR
       }
     }
 
-    "calling submitReturn" should {
+    "calling submitReturn must" - {
       "return 201 CREATED and the submission created response when successful" in new SetUp {
         when(
           mockReturnsService.submitReturn(eqTo(adrReturnsSubmission), eqTo(returnId.copy(periodKey = periodKey)))(any())
@@ -87,23 +88,22 @@ class ReturnsControllerSpec extends SpecBase {
             fakeRequestWithJsonBody(Json.toJson(adrReturnsSubmission))
           )
 
-        status(result)        shouldBe CREATED
-        contentAsJson(result) shouldBe Json.toJson(adrReturnCreatedDetails)
-
+        status(result)        mustBe CREATED
+        contentAsJson(result) mustBe Json.toJson(adrReturnCreatedDetails)
       }
 
       "return 400 BAD_REQUEST when there is a BAD_REQUEST" in new SetUp {
         when(
           mockReturnsService.submitReturn(eqTo(adrReturnsSubmission), eqTo(returnId.copy(periodKey = periodKey)))(any())
         )
-          .thenReturn(EitherT.leftT[Future, ReturnCreatedDetails](ErrorResponse.BadRequest))
+          .thenReturn(EitherT.leftT[Future, ReturnCreatedDetails](ErrorCodes.badRequest))
 
         val result: Future[Result] =
           controller.submitReturn(appaId, periodKey)(
             fakeRequestWithJsonBody(Json.toJson(adrReturnsSubmission))
           )
 
-        status(result) shouldBe BAD_REQUEST
+        status(result) mustBe BAD_REQUEST
       }
 
       "return 423 LOCKED when the return is locked by another user" in new SetUp {
@@ -124,42 +124,42 @@ class ReturnsControllerSpec extends SpecBase {
         when(
           mockReturnsService.submitReturn(eqTo(adrReturnsSubmission), eqTo(returnId.copy(periodKey = periodKey)))(any())
         )
-          .thenReturn(EitherT.leftT[Future, ReturnCreatedDetails](ErrorResponse.BadRequest))
+          .thenReturn(EitherT.leftT[Future, ReturnCreatedDetails](ErrorCodes.badRequest))
 
         val result: Future[Result] =
           controller.submitReturn(appaId, periodKey)(
             fakeRequestWithJsonBody(Json.toJson(adrReturnsSubmission))
           )
 
-        status(result) shouldBe LOCKED
+        status(result) mustBe LOCKED
       }
 
       "return 404 NOT_FOUND when not found" in new SetUp {
         when(
           mockReturnsService.submitReturn(eqTo(adrReturnsSubmission), eqTo(returnId.copy(periodKey = periodKey)))(any())
         )
-          .thenReturn(EitherT.leftT[Future, ReturnCreatedDetails](ErrorResponse.EntityNotFound))
+          .thenReturn(EitherT.leftT[Future, ReturnCreatedDetails](ErrorCodes.entityNotFound))
 
         val result: Future[Result] =
           controller.submitReturn(appaId, periodKey)(
             fakeRequestWithJsonBody(Json.toJson(adrReturnsSubmission))
           )
 
-        status(result) shouldBe NOT_FOUND
+        status(result) mustBe NOT_FOUND
       }
 
       "return 500 INTERNAL_SERVER_ERROR when an unexpected response" in new SetUp {
         when(
           mockReturnsService.submitReturn(eqTo(adrReturnsSubmission), eqTo(returnId.copy(periodKey = periodKey)))(any())
         )
-          .thenReturn(EitherT.leftT[Future, ReturnCreatedDetails](ErrorResponse.UnexpectedResponse))
+          .thenReturn(EitherT.leftT[Future, ReturnCreatedDetails](ErrorCodes.unexpectedResponse))
 
         val result: Future[Result] =
           controller.submitReturn(appaId, periodKey)(
             fakeRequestWithJsonBody(Json.toJson(adrReturnsSubmission))
           )
 
-        status(result) shouldBe INTERNAL_SERVER_ERROR
+        status(result) mustBe INTERNAL_SERVER_ERROR
       }
     }
   }

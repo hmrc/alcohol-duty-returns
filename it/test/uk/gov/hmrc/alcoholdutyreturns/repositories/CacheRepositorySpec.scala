@@ -59,9 +59,9 @@ class CacheRepositorySpec
     clock = stubClock
   )
 
-  ".add" - {
+  "add must" - {
 
-    "must set the last updated time on the supplied user answers to `now`, and save them" in {
+    "set the last updated time on the supplied user answers to `now`, and save them" in {
 
       val expectedAddedUserAnswers = userAnswers.copy(
         lastUpdated = instant,
@@ -81,10 +81,8 @@ class CacheRepositorySpec
     }
   }
 
-  ".set" - {
-
-    "must set the last updated time on the supplied user answers to `now`, and update them" in {
-
+  "set must" - {
+    "set the last updated time on the supplied user answers to `now`, and update them" in {
       val updatedUserAnswers     = repository.add(userAnswers).futureValue
 
       val updatedResult = userAnswers.copy(
@@ -110,18 +108,16 @@ class CacheRepositorySpec
       verifyUserAnswerResult(updatedRecord, expectedResult)
     }
 
-    "must fail to update a user answer if it wasn't previously saved" in {
+    "fail to update a user answer if it wasn't previously saved" in {
       val newUserAnswers = userAnswers.copy(returnId = ReturnId("new-appa-id", "new-period-key"))
       val setResult     = repository.set(newUserAnswers).futureValue
       setResult mustEqual UpdateFailure
     }
   }
 
-  ".get" - {
-
-    "when there is a record for this id" - {
-      "must update the lastUpdated time, validUntil time, and get the record" in {
-
+  "get when" - {
+    "there is a record for this id must" - {
+      "update the lastUpdated time, validUntil time, and get the record" in {
         insert(userAnswers).futureValue
 
         val result         = repository.get(userAnswers.returnId).futureValue
@@ -134,21 +130,16 @@ class CacheRepositorySpec
       }
     }
 
-    "when there is no record for this id" - {
-
-      "must return None" in {
-
+    "there is no record for this id must" - {
+      "return None" in {
         repository.get(ReturnId("APPA id that does not exist", "period key that does not exist")).futureValue must not be defined
       }
     }
   }
 
-  ".keepAlive" - {
-
-    "when there is a record for this id" - {
-
-      "must update its lastUpdated to `now` and return true" in {
-
+  "keepAlive when" - {
+    "there is a record for this id must" - {
+      "update its lastUpdated to `now` and return true" in {
         insert(userAnswers).futureValue
 
         val result = repository.keepAlive(userAnswers.returnId).futureValue
@@ -166,23 +157,22 @@ class CacheRepositorySpec
       }
     }
 
-    "when there is no record for this id" - {
-
-      "must return true" in {
+    "there is no record for this id must" - {
+      "return true" in {
         repository.keepAlive(ReturnId("APPA id that does not exist", "period key that does not exist")).futureValue mustEqual true
       }
     }
   }
 
-  ".clearUserAnswersById" - {
-    "must clear down existing user answers" in {
+  "clearUserAnswersById must" - {
+    "clear down existing user answers" in {
       insert(userAnswers).futureValue
       repository.get(userAnswers.returnId).futureValue.isEmpty mustBe false
       repository.clearUserAnswersById(userAnswers.returnId).futureValue mustBe ()
       repository.get(userAnswers.returnId).futureValue.isEmpty mustBe true
     }
 
-    "must not fail if user answers doesn't exist" in {
+    "not fail if user answers doesn't exist" in {
       repository.get(userAnswers.returnId).futureValue.isEmpty mustBe true
       repository.clearUserAnswersById(userAnswers.returnId).futureValue mustBe ()
     }

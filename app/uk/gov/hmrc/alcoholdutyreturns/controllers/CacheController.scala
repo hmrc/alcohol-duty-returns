@@ -22,10 +22,11 @@ import play.api.http.HttpEntity
 import play.api.libs.json._
 import play.api.mvc._
 import uk.gov.hmrc.alcoholdutyreturns.controllers.actions.{AuthorisedAction, CheckAppaIdAction}
-import uk.gov.hmrc.alcoholdutyreturns.models.{ErrorResponse, ReturnAndUserDetails, ReturnId, UserAnswers}
+import uk.gov.hmrc.alcoholdutyreturns.models.{ReturnAndUserDetails, ReturnId, UserAnswers}
 import uk.gov.hmrc.alcoholdutyreturns.repositories.{CacheRepository, UpdateFailure, UpdateSuccess}
 import uk.gov.hmrc.alcoholdutyreturns.service.{AccountService, LockingService}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
+import uk.gov.hmrc.play.bootstrap.backend.http.ErrorResponse
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
@@ -100,7 +101,7 @@ class CacheController @Inject() (
                 eitherAccountDetails.foldF(
                   err => {
                     logger.warn(
-                      s"Unable to create userAnswers for $appaId ${returnId.periodKey} - ${err.status} ${err.body}"
+                      s"Unable to create userAnswers for $appaId ${returnId.periodKey} - ${err.statusCode} ${err.message}"
                     )
                     Future.successful(error(err))
                   },
@@ -140,7 +141,7 @@ class CacheController @Inject() (
     }
 
   def error(errorResponse: ErrorResponse): Result = Result(
-    header = ResponseHeader(errorResponse.status),
+    header = ResponseHeader(errorResponse.statusCode),
     body = HttpEntity.Strict(ByteString(Json.toBytes(Json.toJson(errorResponse))), Some("application/json"))
   )
 }

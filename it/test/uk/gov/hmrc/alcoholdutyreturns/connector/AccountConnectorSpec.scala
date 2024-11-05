@@ -17,21 +17,20 @@
 package uk.gov.hmrc.alcoholdutyreturns.connector
 
 import org.scalatest.concurrent.PatienceConfiguration.Timeout
-import org.scalatest.matchers.must.Matchers.convertToAnyMustWrapper
 import org.scalatest.time.{Seconds, Span}
 import play.api.libs.json.Json
 import uk.gov.hmrc.alcoholdutyreturns.base.ISpecBase
-import uk.gov.hmrc.alcoholdutyreturns.models.{ErrorResponse, SubscriptionSummary}
+import uk.gov.hmrc.alcoholdutyreturns.models.{ErrorCodes, SubscriptionSummary}
 
 import java.time.LocalDate
 
 class AccountConnectorSpec extends ISpecBase {
 
-  "getData" should {
+  "getData must" - {
     "return an InvalidJson error if the call returns an invalid response" in new SetUp {
       stubGet(dataTestUrl, OK, "invalid")
       whenReady(connector.getData[DataTestType](dataTestUrl).value) { result =>
-        result mustBe Left(ErrorResponse.InvalidJson)
+        result mustBe Left(ErrorCodes.invalidJson)
         verifyGet(dataTestUrl)
       }
     }
@@ -39,21 +38,21 @@ class AccountConnectorSpec extends ISpecBase {
     "return a NotFound error if the call returns a 404 response" in new SetUp {
       stubGet(dataTestUrl, NOT_FOUND, "")
       whenReady(connector.getData[DataTestType](dataTestUrl).value) { result =>
-        result mustBe Left(ErrorResponse.EntityNotFound)
+        result mustBe Left(ErrorCodes.entityNotFound)
         verifyGet(dataTestUrl)
       }
     }
 
-    "return a UnexpectedResponse error if the call returns a 500 response" in new SetUp {
+    "return an UnexpectedResponse error if the call returns a 500 response" in new SetUp {
       stubGet(dataTestUrl, INTERNAL_SERVER_ERROR, "")
       whenReady(connector.getData[DataTestType](dataTestUrl).value) { result =>
-        result mustBe Left(ErrorResponse.UnexpectedResponse)
+        result mustBe Left(ErrorCodes.unexpectedResponse)
         verifyGet(dataTestUrl)
       }
     }
   }
 
-  "getSubscriptionSummary" should {
+  "getSubscriptionSummary must" - {
     "successfully get a subscription summary" in new SetUp {
       stubGet(subscriptionUrl, OK, Json.toJson(subscriptionSummary).toString())
       whenReady(connector.getSubscriptionSummary(appaId).value, timeout = Timeout(Span(3, Seconds))) { result =>
@@ -63,7 +62,7 @@ class AccountConnectorSpec extends ISpecBase {
     }
   }
 
-  "getOpenObligationData" should {
+  "getOpenObligationData must" - {
     "successfully get an obligation" in new SetUp {
       stubGet(openObligationUrl, OK, Json.toJson(obligationData).toString())
       whenReady(connector.getOpenObligationData(returnId).value) { result =>
@@ -73,7 +72,7 @@ class AccountConnectorSpec extends ISpecBase {
     }
   }
 
-  "getObligationData" should {
+  "getObligationData must" - {
     "successfully get obligations" in new SetUp {
       stubGet(obligationUrl, OK, Json.toJson(Seq(obligationData)).toString())
       whenReady(connector.getObligationData(appaId).value) { result =>

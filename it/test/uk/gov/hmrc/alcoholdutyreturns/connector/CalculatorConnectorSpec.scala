@@ -17,15 +17,14 @@
 package uk.gov.hmrc.alcoholdutyreturns.connector
 
 import org.scalatest.concurrent.PatienceConfiguration.Timeout
-import org.scalatest.matchers.must.Matchers.convertToAnyMustWrapper
 import org.scalatest.time.{Seconds, Span}
 import play.api.libs.json.Json
 import uk.gov.hmrc.alcoholdutyreturns.base.ISpecBase
-import uk.gov.hmrc.alcoholdutyreturns.models.ErrorResponse
+import uk.gov.hmrc.alcoholdutyreturns.models.ErrorCodes
 
 class CalculatorConnectorSpec extends ISpecBase {
-  "Calculator Connector" when {
-    "calculateDutyDueByTaxType is called" should {
+  "Calculator Connector when" - {
+    "calculateDutyDueByTaxType is called must" - {
       "successfully calculate duty due by tax type" in new SetUp {
         stubPost(calculateDutyDueByTaxTypeUrl, OK, Json.toJson(calculateDutyDueByTaxTypeRequest).toString(), Json.toJson(calculatedDutyDueByTaxType).toString())
         whenReady(connector.calculateDutyDueByTaxType(calculateDutyDueByTaxTypeRequest).value, timeout = Timeout(Span(3, Seconds))) { result =>
@@ -37,7 +36,7 @@ class CalculatorConnectorSpec extends ISpecBase {
       "return an InvalidJson error if the call returns an invalid response" in new SetUp {
         stubPost(calculateDutyDueByTaxTypeUrl, OK, Json.toJson(calculateDutyDueByTaxTypeRequest).toString(), "invalid")
         whenReady(connector.calculateDutyDueByTaxType(calculateDutyDueByTaxTypeRequest).value, timeout = Timeout(Span(3, Seconds))) { result =>
-          result mustBe Left(ErrorResponse.InvalidJson)
+          result mustBe Left(ErrorCodes.invalidJson)
           verifyPost(calculateDutyDueByTaxTypeUrl)
         }
       }
@@ -45,15 +44,15 @@ class CalculatorConnectorSpec extends ISpecBase {
       "return a BadRequest error if the call returns a 400 response" in new SetUp {
         stubPost(calculateDutyDueByTaxTypeUrl, BAD_REQUEST, Json.toJson(calculateDutyDueByTaxTypeRequest).toString(), "")
         whenReady(connector.calculateDutyDueByTaxType(calculateDutyDueByTaxTypeRequest).value, timeout = Timeout(Span(3, Seconds))) { result =>
-          result mustBe Left(ErrorResponse.BadRequest)
+          result mustBe Left(ErrorCodes.badRequest)
           verifyPost(calculateDutyDueByTaxTypeUrl)
         }
       }
 
-      "return a UnexpectedResponse error if the call returns a 500 response" in new SetUp {
+      "return an UnexpectedResponse error if the call returns a 500 response" in new SetUp {
         stubPost(calculateDutyDueByTaxTypeUrl, INTERNAL_SERVER_ERROR, Json.toJson(calculateDutyDueByTaxTypeRequest).toString(), Json.toJson(internalServerError).toString())
         whenReady(connector.calculateDutyDueByTaxType(calculateDutyDueByTaxTypeRequest).value) { result =>
-          result mustBe Left(ErrorResponse.UnexpectedResponse)
+          result mustBe Left(ErrorCodes.unexpectedResponse)
           verifyPost(calculateDutyDueByTaxTypeUrl)
         }
       }

@@ -19,17 +19,18 @@ package uk.gov.hmrc.alcoholdutyreturns.controllers
 import cats.data.EitherT
 import play.api.mvc.Result
 import uk.gov.hmrc.alcoholdutyreturns.base.SpecBase
-import uk.gov.hmrc.alcoholdutyreturns.models.{ErrorResponse, ObligationData}
+import uk.gov.hmrc.alcoholdutyreturns.models.{ErrorCodes, ObligationData}
 import uk.gov.hmrc.alcoholdutyreturns.service.AccountService
 import play.api.libs.json.Json
 import org.mockito.ArgumentMatchers.any
 import org.mockito.ArgumentMatchersSugar.eqTo
+import uk.gov.hmrc.play.bootstrap.backend.http.ErrorResponse
 
 import java.time.LocalDate
 import scala.concurrent.Future
 
 class ObligationControllerSpec extends SpecBase {
-  "ObligationController" should {
+  "ObligationController must" - {
     "return 200 OK with obligations if successful" in new SetUp {
       when(mockAccountService.getObligations(eqTo(appaId))(any(), any()))
         .thenReturn(EitherT.rightT[Future, ErrorResponse](Seq(obligationData)))
@@ -37,19 +38,19 @@ class ObligationControllerSpec extends SpecBase {
       val result: Future[Result] =
         controller.getObligationDetails(appaId)(fakeRequest)
 
-      status(result)        shouldBe OK
-      contentAsJson(result) shouldBe Json.toJson(Seq(obligationData))
+      status(result)        mustBe OK
+      contentAsJson(result) mustBe Json.toJson(Seq(obligationData))
     }
 
     "return 404 NOT_FOUND when there is an issue" in new SetUp {
       when(mockAccountService.getObligations(eqTo(appaId))(any(), any()))
-        .thenReturn(EitherT.leftT[Future, Seq[ObligationData]](ErrorResponse.UnexpectedResponse))
+        .thenReturn(EitherT.leftT[Future, Seq[ObligationData]](ErrorCodes.unexpectedResponse))
 
       val result: Future[Result] =
         controller.getObligationDetails(appaId)(fakeRequest)
 
-      status(result)          shouldBe NOT_FOUND
-      contentAsString(result) shouldBe "Error: {500,Unexpected Response}"
+      status(result)          mustBe NOT_FOUND
+      contentAsString(result) mustBe "Error: {500,Unexpected Response}"
     }
   }
 

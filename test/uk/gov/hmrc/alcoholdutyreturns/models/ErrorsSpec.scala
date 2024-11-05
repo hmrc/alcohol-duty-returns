@@ -22,29 +22,29 @@ import uk.gov.hmrc.alcoholdutyreturns.base.SpecBase
 import java.time.Instant
 
 class ErrorsSpec extends SpecBase {
-  "ReturnDetailsError" should {
+  "ReturnDetailsError must" - {
     "serialise DownstreamErrors to json" in new SetUp {
-      Json.toJson(downstreamErrors).toString shouldBe downstreamErrorsJson
+      Json.toJson(downstreamErrors).toString mustBe downstreamErrorsJson
     }
 
     "deserialise DownstreamErrors from json" in new SetUp {
-      Json.parse(downstreamErrorsJson).as[DownstreamErrors] shouldBe downstreamErrors
+      Json.parse(downstreamErrorsJson).as[DownstreamErrors] mustBe downstreamErrors
     }
 
     "serialise DownstreamError to json" in new SetUp {
-      Json.toJson(downstreamError).toString shouldBe internalServerErrorJson
+      Json.toJson(downstreamError).toString mustBe internalServerErrorJson
     }
 
     "deserialise DownstreamError from json" in new SetUp {
-      Json.parse(internalServerErrorJson).as[DownstreamError] shouldBe downstreamError
+      Json.parse(internalServerErrorJson).as[DownstreamError] mustBe downstreamError
     }
 
     "serialise HIPFailureResponse to json" in new SetUp {
-      Json.toJson(hipFailureResponse).toString shouldBe hipFailureResponseJson
+      Json.toJson(hipFailureResponse).toString mustBe hipFailureResponseJson
     }
 
     "deserialise HIPFailureResponse from json" in new SetUp {
-      Json.parse(hipFailureResponseJson).as[HIPFailureResponse] shouldBe hipFailureResponse
+      Json.parse(hipFailureResponseJson).as[HIPFailureResponse] mustBe hipFailureResponse
     }
   }
 
