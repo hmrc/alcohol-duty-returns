@@ -1,11 +1,11 @@
 # microservice specific routes
 
-# User Answers Cache
-GET         /user-answers/:appaId/:periodKey                  uk.gov.hmrc.alcoholdutyreturns.controllers.CacheController.get(appaId:String, periodKey:String)
-PUT         /user-answers                                     uk.gov.hmrc.alcoholdutyreturns.controllers.CacheController.set()
-POST        /user-answers                                     uk.gov.hmrc.alcoholdutyreturns.controllers.CacheController.createUserAnswers()
-DELETE      /user-answers/lock/:appaId/:periodKey             uk.gov.hmrc.alcoholdutyreturns.controllers.CacheController.releaseReturnLock(appaId, periodKey)
-PUT         /user-answers/lock/:appaId/:periodKey/ttl         uk.gov.hmrc.alcoholdutyreturns.controllers.CacheController.keepAlive(appaId, periodKey)
+# User Answers
+GET         /user-answers/:appaId/:periodKey                  uk.gov.hmrc.alcoholdutyreturns.controllers.UserAnswersController.get(appaId:String, periodKey:String)
+PUT         /user-answers                                     uk.gov.hmrc.alcoholdutyreturns.controllers.UserAnswersController.set()
+POST        /user-answers                                     uk.gov.hmrc.alcoholdutyreturns.controllers.UserAnswersController.createUserAnswers()
+DELETE      /user-answers/lock/:appaId/:periodKey             uk.gov.hmrc.alcoholdutyreturns.controllers.UserAnswersController.releaseReturnLock(appaId, periodKey)
+PUT         /user-answers/lock/:appaId/:periodKey/ttl         uk.gov.hmrc.alcoholdutyreturns.controllers.UserAnswersController.keepAlive(appaId, periodKey)
 
 GET         /obligationDetails/:appaId                        uk.gov.hmrc.alcoholdutyreturns.controllers.ObligationController.getObligationDetails(appaId)
 

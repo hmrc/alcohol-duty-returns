@@ -23,7 +23,7 @@ import uk.gov.hmrc.alcoholdutyreturns.connector.{CalculatorConnector, ReturnsCon
 import uk.gov.hmrc.alcoholdutyreturns.models.{ErrorCodes, ReturnId}
 import uk.gov.hmrc.alcoholdutyreturns.models.calculation.CalculatedDutyDueByTaxType
 import uk.gov.hmrc.alcoholdutyreturns.models.returns.{ReturnCreate, ReturnCreatedDetails, TotalDutyDuebyTaxType}
-import uk.gov.hmrc.alcoholdutyreturns.repositories.CacheRepository
+import uk.gov.hmrc.alcoholdutyreturns.repositories.UserAnswersRepository
 import uk.gov.hmrc.play.bootstrap.backend.http.ErrorResponse
 
 import java.time.Instant
@@ -32,7 +32,7 @@ import scala.concurrent.Future
 class ReturnsServiceSpec extends SpecBase {
   "ReturnsService must" - {
     "calculate dutyDueByTaxType, validate against the schema, submit a return successfully, audit the event, " +
-      "clear the cache and return the created response" in new SetUp {
+      "clear the user answers and return the created response" in new SetUp {
         when(mockCalculatorConnector.calculateDutyDueByTaxType(any())(any()))
           .thenReturn(EitherT.right[ErrorResponse](Future.successful(calculatedDutyDueByTaxTypeForExampleSubmission)))
 
@@ -41,9 +41,9 @@ class ReturnsServiceSpec extends SpecBase {
         when(mockReturnsConnector.submitReturn(returnSubmission, retId.appaId))
           .thenReturn(EitherT.rightT[Future, ErrorResponse](returnCreatedDetails))
 
-        when(mockCacheRespository.clearUserAnswersById(retId)).thenReturn(Future.unit)
+        when(mockUserAnswersRespository.clearUserAnswersById(retId)).thenReturn(Future.unit)
 
-        when(mockCacheRespository.get(retId)).thenReturn(Future.successful(Some(userAnswers)))
+        when(mockUserAnswersRespository.get(retId)).thenReturn(Future.successful(Some(userAnswers)))
 
         whenReady(returnsService.submitReturn(adrReturnSubmission, retId).value) {
           _ mustBe Right[ErrorResponse, ReturnCreatedDetails](returnCreatedDetails)
@@ -51,8 +51,8 @@ class ReturnsServiceSpec extends SpecBase {
 
         verify(mockSchemaValidationService).validateAgainstSchema(returnSubmission)
         verify(mockReturnsConnector).submitReturn(returnSubmission, retId.appaId)
-        verify(mockCacheRespository).get(ReturnId(appaId, periodKey))
-        verify(mockCacheRespository).clearUserAnswersById(retId)
+        verify(mockUserAnswersRespository).get(ReturnId(appaId, periodKey))
+        verify(mockUserAnswersRespository).clearUserAnswersById(retId)
       }
 
     "trigger an audit event when unable to get UserAnswers" in new SetUp {
@@ -64,9 +64,9 @@ class ReturnsServiceSpec extends SpecBase {
       when(mockReturnsConnector.submitReturn(returnSubmission, retId.appaId))
         .thenReturn(EitherT.rightT[Future, ErrorResponse](returnCreatedDetails))
 
-      when(mockCacheRespository.get(retId)).thenReturn(Future.successful(None))
+      when(mockUserAnswersRespository.get(retId)).thenReturn(Future.successful(None))
 
-      when(mockCacheRespository.clearUserAnswersById(retId)).thenReturn(Future.unit)
+      when(mockUserAnswersRespository.clearUserAnswersById(retId)).thenReturn(Future.unit)
 
       whenReady(returnsService.submitReturn(adrReturnSubmission, retId).value) {
         _ mustBe Right[ErrorResponse, ReturnCreatedDetails](returnCreatedDetails)
@@ -74,11 +74,11 @@ class ReturnsServiceSpec extends SpecBase {
 
       verify(mockSchemaValidationService).validateAgainstSchema(returnSubmission)
       verify(mockReturnsConnector).submitReturn(returnSubmission, retId.appaId)
-      verify(mockCacheRespository).get(ReturnId(appaId, periodKey))
-      verify(mockCacheRespository).clearUserAnswersById(retId)
+      verify(mockUserAnswersRespository).get(ReturnId(appaId, periodKey))
+      verify(mockUserAnswersRespository).clearUserAnswersById(retId)
     }
 
-    "trigger an audit event and clear the cache even if the cache get method returns error" in new SetUp {
+    "trigger an audit event and clear the user answer even if the get method returns error" in new SetUp {
       when(mockCalculatorConnector.calculateDutyDueByTaxType(any())(any()))
         .thenReturn(EitherT.right[ErrorResponse](Future.successful(calculatedDutyDueByTaxTypeForExampleSubmission)))
 
@@ -87,9 +87,9 @@ class ReturnsServiceSpec extends SpecBase {
       when(mockReturnsConnector.submitReturn(returnSubmission, retId.appaId))
         .thenReturn(EitherT.rightT[Future, ErrorResponse](returnCreatedDetails))
 
-      when(mockCacheRespository.get(retId)).thenReturn(Future.failed(new RuntimeException("Fail!")))
+      when(mockUserAnswersRespository.get(retId)).thenReturn(Future.failed(new RuntimeException("Fail!")))
 
-      when(mockCacheRespository.clearUserAnswersById(retId)).thenReturn(Future.unit)
+      when(mockUserAnswersRespository.clearUserAnswersById(retId)).thenReturn(Future.unit)
 
       whenReady(returnsService.submitReturn(adrReturnSubmission, retId).value) {
         _ mustBe Right[ErrorResponse, ReturnCreatedDetails](returnCreatedDetails)
@@ -97,8 +97,8 @@ class ReturnsServiceSpec extends SpecBase {
 
       verify(mockSchemaValidationService).validateAgainstSchema(returnSubmission)
       verify(mockReturnsConnector).submitReturn(returnSubmission, retId.appaId)
-      verify(mockCacheRespository).get(ReturnId(appaId, periodKey))
-      verify(mockCacheRespository).clearUserAnswersById(retId)
+      verify(mockUserAnswersRespository).get(ReturnId(appaId, periodKey))
+      verify(mockUserAnswersRespository).clearUserAnswersById(retId)
     }
 
     "return any error from the calculator connector if failure" in new SetUp {
@@ -110,7 +110,7 @@ class ReturnsServiceSpec extends SpecBase {
       when(mockReturnsConnector.submitReturn(returnSubmission, retId.appaId))
         .thenReturn(EitherT.rightT[Future, ErrorResponse](returnCreatedDetails))
 
-      when(mockCacheRespository.clearUserAnswersById(retId)).thenReturn(Future.unit)
+      when(mockUserAnswersRespository.clearUserAnswersById(retId)).thenReturn(Future.unit)
 
       whenReady(returnsService.submitReturn(adrReturnSubmission, retId).value) {
         _ mustBe Left[ErrorResponse, ReturnCreatedDetails](ErrorCodes.entityNotFound)
@@ -118,8 +118,8 @@ class ReturnsServiceSpec extends SpecBase {
 
       verify(mockSchemaValidationService, never).validateAgainstSchema(returnSubmission)
       verify(mockReturnsConnector, never).submitReturn(any(), any())(any())
-      verify(mockCacheRespository, never).get(any())
-      verify(mockCacheRespository, never).clearUserAnswersById(any())
+      verify(mockUserAnswersRespository, never).get(any())
+      verify(mockUserAnswersRespository, never).clearUserAnswersById(any())
     }
 
     "return a failed failure if the calculator connector fails" in new SetUp {
@@ -131,7 +131,7 @@ class ReturnsServiceSpec extends SpecBase {
       when(mockReturnsConnector.submitReturn(returnSubmission, retId.appaId))
         .thenReturn(EitherT.rightT[Future, ErrorResponse](returnCreatedDetails))
 
-      when(mockCacheRespository.clearUserAnswersById(retId)).thenReturn(Future.unit)
+      when(mockUserAnswersRespository.clearUserAnswersById(retId)).thenReturn(Future.unit)
 
       whenReady(returnsService.submitReturn(adrReturnSubmission, retId).value.failed) {
         _ mustBe a[RuntimeException]
@@ -139,11 +139,11 @@ class ReturnsServiceSpec extends SpecBase {
 
       verify(mockSchemaValidationService, never).validateAgainstSchema(returnSubmission)
       verify(mockReturnsConnector, never).submitReturn(any(), any())(any())
-      verify(mockCacheRespository, never).get(any())
-      verify(mockCacheRespository, never).clearUserAnswersById(any())
+      verify(mockUserAnswersRespository, never).get(any())
+      verify(mockUserAnswersRespository, never).clearUserAnswersById(any())
     }
 
-    "not submit or clear the cache and return BadRequest if validation fails" in new SetUp {
+    "not submit or clear the user answers and return BadRequest if validation fails" in new SetUp {
       when(mockCalculatorConnector.calculateDutyDueByTaxType(any())(any()))
         .thenReturn(EitherT.right[ErrorResponse](Future.successful(calculatedDutyDueByTaxTypeForExampleSubmission)))
 
@@ -152,7 +152,7 @@ class ReturnsServiceSpec extends SpecBase {
       when(mockReturnsConnector.submitReturn(returnSubmission, retId.appaId))
         .thenReturn(EitherT.rightT[Future, ErrorResponse](returnCreatedDetails))
 
-      when(mockCacheRespository.clearUserAnswersById(retId)).thenReturn(Future.unit)
+      when(mockUserAnswersRespository.clearUserAnswersById(retId)).thenReturn(Future.unit)
 
       whenReady(returnsService.submitReturn(adrReturnSubmission, retId).value) {
         _ mustBe Left[ErrorResponse, ReturnCreatedDetails](ErrorCodes.badRequest)
@@ -160,8 +160,8 @@ class ReturnsServiceSpec extends SpecBase {
 
       verify(mockSchemaValidationService).validateAgainstSchema(returnSubmission)
       verify(mockReturnsConnector, never).submitReturn(any(), any())(any())
-      verify(mockCacheRespository, never).get(any())
-      verify(mockCacheRespository, never).clearUserAnswersById(any())
+      verify(mockUserAnswersRespository, never).get(any())
+      verify(mockUserAnswersRespository, never).clearUserAnswersById(any())
     }
 
     "return any error from the returns connector if failure" in new SetUp {
@@ -173,7 +173,7 @@ class ReturnsServiceSpec extends SpecBase {
       when(mockReturnsConnector.submitReturn(returnSubmission, retId.appaId))
         .thenReturn(EitherT.leftT[Future, ReturnCreatedDetails](ErrorCodes.entityNotFound))
 
-      when(mockCacheRespository.clearUserAnswersById(retId)).thenReturn(Future.unit)
+      when(mockUserAnswersRespository.clearUserAnswersById(retId)).thenReturn(Future.unit)
 
       whenReady(returnsService.submitReturn(adrReturnSubmission, retId).value) {
         _ mustBe Left[ErrorResponse, ReturnCreatedDetails](ErrorCodes.entityNotFound)
@@ -181,8 +181,8 @@ class ReturnsServiceSpec extends SpecBase {
 
       verify(mockSchemaValidationService).validateAgainstSchema(returnSubmission)
       verify(mockReturnsConnector).submitReturn(returnSubmission, retId.appaId)
-      verify(mockCacheRespository, never).get(any())
-      verify(mockCacheRespository, never).clearUserAnswersById(any())
+      verify(mockUserAnswersRespository, never).get(any())
+      verify(mockUserAnswersRespository, never).clearUserAnswersById(any())
     }
 
     "return a failed failure if the returns connector fails" in new SetUp {
@@ -194,7 +194,7 @@ class ReturnsServiceSpec extends SpecBase {
       when(mockReturnsConnector.submitReturn(returnSubmission, retId.appaId))
         .thenReturn(EitherT.left[ReturnCreatedDetails](Future.failed(new RuntimeException("Fail!"))))
 
-      when(mockCacheRespository.clearUserAnswersById(retId)).thenReturn(Future.unit)
+      when(mockUserAnswersRespository.clearUserAnswersById(retId)).thenReturn(Future.unit)
 
       whenReady(returnsService.submitReturn(adrReturnSubmission, retId).value.failed) {
         _ mustBe a[RuntimeException]
@@ -202,11 +202,11 @@ class ReturnsServiceSpec extends SpecBase {
 
       verify(mockSchemaValidationService).validateAgainstSchema(returnSubmission)
       verify(mockReturnsConnector).submitReturn(returnSubmission, retId.appaId)
-      verify(mockCacheRespository, never).get(any())
-      verify(mockCacheRespository, never).clearUserAnswersById(any())
+      verify(mockUserAnswersRespository, never).get(any())
+      verify(mockUserAnswersRespository, never).clearUserAnswersById(any())
     }
 
-    "return any error if the cache repository couldn't clear user answers" in new SetUp {
+    "return any error if the user answers repository couldn't clear the entry" in new SetUp {
       when(mockCalculatorConnector.calculateDutyDueByTaxType(any())(any()))
         .thenReturn(EitherT.right[ErrorResponse](Future.successful(calculatedDutyDueByTaxTypeForExampleSubmission)))
 
@@ -215,12 +215,13 @@ class ReturnsServiceSpec extends SpecBase {
       when(mockReturnsConnector.submitReturn(returnSubmission, retId.appaId))
         .thenReturn(EitherT.rightT[Future, ErrorResponse](returnCreatedDetails))
 
-      when(mockCacheRespository.get(retId)).thenReturn(Future.successful(Some(userAnswers)))
+      when(mockUserAnswersRespository.get(retId)).thenReturn(Future.successful(Some(userAnswers)))
 
       when(mockCalculatorConnector.calculateDutyDueByTaxType(any())(any()))
         .thenReturn(EitherT.right[ErrorResponse](Future.successful(calculatedDutyDueByTaxTypeForExampleSubmission)))
 
-      when(mockCacheRespository.clearUserAnswersById(retId)).thenReturn(Future.failed(new RuntimeException("Fail!")))
+      when(mockUserAnswersRespository.clearUserAnswersById(retId))
+        .thenReturn(Future.failed(new RuntimeException("Fail!")))
 
       whenReady(returnsService.submitReturn(adrReturnSubmission, retId).value.failed) {
         _ mustBe a[RuntimeException]
@@ -228,21 +229,21 @@ class ReturnsServiceSpec extends SpecBase {
 
       verify(mockSchemaValidationService).validateAgainstSchema(returnSubmission)
       verify(mockReturnsConnector).submitReturn(returnSubmission, retId.appaId)
-      verify(mockCacheRespository).get(ReturnId(appaId, periodKey))
-      verify(mockCacheRespository).clearUserAnswersById(retId)
+      verify(mockUserAnswersRespository).get(ReturnId(appaId, periodKey))
+      verify(mockUserAnswersRespository).clearUserAnswersById(retId)
     }
   }
 
   class SetUp {
     val mockReturnsConnector        = mock[ReturnsConnector]
     val mockCalculatorConnector     = mock[CalculatorConnector]
-    val mockCacheRespository        = mock[CacheRepository]
+    val mockUserAnswersRespository  = mock[UserAnswersRepository]
     val mockSchemaValidationService = mock[SchemaValidationService]
 
     val returnsService = new ReturnsService(
       mockReturnsConnector,
       mockCalculatorConnector,
-      mockCacheRespository,
+      mockUserAnswersRespository,
       mockSchemaValidationService
     )
 

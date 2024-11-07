@@ -4,7 +4,7 @@ Renews a lock a user may have on a return.
 
 Calls to this API must be made by an authenticated and authorised user with an ADR enrolment in order for the data to be returned.
 
-**URL**: `/cache/lock/:appaId/:periodKey/ttl`
+**URL**: `/user-answers/lock/:appaId/:periodKey/ttl`
 
 **Method**: `PUT`
 
@@ -23,7 +23,7 @@ Calls to this API must be made by an authenticated and authorised user with an A
 
 ***Example request:***
 
-/alcohol-duty-returns/cache/lock/AP0000000001/24AF/ttl
+/alcohol-duty-returns/user-answers/lock/AP0000000001/24AF/ttl
 
 ## Responses
 

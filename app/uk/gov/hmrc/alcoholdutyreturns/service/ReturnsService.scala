@@ -24,7 +24,7 @@ import uk.gov.hmrc.alcoholdutyreturns.connector.{CalculatorConnector, ReturnsCon
 import uk.gov.hmrc.alcoholdutyreturns.models.calculation.CalculateDutyDueByTaxTypeRequest
 import uk.gov.hmrc.alcoholdutyreturns.models.{ErrorCodes, ReturnId}
 import uk.gov.hmrc.alcoholdutyreturns.models.returns.{AdrReturnSubmission, ReturnCreate, ReturnCreatedDetails, TotalDutyDuebyTaxType}
-import uk.gov.hmrc.alcoholdutyreturns.repositories.CacheRepository
+import uk.gov.hmrc.alcoholdutyreturns.repositories.UserAnswersRepository
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.backend.http.ErrorResponse
 
@@ -34,7 +34,7 @@ import scala.concurrent.{ExecutionContext, Future}
 class ReturnsService @Inject() (
   returnsConnector: ReturnsConnector,
   calculatorConnector: CalculatorConnector,
-  cacheRepository: CacheRepository,
+  userAnswersRepository: UserAnswersRepository,
   schemaValidationService: SchemaValidationService
 )(implicit
   ec: ExecutionContext
@@ -70,17 +70,17 @@ class ReturnsService @Inject() (
       returnCreatedDetails       <- returnsConnector.submitReturn(returnToSubmit, returnId.appaId)
       userAnswers                <-
         EitherT.right[ErrorResponse](
-          cacheRepository
+          userAnswersRepository
             .get(returnId)
             .recover { case _ =>
               logger.warn(
-                s"Failed retrieving user answers from the cache for returnId=$returnId. Continuing the process and auditing without user answers. "
+                s"Failed retrieving user answers for returnId=$returnId. Continuing the process and auditing without user answers. "
               )
               None
             }
         )
       _                          <- EitherT.right[ErrorResponse](
-                                      cacheRepository
+                                      userAnswersRepository
                                         .clearUserAnswersById(returnId)
                                     )
     } yield returnCreatedDetails
