@@ -24,21 +24,21 @@ import play.api.libs.json.Json
 import play.api.mvc.Result
 import uk.gov.hmrc.alcoholdutyreturns.base.SpecBase
 import uk.gov.hmrc.alcoholdutyreturns.models.{ApprovalStatus, ErrorCodes}
-import uk.gov.hmrc.alcoholdutyreturns.repositories.{CacheRepository, UpdateFailure, UpdateSuccess}
+import uk.gov.hmrc.alcoholdutyreturns.repositories.{UpdateFailure, UpdateSuccess, UserAnswersRepository}
 import uk.gov.hmrc.alcoholdutyreturns.service.{AccountService, FakeLockingService, LockingService}
 
 import java.time.LocalDate
 import scala.concurrent.Future
 
-class CacheControllerSpec extends SpecBase {
-  val mockCacheRepository: CacheRepository = mock[CacheRepository]
-  val mockAccountService: AccountService   = mock[AccountService]
-  val mockLockingService: LockingService   = new FakeLockingService
+class UserAnswersControllerSpec extends SpecBase {
+  val mockUserAnswersRepository: UserAnswersRepository = mock[UserAnswersRepository]
+  val mockAccountService: AccountService               = mock[AccountService]
+  val mockLockingService: LockingService               = new FakeLockingService
 
-  val controller = new CacheController(
+  val controller = new UserAnswersController(
     fakeAuthorisedAction,
     fakeCheckAppaIdAction,
-    mockCacheRepository,
+    mockUserAnswersRepository,
     mockLockingService,
     mockAccountService,
     cc
@@ -46,7 +46,7 @@ class CacheControllerSpec extends SpecBase {
 
   "get must" - {
     "return 200 OK with an existing user answers when there is one for the id" in {
-      when(mockCacheRepository.get(ArgumentMatchers.eq(returnId)))
+      when(mockUserAnswersRepository.get(ArgumentMatchers.eq(returnId)))
         .thenReturn(Future.successful(Some(emptyUserAnswers)))
 
       val result: Future[Result] =
@@ -57,7 +57,7 @@ class CacheControllerSpec extends SpecBase {
     }
 
     "return 404 NOT_FOUND when there is no user answers for the id" in {
-      when(mockCacheRepository.get(ArgumentMatchers.eq(returnId)))
+      when(mockUserAnswersRepository.get(ArgumentMatchers.eq(returnId)))
         .thenReturn(Future.successful(None))
 
       val result: Future[Result] =
@@ -70,16 +70,16 @@ class CacheControllerSpec extends SpecBase {
       val mockLockingService = mock[LockingService]
       when(mockLockingService.withLock(any(), any())(any())).thenReturn(Future.successful(None))
 
-      val controller = new CacheController(
+      val controller = new UserAnswersController(
         fakeAuthorisedAction,
         fakeCheckAppaIdAction,
-        mockCacheRepository,
+        mockUserAnswersRepository,
         mockLockingService,
         mockAccountService,
         cc
       )
 
-      when(mockCacheRepository.get(ArgumentMatchers.eq(returnId)))
+      when(mockUserAnswersRepository.get(ArgumentMatchers.eq(returnId)))
         .thenReturn(Future.successful(None))
 
       val result: Future[Result] =
@@ -91,7 +91,7 @@ class CacheControllerSpec extends SpecBase {
 
   "set must" - {
     "return 200 OK with the user answers that was updated" in {
-      when(mockCacheRepository.set(any())).thenReturn(Future.successful(UpdateSuccess))
+      when(mockUserAnswersRepository.set(any())).thenReturn(Future.successful(UpdateSuccess))
 
       val result: Future[Result] =
         controller.set()(
@@ -103,7 +103,7 @@ class CacheControllerSpec extends SpecBase {
     }
 
     "return 404 Not Found if the repository returns an error" in {
-      when(mockCacheRepository.set(any())).thenReturn(Future.successful(UpdateFailure))
+      when(mockUserAnswersRepository.set(any())).thenReturn(Future.successful(UpdateFailure))
 
       val result: Future[Result] =
         controller.set()(
@@ -116,12 +116,12 @@ class CacheControllerSpec extends SpecBase {
     "return 423 LOCKED if user answers is locked by another user" in {
       val lockingService = mock[LockingService]
       when(lockingService.withLock(any(), any())(any())).thenReturn(Future.successful(None))
-      when(mockCacheRepository.set(any())).thenReturn(Future.successful(UpdateSuccess))
+      when(mockUserAnswersRepository.set(any())).thenReturn(Future.successful(UpdateSuccess))
 
-      val controller = new CacheController(
+      val controller = new UserAnswersController(
         fakeAuthorisedAction,
         fakeCheckAppaIdAction,
-        mockCacheRepository,
+        mockUserAnswersRepository,
         lockingService,
         mockAccountService,
         cc
@@ -138,7 +138,7 @@ class CacheControllerSpec extends SpecBase {
 
   "createUserAnswers must" - {
     "return 201 CREATED with the user answers that was created when the account service returns a valid UserAnswers" in {
-      when(mockCacheRepository.add(any())).thenReturn(Future.successful(userAnswers))
+      when(mockUserAnswersRepository.add(any())).thenReturn(Future.successful(userAnswers))
       when(mockAccountService.getSubscriptionSummaryAndCheckStatus(eqTo(appaId))(any(), any()))
         .thenReturn(EitherT.rightT(subscriptionSummary))
       when(mockAccountService.getOpenObligation(eqTo(returnId))(any(), any()))
@@ -157,16 +157,16 @@ class CacheControllerSpec extends SpecBase {
       val mockLockingService = mock[LockingService]
       when(mockLockingService.withLock(any(), any())(any())).thenReturn(Future.successful(None))
 
-      val controller = new CacheController(
+      val controller = new UserAnswersController(
         fakeAuthorisedAction,
         fakeCheckAppaIdAction,
-        mockCacheRepository,
+        mockUserAnswersRepository,
         mockLockingService,
         mockAccountService,
         cc
       )
 
-      when(mockCacheRepository.add(any())).thenReturn(Future.successful(userAnswers))
+      when(mockUserAnswersRepository.add(any())).thenReturn(Future.successful(userAnswers))
       when(mockAccountService.getSubscriptionSummaryAndCheckStatus(eqTo(appaId))(any(), any()))
         .thenReturn(EitherT.rightT(subscriptionSummary))
       when(mockAccountService.getOpenObligation(eqTo(returnId))(any(), any()))
@@ -187,7 +187,7 @@ class CacheControllerSpec extends SpecBase {
       ("InvalidSubscriptionStatus(Insolvent)", ErrorCodes.invalidSubscriptionStatus(ApprovalStatus.Insolvent))
     ).foreach { case (errorName, errorResponse) =>
       s"return status ${errorResponse.statusCode} if the account service returns the error $errorName when getting the subscription summary" in {
-        when(mockCacheRepository.add(any())).thenReturn(Future.successful(userAnswers))
+        when(mockUserAnswersRepository.add(any())).thenReturn(Future.successful(userAnswers))
         when(mockAccountService.getSubscriptionSummaryAndCheckStatus(eqTo(appaId))(any(), any()))
           .thenReturn(EitherT.leftT(errorResponse))
 
@@ -209,7 +209,7 @@ class CacheControllerSpec extends SpecBase {
       ("InvalidSubscriptionStatus(Insolvent)", ErrorCodes.invalidSubscriptionStatus(ApprovalStatus.Insolvent))
     ).foreach { case (errorName, errorResponse) =>
       s"return the status ${errorResponse.statusCode} if the account service returns the error $errorName when getting the open obligations" in {
-        when(mockCacheRepository.add(any())).thenReturn(Future.successful(userAnswers))
+        when(mockUserAnswersRepository.add(any())).thenReturn(Future.successful(userAnswers))
         when(mockAccountService.getSubscriptionSummaryAndCheckStatus(eqTo(appaId))(any(), any()))
           .thenReturn(EitherT.rightT(subscriptionSummary))
         when(mockAccountService.getOpenObligation(eqTo(returnId))(any(), any()))
@@ -231,10 +231,10 @@ class CacheControllerSpec extends SpecBase {
       val mockLockingService = mock[LockingService]
       when(mockLockingService.releaseLock(any(), any())).thenReturn(Future.successful(()))
 
-      val controller = new CacheController(
+      val controller = new UserAnswersController(
         fakeAuthorisedAction,
         fakeCheckAppaIdAction,
-        mockCacheRepository,
+        mockUserAnswersRepository,
         mockLockingService,
         mockAccountService,
         cc
@@ -252,10 +252,10 @@ class CacheControllerSpec extends SpecBase {
       val mockLockingService = mock[LockingService]
       when(mockLockingService.keepAlive(any(), any())).thenReturn(Future.successful(true))
 
-      val controller = new CacheController(
+      val controller = new UserAnswersController(
         fakeAuthorisedAction,
         fakeCheckAppaIdAction,
-        mockCacheRepository,
+        mockUserAnswersRepository,
         mockLockingService,
         mockAccountService,
         cc
@@ -271,10 +271,10 @@ class CacheControllerSpec extends SpecBase {
       val mockLockingService = mock[LockingService]
       when(mockLockingService.keepAlive(any(), any())).thenReturn(Future.successful(false))
 
-      val controller = new CacheController(
+      val controller = new UserAnswersController(
         fakeAuthorisedAction,
         fakeCheckAppaIdAction,
-        mockCacheRepository,
+        mockUserAnswersRepository,
         mockLockingService,
         mockAccountService,
         cc

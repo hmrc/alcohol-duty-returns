@@ -23,7 +23,7 @@ import play.api.libs.json._
 import play.api.mvc._
 import uk.gov.hmrc.alcoholdutyreturns.controllers.actions.{AuthorisedAction, CheckAppaIdAction}
 import uk.gov.hmrc.alcoholdutyreturns.models.{ReturnAndUserDetails, ReturnId, UserAnswers}
-import uk.gov.hmrc.alcoholdutyreturns.repositories.{CacheRepository, UpdateFailure, UpdateSuccess}
+import uk.gov.hmrc.alcoholdutyreturns.repositories.{UpdateFailure, UpdateSuccess, UserAnswersRepository}
 import uk.gov.hmrc.alcoholdutyreturns.service.{AccountService, LockingService}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import uk.gov.hmrc.play.bootstrap.backend.http.ErrorResponse
@@ -31,10 +31,10 @@ import uk.gov.hmrc.play.bootstrap.backend.http.ErrorResponse
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-class CacheController @Inject() (
+class UserAnswersController @Inject() (
   authorise: AuthorisedAction,
   checkAppaId: CheckAppaIdAction,
-  cacheRepository: CacheRepository,
+  userAnswersRepository: UserAnswersRepository,
   lockingService: LockingService,
   accountService: AccountService,
   override val controllerComponents: ControllerComponents
@@ -47,7 +47,7 @@ class CacheController @Inject() (
       val returnId = ReturnId(appaId, periodKey)
       lockingService
         .withLock(returnId, request.userId) {
-          cacheRepository.get(returnId).map {
+          userAnswersRepository.get(returnId).map {
             case Some(ua) => Ok(Json.toJson(ua))
             case None     => NotFound
           }
@@ -68,7 +68,7 @@ class CacheController @Inject() (
           { implicit request =>
             lockingService
               .withLock(userAnswers.returnId, request.userId) {
-                cacheRepository.set(userAnswers).map {
+                userAnswersRepository.set(userAnswers).map {
                   case UpdateSuccess => Ok(Json.toJson(userAnswers))
                   case UpdateFailure => NotFound
                 }
@@ -109,7 +109,7 @@ class CacheController @Inject() (
                     val (subscriptionSummary, obligationData) = accountDetails
                     val userAnswers                           =
                       UserAnswers.createUserAnswers(returnAndUserDetails, subscriptionSummary, obligationData)
-                    cacheRepository.add(userAnswers).map { userAnswers =>
+                    userAnswersRepository.add(userAnswers).map { userAnswers =>
                       Created(Json.toJson(userAnswers))
                     }
                   }
