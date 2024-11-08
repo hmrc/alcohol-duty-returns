@@ -154,7 +154,7 @@ If the downstream returned a BAD_REQUEST
 This response can occur when a call is made by any consumer without an authorized session that has an ADR enrolment.
 
 **Code**: `404 NOT_FOUND`
-No cache entry was found for the appaId,periodKey pair
+No user answers entry was found for the appaId,periodKey pair
 
 **Code**: `422 UNPROCESSABLE_ENTITY`
 The return could not be parsed

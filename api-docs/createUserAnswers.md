@@ -1,10 +1,10 @@
 # Create User Answers
 
-Creates the UserAnswers structure and stores in the cache (the structure is locked by the user).
+Creates the UserAnswers structure and stores in the repository (the structure is locked by the user).
 
 Calls to this API must be made by an authenticated and authorised user with an ADR enrolment in order for the data to be returned.
 
-**URL**: `/alcohol-duty-returns/cache/user-answers`
+**URL**: `/alcohol-duty-returns/user-answers`
 
 **Method**: `POST`
 
@@ -19,7 +19,7 @@ Calls to this API must be made by an authenticated and authorised user with an A
 
 **Request Body Examples**
 
-***An example cache creation request:***
+***An example user answers creation request:***
 
 ```json
 {
@@ -46,7 +46,7 @@ Calls to this API must be made by an authenticated and authorised user with an A
 
 **Response Body**
 
-The response body returns the user answers cache entry with regime and obligation details.
+The response body returns the user answers entry with regime and obligation details.
 
 | Field Name                    | Description                                        | Data Type | Mandatory/Optional | Notes                                             |
 |-------------------------------|----------------------------------------------------|-----------|--------------------|---------------------------------------------------|
@@ -116,7 +116,7 @@ This response can occur when a call is made by any consumer without an authorize
 The user is in another state than Approved or Insolvent
 
 **Code**: `404 NOT_FOUND`
-No cache entry was found for the appaId,periodKey pair
+No user answers entry was found for the appaId,periodKey pair
 
 **Code**: `410 GONE`
 The return is not Open i.e. Fulfilled

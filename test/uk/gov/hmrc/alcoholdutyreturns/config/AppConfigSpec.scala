@@ -34,19 +34,19 @@ class SpecBaseWithConfigOverrides extends SpecBase {
 }
 
 class AppConfigSpec extends SpecBaseWithConfigOverrides {
-  "AppConfig" should {
+  "AppConfig must" - {
     "get the calculateDutyDueByTaxType url" in {
-      appConfig.getCalculateDutyDueByTaxTypeUrl shouldBe "http://calchost:16003/alcohol-duty-calculator/calculate-duty-due-by-tax-type"
+      appConfig.getCalculateDutyDueByTaxTypeUrl mustBe "http://calchost:16003/alcohol-duty-calculator/calculate-duty-due-by-tax-type"
     }
 
     "get the getReturn url" in {
       appConfig.getReturnUrl(
         returnId
-      ) shouldBe s"http://host:12345/etmp/RESTAdapter/excise/${regime.toLowerCase}/return/${returnId.appaId}/${returnId.periodKey}"
+      ) mustBe s"http://host:12345/etmp/RESTAdapter/excise/${regime.toLowerCase}/return/${returnId.appaId}/${returnId.periodKey}"
     }
 
     "get the submitReturn url" in {
-      appConfig.submitReturnUrl shouldBe s"http://host:12345/etmp/RESTAdapter/excise/${regime.toLowerCase}/return"
+      appConfig.submitReturnUrl mustBe s"http://host:12345/etmp/RESTAdapter/excise/${regime.toLowerCase}/return"
     }
   }
 }

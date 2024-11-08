@@ -4,13 +4,13 @@ This is the backend microservice that handles Returns related operations for Alc
 
 ## API Endpoints
 
-- [Create User Answers](api-docs/createUserAnswers.md): `POST /alcohol-duty-returns/cache/user-answers`
-- [Get (User Answers) Cache](api-docs/getCache.md): `GET /alcohol-duty-returns/cache/get/:appaId/:periodKey`
+- [Create User Answers](api-docs/createUserAnswers.md): `POST /alcohol-duty-returns/user-answers`
+- [Get User Answers](api-docs/getUserAnswers): `GET /alcohol-duty-returns/user-answers/:appaId/:periodKey`
 - [Get Return For Period](api-docs/getReturn.md): `GET /alcohol-duty-returns/producers/:appaId/returns/:periodKey`
 - [Get Obligation Details](api-docs/obligationDetails.md): `GET /alcohol-duty-returns/obligationDetails/:appaId`
-- [Release Lock](api-docs/releaseLock.md): `DELETE /cache/lock/:appaId/:periodKey`
-- [Renew Lock (Keep Alive)](api-docs/renewLock.md): `PUT /cache/lock/:appaId/:periodKey/ttl`
-- [Set (User Answers) Cache](api-docs/setCache.md): `PUT /alcohol-duty-returns/cache/set`
+- [Release Lock](api-docs/releaseLock.md): `DELETE /user-answers/lock/:appaId/:periodKey`
+- [Renew Lock (Keep Alive)](api-docs/renewLock.md): `PUT /user-answers/lock/:appaId/:periodKey/ttl`
+- [Set User Answers](api-docs/setUserAnswers): `PUT /alcohol-duty-returns/user-answers`
 - [Submit Return](api-docs/submitReturn.md): `POST /alcohol-duty-returns/producers/:appaId/returns/:periodKey`
 
 ## Running the service

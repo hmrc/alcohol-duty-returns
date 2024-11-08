@@ -1,10 +1,10 @@
-# Set (User Answers) Cache
+# Set User Answers
 
-Updates the user answers cache for a specific appaId and period key if the user has the lock.
+Updates the user answers for a specific appaId and period key if the user has the lock.
 
 Calls to this API must be made by an authenticated and authorised user with an ADR enrolment in order for the data to be returned.
 
-**URL**: `/alcohol-duty-returns/cache/set`
+**URL**: `/alcohol-duty-returns/user-answers`
 
 **Method**: `PUT`
 
@@ -44,7 +44,7 @@ The data section contains the actual user answers and other stored data. The con
 
 **Response Body**
 
-The response body returns the user answers cache entry if set up which relates to details for a return for a specific appaId and period.
+The response body returns the user answers entry if set up which relates to details for a return for a specific appaId and period.
 
 The data section contains the actual user answers and other stored data. The content will depend on the specific questions answered and will not be documented in detail here
 
@@ -113,7 +113,7 @@ The data section contains the actual user answers and other stored data. The con
 This response can occur when a call is made by any consumer without an authorized session that has an ADR enrolment.
 
 **Code**: `404 NOT_FOUND`
-No cache entry to update was found for the appaId,periodKey pair
+No user answers entry to update was found for the appaId,periodKey pair
 
 **Code**: `423 LOCKED`
 The return is locked

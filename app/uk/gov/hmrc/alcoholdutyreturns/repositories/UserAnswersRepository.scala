@@ -34,7 +34,7 @@ case object UpdateSuccess extends UpdateResult
 case object UpdateFailure extends UpdateResult
 
 @Singleton
-class CacheRepository @Inject() (
+class UserAnswersRepository @Inject() (
   mongoComponent: MongoComponent,
   appConfig: AppConfig,
   clock: Clock

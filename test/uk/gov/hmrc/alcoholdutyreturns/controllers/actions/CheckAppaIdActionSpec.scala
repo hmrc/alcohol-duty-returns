@@ -28,25 +28,25 @@ class CheckAppaIdActionSpec extends SpecBase {
   val testContent           = "Test"
 
   val testAction: IdentifierRequest[_] => Future[Result] = { request =>
-    request shouldBe fakeIdentifierRequest
+    request mustBe fakeIdentifierRequest
 
     Future(Ok(testContent))
   }
 
-  "CheckAppaIdAction" should {
+  "CheckAppaIdAction must" - {
     "succeed if appaId matches that in the enrolment" in {
       val checkAppaIdAction = new CheckAppaIdAction
       val result            = checkAppaIdAction(appaId).invokeBlock(fakeIdentifierRequest, testAction)
 
-      status(result)          shouldBe OK
-      contentAsString(result) shouldBe testContent
+      status(result)          mustBe OK
+      contentAsString(result) mustBe testContent
     }
 
     "fail if appaId doesn't match that in the enrolment" in {
       val checkAppaIdAction = new CheckAppaIdAction
       val result            = checkAppaIdAction(wrongAppaId).invokeBlock(fakeIdentifierRequest, testAction)
 
-      status(result) shouldBe UNAUTHORIZED
+      status(result) mustBe UNAUTHORIZED
     }
   }
 }
