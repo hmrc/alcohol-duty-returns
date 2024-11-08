@@ -56,11 +56,11 @@ class AdrReturnDetailsSpec extends SpecBase {
   }
 
   class SetUp {
-    val periodKey: String  = "24AC"
-    val periodKey2: String = "24AB"
-    val periodKey3: String = "24AA"
-    val periodKey4: String = "23AL"
-    val periodKey5: String = "23AK"
+    val periodKey: String  = "24AA"
+    val periodKey2: String = "23AL"
+    val periodKey3: String = "23AK"
+    val periodKey4: String = "23AJ"
+    val periodKey5: String = "23AI"
     val now                = Instant.now(clock)
 
     val returnDetails = successfulReturnExample(

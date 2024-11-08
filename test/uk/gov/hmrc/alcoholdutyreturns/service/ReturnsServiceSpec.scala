@@ -247,7 +247,7 @@ class ReturnsServiceSpec extends SpecBase {
       mockSchemaValidationService
     )
 
-    val periodKey = "24AC"
+    val periodKey = "24AA"
     val retId     = returnId.copy(periodKey = periodKey)
     val total     = BigDecimal("12345.67")
     val now       = Instant.now()
