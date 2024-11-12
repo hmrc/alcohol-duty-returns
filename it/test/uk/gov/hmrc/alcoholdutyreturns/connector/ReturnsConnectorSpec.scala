@@ -17,7 +17,6 @@
 package uk.gov.hmrc.alcoholdutyreturns.connector
 
 import org.scalatest.concurrent.PatienceConfiguration.Timeout
-import org.scalatest.matchers.must.Matchers.convertToAnyMustWrapper
 import org.scalatest.time.{Seconds, Span}
 import play.api.libs.json.Json
 import uk.gov.hmrc.alcoholdutyreturns.base.ISpecBase
@@ -117,7 +116,7 @@ class ReturnsConnectorSpec extends ISpecBase {
     val getReturnUrl = config.getReturnUrl(returnId)
     val submitReturnUrl = config.submitReturnUrl
 
-    val periodKey = "24AC"
+    val periodKey = "24AA"
     val id = appaId
     val now = Instant.now()
 

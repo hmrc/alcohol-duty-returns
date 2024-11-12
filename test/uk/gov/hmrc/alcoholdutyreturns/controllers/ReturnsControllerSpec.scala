@@ -179,7 +179,7 @@ class ReturnsControllerSpec extends SpecBase {
         cc
       )
 
-    val periodKey: String = "24AC"
+    val periodKey: String = "24AA"
     val total             = BigDecimal("12345.67")
     val now               = Instant.now()
 
