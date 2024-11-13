@@ -39,6 +39,7 @@ trait TestData extends ModelGenerators {
   val returnId: ReturnId      = ReturnId(appaId, periodKey)
   val submissionId: String    = submissionIdGen.sample.get
   val chargeReference: String = chargeReferenceGen.sample.get
+  val paymentDueDate: String  = "2024-02-25"
 
   val returnAndUserDetails: ReturnAndUserDetails = ReturnAndUserDetails(returnId, groupId, internalId)
 
