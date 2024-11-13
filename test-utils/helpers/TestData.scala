@@ -23,7 +23,7 @@ import uk.gov.hmrc.alcoholdutyreturns.models.ApprovalStatus.Approved
 import uk.gov.hmrc.alcoholdutyreturns.models.{AlcoholRegimes, ObligationData, ReturnAndUserDetails, ReturnId, SubscriptionSummary, UserAnswers}
 import uk.gov.hmrc.alcoholdutyreturns.models.ObligationStatus.{Fulfilled, Open}
 import uk.gov.hmrc.alcoholdutyreturns.models.calculation.{CalculateDutyDueByTaxTypeRequest, CalculateDutyDueByTaxTypeRequestItem, CalculatedDutyDueByTaxType, CalculatedDutyDueByTaxTypeItem}
-import uk.gov.hmrc.alcoholdutyreturns.models.returns.{AdrAdjustmentItem, AdrAdjustments, AdrAlcoholQuantity, AdrDuty, AdrDutyDeclared, AdrDutyDeclaredItem, AdrDutySuspended, AdrDutySuspendedAlcoholRegime, AdrDutySuspendedProduct, AdrNetDutySuspension, AdrOtherIngredient, AdrRepackagedDraughtAdjustmentItem, AdrReturnAdjustments, AdrReturnAdjustmentsRow, AdrReturnAlcoholDeclared, AdrReturnAlcoholDeclaredRow, AdrReturnCreatedDetails, AdrReturnDetails, AdrReturnDetailsIdentification, AdrReturnSubmission, AdrReturnTotalDutyDue, AdrSpirits, AdrSpiritsGrainsQuantities, AdrSpiritsIngredientsVolumes, AdrSpiritsProduced, AdrSpiritsVolumes, AdrTotals, AdrTypeOfSpirit, AdrUnitOfMeasure, AlcoholProducts, ChargeDetails, Drawback, GetReturnDetails, GetReturnDetailsSuccess, IdDetails, NetDutySuspension, NetDutySuspensionProducts, OtherMaterialsUomType, OverDeclaration, RegularReturnDetails, RepackagedDraught, RepackagedDraughtProduct, ReturnCreate, ReturnCreatedDetails, ReturnCreatedSuccess, ReturnDetails, SpiritsProduced, SpiritsProducedDetails, SpoiltProduct, TotalDutyDue, TotalDutyDuebyTaxType, TypeOfSpiritType, UnderDeclaration}
+import uk.gov.hmrc.alcoholdutyreturns.models.returns.{AdrAdjustmentItem, AdrAdjustments, AdrAlcoholQuantity, AdrDuty, AdrDutyDeclared, AdrDutyDeclaredItem, AdrDutySuspended, AdrDutySuspendedAlcoholRegime, AdrDutySuspendedProduct, AdrOtherIngredient, AdrRepackagedDraughtAdjustmentItem, AdrReturnAdjustments, AdrReturnAdjustmentsRow, AdrReturnAlcoholDeclared, AdrReturnAlcoholDeclaredRow, AdrReturnCreatedDetails, AdrReturnDetails, AdrReturnDetailsIdentification, AdrReturnNetDutySuspension, AdrReturnSpirits, AdrReturnSpiritsVolumes, AdrReturnSubmission, AdrReturnTotalDutyDue, AdrSpirits, AdrSpiritsGrainsQuantities, AdrSpiritsIngredientsVolumes, AdrSpiritsProduced, AdrSpiritsVolumes, AdrTotals, AdrTypeOfSpirit, AdrUnitOfMeasure, AlcoholProducts, ChargeDetails, Drawback, GetReturnDetails, GetReturnDetailsSuccess, IdDetails, NetDutySuspension, NetDutySuspensionProducts, OtherMaterialsUomType, OverDeclaration, RegularReturnDetails, RepackagedDraught, RepackagedDraughtProduct, ReturnCreate, ReturnCreatedDetails, ReturnCreatedSuccess, ReturnDetails, SpiritsProduced, SpiritsProducedDetails, SpoiltProduct, TotalDutyDue, TotalDutyDuebyTaxType, TypeOfSpiritType, UnderDeclaration}
 
 import java.time.{Clock, Instant, LocalDate, YearMonth, ZoneId}
 
@@ -481,7 +481,7 @@ trait TestData extends ModelGenerators {
         totalDue = BigDecimal("61118.51")
       ),
       Some(
-        AdrNetDutySuspension(
+        AdrReturnNetDutySuspension(
           totalLtsBeer = Some(BigDecimal("0.15")),
           totalLtsWine = Some(BigDecimal("0.44")),
           totalLtsCider = Some(BigDecimal("0.38")),
@@ -492,6 +492,17 @@ trait TestData extends ModelGenerators {
           totalLtsPureAlcoholCider = Some(BigDecimal("0.0379")),
           totalLtsPureAlcoholSpirit = Some(BigDecimal("0.2492")),
           totalLtsPureAlcoholOtherFermented = Some(BigDecimal("0.1894"))
+        )
+      ),
+      spirits = Some(
+        AdrReturnSpirits(
+          AdrReturnSpiritsVolumes(
+            totalSpirits = BigDecimal("0.05"),
+            scotchWhisky = BigDecimal("0.26"),
+            irishWhiskey = BigDecimal("0.16")
+          ),
+          typesOfSpirit = Set(AdrTypeOfSpirit.NeutralAgricultural),
+          otherSpiritTypeName = Some("Coco Pops Vodka")
         )
       )
     )
@@ -610,7 +621,7 @@ trait TestData extends ModelGenerators {
       ),
       totalDutyDue = AdrReturnTotalDutyDue(totalDue = BigDecimal("55815")),
       netDutySuspension = Some(
-        AdrNetDutySuspension(
+        AdrReturnNetDutySuspension(
           totalLtsBeer = Some(BigDecimal("0.15")),
           totalLtsWine = Some(BigDecimal("0.44")),
           totalLtsCider = Some(BigDecimal("0.38")),
@@ -621,6 +632,17 @@ trait TestData extends ModelGenerators {
           totalLtsPureAlcoholCider = Some(BigDecimal("0.0379")),
           totalLtsPureAlcoholSpirit = Some(BigDecimal("0.2492")),
           totalLtsPureAlcoholOtherFermented = Some(BigDecimal("0.1894"))
+        )
+      ),
+      spirits = Some(
+        AdrReturnSpirits(
+          AdrReturnSpiritsVolumes(
+            totalSpirits = BigDecimal("0.05"),
+            scotchWhisky = BigDecimal("0.26"),
+            irishWhiskey = BigDecimal("0.16")
+          ),
+          typesOfSpirit = Set(AdrTypeOfSpirit.NeutralAgricultural),
+          otherSpiritTypeName = Some("Coco Pops Vodka")
         )
       )
     )
@@ -638,7 +660,8 @@ trait TestData extends ModelGenerators {
         total = BigDecimal(0)
       ),
       totalDutyDue = AdrReturnTotalDutyDue(totalDue = BigDecimal(0)),
-      netDutySuspension = None
+      netDutySuspension = None,
+      spirits = None
     )
 
   val exampleReturnSubmissionRequest: AdrReturnSubmission = AdrReturnSubmission(
@@ -795,8 +818,8 @@ trait TestData extends ModelGenerators {
           AdrSpiritsProduced(
             spiritsVolumes = AdrSpiritsVolumes(
               totalSpirits = BigDecimal("123.45"),
-              scotchWhiskey = BigDecimal("234.56"),
-              irishWhisky = BigDecimal("345.67")
+              scotchWhisky = BigDecimal("234.56"),
+              irishWhiskey = BigDecimal("345.67")
             ),
             typesOfSpirit = Set(AdrTypeOfSpirit.Malt, AdrTypeOfSpirit.Beer, AdrTypeOfSpirit.Other),
             otherSpiritTypeName = Some("MaltyBeer"),
