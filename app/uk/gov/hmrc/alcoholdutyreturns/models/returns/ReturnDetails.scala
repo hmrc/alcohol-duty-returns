@@ -538,7 +538,7 @@ object SpiritsProducedDetails {
       typeOfSpirit = spiritsProduced.typesOfSpirit.map(TypeOfSpiritType.fromAdrTypeOfSpirit),
       typeOfSpiritOther = spiritsProduced.otherSpiritTypeName,
       code1MaltedBarley = spiritsProduced.grainsQuantities.maltedBarley,
-      code2Other = Some(spiritsProduced.hasOtherMaltedGrain),
+      code2Other = spiritsProduced.hasOtherMaltedGrain,
       maltedGrainQuantity = spiritsProduced.grainsQuantities.otherMaltedGrain,
       maltedGrainType = spiritsProduced.otherMaltedGrainType,
       code3Wheat = spiritsProduced.grainsQuantities.wheat,

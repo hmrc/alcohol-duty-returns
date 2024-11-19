@@ -801,7 +801,7 @@ trait TestData extends ModelGenerators {
             ),
             typesOfSpirit = Set(AdrTypeOfSpirit.Malt, AdrTypeOfSpirit.Beer, AdrTypeOfSpirit.Other),
             otherSpiritTypeName = Some("MaltyBeer"),
-            hasOtherMaltedGrain = true,
+            hasOtherMaltedGrain = Some(true),
             grainsQuantities = AdrSpiritsGrainsQuantities(
               maltedBarley = Some(BigDecimal("10.00")),
               otherMaltedGrain = Some(BigDecimal("11.11")),
