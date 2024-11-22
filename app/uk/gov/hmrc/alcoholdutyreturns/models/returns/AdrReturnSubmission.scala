@@ -67,6 +67,18 @@ object AdrTypeOfSpirit extends Enum[AdrTypeOfSpirit] with PlayJsonEnum[AdrTypeOf
   case object CiderOrPerry extends AdrTypeOfSpirit
   case object WineOrMadeWine extends AdrTypeOfSpirit
   case object Other extends AdrTypeOfSpirit
+
+  def fromTypeOfSpiritType(typeOfSpiritType: TypeOfSpiritType): AdrTypeOfSpirit =
+    typeOfSpiritType match {
+      case TypeOfSpiritType.MaltSpirit                => Malt
+      case TypeOfSpiritType.GrainSpirit               => Grain
+      case TypeOfSpiritType.NeutralSpiritAgricultural => NeutralAgricultural
+      case TypeOfSpiritType.NeutralSpiritIndustrial   => NeutralIndustrial
+      case TypeOfSpiritType.BeerBased                 => Beer
+      case TypeOfSpiritType.WineMadeWineBased         => WineOrMadeWine
+      case TypeOfSpiritType.CiderPerryBased           => CiderOrPerry
+      case TypeOfSpiritType.Other                     => Other
+    }
 }
 
 sealed trait AdrUnitOfMeasure extends EnumEntry
@@ -169,8 +181,8 @@ case object AdrDutySuspended {
 
 case class AdrSpiritsVolumes(
   totalSpirits: BigDecimal,
-  scotchWhiskey: BigDecimal,
-  irishWhisky: BigDecimal
+  scotchWhisky: BigDecimal,
+  irishWhiskey: BigDecimal
 )
 
 case object AdrSpiritsVolumes {
