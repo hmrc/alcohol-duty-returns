@@ -28,7 +28,8 @@ case class AdrReturnDetails(
   alcoholDeclared: AdrReturnAlcoholDeclared,
   adjustments: AdrReturnAdjustments,
   totalDutyDue: AdrReturnTotalDutyDue,
-  netDutySuspension: Option[AdrNetDutySuspension]
+  netDutySuspension: Option[AdrReturnNetDutySuspension],
+  spirits: Option[AdrReturnSpirits] // Will be None on non-spirits months or if none declared
 )
 
 object AdrReturnDetails {
@@ -38,7 +39,8 @@ object AdrReturnDetails {
       alcoholDeclared = AdrReturnAlcoholDeclared.fromReturnDetailsSuccess(returnDetailsSuccess),
       adjustments = AdrReturnAdjustments.fromReturnDetailsSuccess(returnDetailsSuccess),
       totalDutyDue = AdrReturnTotalDutyDue.fromReturnDetailsSuccess(returnDetailsSuccess),
-      netDutySuspension = AdrNetDutySuspension.fromReturnDetailsSuccess(returnDetailsSuccess)
+      netDutySuspension = AdrReturnNetDutySuspension.fromReturnDetailsSuccess(returnDetailsSuccess),
+      spirits = AdrReturnSpirits.fromReturnDetailsSuccess(returnDetailsSuccess)
     )
 
   implicit val adrReturnDetailsFormat: OFormat[AdrReturnDetails] = Json.format[AdrReturnDetails]
@@ -208,7 +210,7 @@ object AdrReturnTotalDutyDue {
   implicit val adrReturnTotalDutyDueFormat: OFormat[AdrReturnTotalDutyDue] = Json.format[AdrReturnTotalDutyDue]
 }
 
-case class AdrNetDutySuspension(
+case class AdrReturnNetDutySuspension(
   totalLtsBeer: Option[BigDecimal],
   totalLtsWine: Option[BigDecimal],
   totalLtsCider: Option[BigDecimal],
@@ -221,11 +223,11 @@ case class AdrNetDutySuspension(
   totalLtsPureAlcoholOtherFermented: Option[BigDecimal]
 )
 
-object AdrNetDutySuspension {
-  def fromReturnDetailsSuccess(returnDetailsSuccess: GetReturnDetails): Option[AdrNetDutySuspension] =
+object AdrReturnNetDutySuspension {
+  def fromReturnDetailsSuccess(returnDetailsSuccess: GetReturnDetails): Option[AdrReturnNetDutySuspension] =
     if (returnDetailsSuccess.netDutySuspension.netDutySuspensionFilled) {
       returnDetailsSuccess.netDutySuspension.netDutySuspensionProducts.map(dutySuspension =>
-        AdrNetDutySuspension(
+        AdrReturnNetDutySuspension(
           totalLtsBeer = dutySuspension.totalLtsBeer,
           totalLtsWine = dutySuspension.totalLtsWine,
           totalLtsCider = dutySuspension.totalLtsCider,
@@ -242,5 +244,45 @@ object AdrNetDutySuspension {
       None
     }
 
-  implicit val adrNetDutySuspensionFormat: OFormat[AdrNetDutySuspension] = Json.format[AdrNetDutySuspension]
+  implicit val adrReturnNetDutySuspensionFormat: OFormat[AdrReturnNetDutySuspension] =
+    Json.format[AdrReturnNetDutySuspension]
+}
+
+case class AdrReturnSpiritsVolumes(
+  totalSpirits: BigDecimal,
+  scotchWhisky: BigDecimal,
+  irishWhiskey: BigDecimal
+)
+
+case object AdrReturnSpiritsVolumes {
+  def fromSpiritsProducedDetails(spiritsProducedDetails: SpiritsProducedDetails): AdrReturnSpiritsVolumes =
+    // Note the spelling of Whisk(e)y in the downstream API is the wrong way around
+    AdrReturnSpiritsVolumes(
+      totalSpirits = spiritsProducedDetails.totalSpirits,
+      scotchWhisky = spiritsProducedDetails.scotchWhiskey,
+      irishWhiskey = spiritsProducedDetails.irishWhisky
+    )
+
+  implicit val adrReturnSpiritsVolumesFormat: OFormat[AdrReturnSpiritsVolumes] = Json.format[AdrReturnSpiritsVolumes]
+}
+
+case class AdrReturnSpirits(
+  spiritsVolumes: AdrReturnSpiritsVolumes,
+  typesOfSpirit: Set[AdrTypeOfSpirit],
+  otherSpiritTypeName: Option[String]
+)
+
+case object AdrReturnSpirits {
+  def fromReturnDetailsSuccess(returnDetailsSuccess: GetReturnDetails): Option[AdrReturnSpirits] =
+    returnDetailsSuccess.spiritsProduced
+      .flatMap(_.spiritsProduced)
+      .map(spiritsProducedDetails =>
+        AdrReturnSpirits(
+          spiritsVolumes = AdrReturnSpiritsVolumes.fromSpiritsProducedDetails(spiritsProducedDetails),
+          typesOfSpirit = spiritsProducedDetails.typeOfSpirit.map(AdrTypeOfSpirit.fromTypeOfSpiritType),
+          otherSpiritTypeName = spiritsProducedDetails.typeOfSpiritOther
+        )
+      )
+
+  implicit val adrReturnSpiritsFormat: OFormat[AdrReturnSpirits] = Json.format[AdrReturnSpirits]
 }
