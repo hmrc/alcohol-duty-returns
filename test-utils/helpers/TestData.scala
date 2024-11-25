@@ -417,7 +417,11 @@ trait TestData extends ModelGenerators {
     val periodDate = LocalDate.of(periodKey.take(2).toInt + 2000, periodKey.charAt(3) - 'A' + 1, 1)
 
     AdrReturnDetails(
-      identification = AdrReturnDetailsIdentification(periodKey = periodKey, submittedTime = now),
+      identification = AdrReturnDetailsIdentification(
+        periodKey = periodKey,
+        chargeReference = Some(chargeReference),
+        submittedTime = now
+      ),
       alcoholDeclared = AdrReturnAlcoholDeclared(
         alcoholDeclaredDetails = Some(
           Seq(
@@ -513,7 +517,11 @@ trait TestData extends ModelGenerators {
     val periodDate = LocalDate.of(periodKey.take(2).toInt + 2000, periodKey.charAt(3) - 'A' + 1, 1)
 
     AdrReturnDetails(
-      identification = AdrReturnDetailsIdentification(periodKey = periodKey, submittedTime = now),
+      identification = AdrReturnDetailsIdentification(
+        periodKey = periodKey,
+        chargeReference = Some(chargeReference),
+        submittedTime = now
+      ),
       alcoholDeclared = AdrReturnAlcoholDeclared(
         alcoholDeclaredDetails = Some(
           Seq(
@@ -651,7 +659,8 @@ trait TestData extends ModelGenerators {
 
   def nilReturnDetails(periodKey: String, now: Instant): AdrReturnDetails =
     AdrReturnDetails(
-      identification = AdrReturnDetailsIdentification(periodKey = periodKey, submittedTime = now),
+      identification =
+        AdrReturnDetailsIdentification(periodKey = periodKey, chargeReference = None, submittedTime = now),
       alcoholDeclared = AdrReturnAlcoholDeclared(
         alcoholDeclaredDetails = None,
         total = BigDecimal(0)
