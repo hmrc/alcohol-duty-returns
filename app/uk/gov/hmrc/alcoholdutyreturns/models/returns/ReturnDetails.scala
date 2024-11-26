@@ -531,10 +531,11 @@ object SpiritsProducedDetails {
     Jsonx.formatCaseClass[SpiritsProducedDetails]
 
   def fromAdrSpiritsProduced(spiritsProduced: AdrSpiritsProduced): SpiritsProducedDetails =
+    // Note the spelling of Whisk(e)y in the downstream API is the wrong way around
     SpiritsProducedDetails(
       totalSpirits = spiritsProduced.spiritsVolumes.totalSpirits,
-      scotchWhiskey = spiritsProduced.spiritsVolumes.scotchWhiskey,
-      irishWhisky = spiritsProduced.spiritsVolumes.irishWhisky,
+      scotchWhiskey = spiritsProduced.spiritsVolumes.scotchWhisky,
+      irishWhisky = spiritsProduced.spiritsVolumes.irishWhiskey,
       typeOfSpirit = spiritsProduced.typesOfSpirit.map(TypeOfSpiritType.fromAdrTypeOfSpirit),
       typeOfSpiritOther = spiritsProduced.otherSpiritTypeName,
       code1MaltedBarley = spiritsProduced.grainsQuantities.maltedBarley,
