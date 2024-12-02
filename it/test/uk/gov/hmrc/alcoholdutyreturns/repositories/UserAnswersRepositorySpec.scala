@@ -16,35 +16,17 @@
 
 package uk.gov.hmrc.alcoholdutyreturns.repositories
 
-import generators.ModelGenerators
-import helpers.TestData
-import org.mockito.MockitoSugar
 import org.mongodb.scala.model.Filters
-import org.scalatest.OptionValues
-import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
-import org.scalatest.freespec.AnyFreeSpec
-import org.scalatest.matchers.must.Matchers
+import uk.gov.hmrc.alcoholdutyreturns.base.ISpecBase
 import uk.gov.hmrc.alcoholdutyreturns.config.AppConfig
 import uk.gov.hmrc.alcoholdutyreturns.models.{ReturnId, UserAnswers}
 import uk.gov.hmrc.mongo.test.DefaultPlayMongoRepositorySupport
 
 import java.time.temporal.ChronoUnit
 import java.time.{Clock, Instant, ZoneId}
-import scala.concurrent.ExecutionContext
 
-class UserAnswersRepositorySpec
-    extends AnyFreeSpec
-    with Matchers
-    with DefaultPlayMongoRepositorySupport[UserAnswers]
-    with ScalaFutures
-    with IntegrationPatience
-    with OptionValues
-    with MockitoSugar
-    with TestData
-    with ModelGenerators {
-
-  implicit val ec: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
-
+class UserAnswersRepositorySpec extends ISpecBase
+    with DefaultPlayMongoRepositorySupport[UserAnswers] {
   private val instant          = Instant.now
   private val stubClock: Clock = Clock.fixed(instant, ZoneId.systemDefault)
 

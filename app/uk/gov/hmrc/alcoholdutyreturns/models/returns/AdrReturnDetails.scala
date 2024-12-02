@@ -46,12 +46,13 @@ object AdrReturnDetails {
   implicit val adrReturnDetailsFormat: OFormat[AdrReturnDetails] = Json.format[AdrReturnDetails]
 }
 
-case class AdrReturnDetailsIdentification(periodKey: String, submittedTime: Instant)
+case class AdrReturnDetailsIdentification(periodKey: String, chargeReference: Option[String], submittedTime: Instant)
 
 object AdrReturnDetailsIdentification {
   def fromReturnDetailsSuccess(returnDetailsSuccess: GetReturnDetails): AdrReturnDetailsIdentification =
     AdrReturnDetailsIdentification(
       periodKey = returnDetailsSuccess.chargeDetails.periodKey,
+      chargeReference = returnDetailsSuccess.chargeDetails.chargeReference,
       submittedTime = returnDetailsSuccess.chargeDetails.receiptDate
     )
 

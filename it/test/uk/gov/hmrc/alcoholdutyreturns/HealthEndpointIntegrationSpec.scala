@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.alcoholdutyreturns
 
-import org.scalatest.time.{Millis, Seconds, Span}
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.ws.WSClient
@@ -33,9 +32,6 @@ class HealthEndpointIntegrationSpec extends ISpecBase {
 
   "service health endpoint should" - {
     "respond with 200 status" in {
-      // Test is known to timeout with the default
-      implicit val patienceConfig = PatienceConfig(timeout = scaled(Span(3, Seconds)), interval = scaled(Span(15, Millis)))
-
       val response =
       wsClient
         .url(s"$baseUrl/ping/ping")

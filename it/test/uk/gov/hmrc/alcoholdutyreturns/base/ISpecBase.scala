@@ -22,7 +22,7 @@ import org.apache.pekko.actor.ActorSystem
 import org.apache.pekko.stream.Materializer
 import org.mockito.MockitoSugar
 import org.scalatest.{OptionValues, TryValues}
-import org.scalatest.concurrent.ScalaFutures
+import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
 import org.scalatest.freespec.AnyFreeSpec
 import org.scalatest.matchers.must.Matchers
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
@@ -58,6 +58,7 @@ trait ISpecBase extends AnyFreeSpec
     with WireMockSupport
     with HttpClientV2Support
     with AuthStubs
+    with IntegrationPatience
     with TestData
     with ModelGenerators {
   implicit lazy val system: ActorSystem = ActorSystem()
