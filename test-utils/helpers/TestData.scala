@@ -851,13 +851,7 @@ trait TestData extends ModelGenerators {
               madeWine = Some(BigDecimal("50.50")),
               ciderOrPerry = Some(BigDecimal("60.60"))
             ),
-            otherIngredient = Some(
-              AdrOtherIngredient(
-                quantity = BigDecimal("70.70"),
-                unitOfMeasure = AdrUnitOfMeasure.Tonnes,
-                ingredientName = "Coco Pops"
-              )
-            )
+            None
           )
         )
       )
@@ -1096,10 +1090,10 @@ trait TestData extends ModelGenerators {
               code10Wine = Some(BigDecimal("40.40")),
               code11MadeWine = Some(BigDecimal("50.50")),
               code12CiderOrPerry = Some(BigDecimal("60.60")),
-              code13Other = Some(true),
-              otherMaterialsQuantity = Some(BigDecimal("70.70")),
-              otherMaterialsUom = Some(OtherMaterialsUomType.Tonnes),
-              otherMaterialsType = Some("Coco Pops")
+              code13Other = None,
+              otherMaterialsQuantity = None,
+              otherMaterialsUom = None,
+              otherMaterialsType = None
             )
           )
         )

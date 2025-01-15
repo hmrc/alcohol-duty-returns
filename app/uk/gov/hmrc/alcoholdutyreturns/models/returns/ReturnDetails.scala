@@ -530,6 +530,7 @@ object SpiritsProducedDetails {
   implicit val spiritsProducedDetailsFormat: OFormat[SpiritsProducedDetails] =
     Jsonx.formatCaseClass[SpiritsProducedDetails]
 
+  // TODO - play ticket (https://jira.tools.tax.service.gov.uk/browse/ADR-1717) in order to remove all legacy spirits data items
   def fromAdrSpiritsProduced(spiritsProduced: AdrSpiritsProduced): SpiritsProducedDetails =
     // Note the spelling of Whisk(e)y in the downstream API is the wrong way around
     SpiritsProducedDetails(
@@ -552,7 +553,7 @@ object SpiritsProducedDetails {
       code10Wine = spiritsProduced.ingredientsVolumes.wine,
       code11MadeWine = spiritsProduced.ingredientsVolumes.madeWine,
       code12CiderOrPerry = spiritsProduced.ingredientsVolumes.ciderOrPerry,
-      code13Other = Some(spiritsProduced.otherIngredient.nonEmpty),
+      code13Other = None,
       otherMaterialsQuantity = spiritsProduced.otherIngredient.map(_.quantity),
       otherMaterialsUom = spiritsProduced.otherIngredient.map(otherIngredient =>
         OtherMaterialsUomType.fromAdrUnitOfMeasure(otherIngredient.unitOfMeasure)
