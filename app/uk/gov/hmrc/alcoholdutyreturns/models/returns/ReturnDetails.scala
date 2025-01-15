@@ -530,7 +530,7 @@ object SpiritsProducedDetails {
   implicit val spiritsProducedDetailsFormat: OFormat[SpiritsProducedDetails] =
     Jsonx.formatCaseClass[SpiritsProducedDetails]
 
-  // TODO - play ticket (https://jira.tools.tax.service.gov.uk/browse/ADR-1717) in order to remove all legacy spirits data items
+  // TODO - play ticket (ADR-1717) in order to remove all legacy spirits data items
   def fromAdrSpiritsProduced(spiritsProduced: AdrSpiritsProduced): SpiritsProducedDetails =
     // Note the spelling of Whisk(e)y in the downstream API is the wrong way around
     SpiritsProducedDetails(
