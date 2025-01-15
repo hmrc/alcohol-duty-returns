@@ -20,12 +20,12 @@ import generators.ModelGenerators
 import play.api.libs.json.{JsObject, Json}
 import uk.gov.hmrc.alcoholdutyreturns.models.AlcoholRegime.{Beer, Cider, OtherFermentedProduct, Spirits, Wine}
 import uk.gov.hmrc.alcoholdutyreturns.models.ApprovalStatus.Approved
-import uk.gov.hmrc.alcoholdutyreturns.models.{AlcoholRegimes, ObligationData, ReturnAndUserDetails, ReturnId, SubscriptionSummary, UserAnswers}
 import uk.gov.hmrc.alcoholdutyreturns.models.ObligationStatus.{Fulfilled, Open}
 import uk.gov.hmrc.alcoholdutyreturns.models.calculation.{CalculateDutyDueByTaxTypeRequest, CalculateDutyDueByTaxTypeRequestItem, CalculatedDutyDueByTaxType, CalculatedDutyDueByTaxTypeItem}
-import uk.gov.hmrc.alcoholdutyreturns.models.returns.{AdrAdjustmentItem, AdrAdjustments, AdrAlcoholQuantity, AdrDuty, AdrDutyDeclared, AdrDutyDeclaredItem, AdrDutySuspended, AdrDutySuspendedAlcoholRegime, AdrDutySuspendedProduct, AdrOtherIngredient, AdrRepackagedDraughtAdjustmentItem, AdrReturnAdjustments, AdrReturnAdjustmentsRow, AdrReturnAlcoholDeclared, AdrReturnAlcoholDeclaredRow, AdrReturnCreatedDetails, AdrReturnDetails, AdrReturnDetailsIdentification, AdrReturnNetDutySuspension, AdrReturnSpirits, AdrReturnSpiritsVolumes, AdrReturnSubmission, AdrReturnTotalDutyDue, AdrSpirits, AdrSpiritsGrainsQuantities, AdrSpiritsIngredientsVolumes, AdrSpiritsProduced, AdrSpiritsVolumes, AdrTotals, AdrTypeOfSpirit, AdrUnitOfMeasure, AlcoholProducts, ChargeDetails, Drawback, GetReturnDetails, GetReturnDetailsSuccess, IdDetails, NetDutySuspension, NetDutySuspensionProducts, OtherMaterialsUomType, OverDeclaration, RegularReturnDetails, RepackagedDraught, RepackagedDraughtProduct, ReturnCreate, ReturnCreatedDetails, ReturnCreatedSuccess, ReturnDetails, SpiritsProduced, SpiritsProducedDetails, SpoiltProduct, TotalDutyDue, TotalDutyDuebyTaxType, TypeOfSpiritType, UnderDeclaration}
+import uk.gov.hmrc.alcoholdutyreturns.models.returns._
+import uk.gov.hmrc.alcoholdutyreturns.models._
 
-import java.time.{Clock, Instant, LocalDate, YearMonth, ZoneId}
+import java.time._
 
 trait TestData extends ModelGenerators {
   val clockMillis: Long = 1718118467838L
@@ -243,25 +243,7 @@ trait TestData extends ModelGenerators {
                 scotchWhiskey = BigDecimal("0.26"),
                 irishWhisky = BigDecimal("0.16"),
                 typeOfSpirit = Set(TypeOfSpiritType.NeutralSpiritAgricultural),
-                typeOfSpiritOther = Some("Coco Pops Vodka"),
-                code1MaltedBarley = Some(BigDecimal("0.17")),
-                code2Other = Some(true),
-                maltedGrainQuantity = Some(BigDecimal("0.55")),
-                maltedGrainType = Some("wheat"),
-                code3Wheat = Some(BigDecimal("0.8")),
-                code4Maize = Some(BigDecimal("0.67")),
-                code5Rye = Some(BigDecimal("0.13")),
-                code6UnmaltedGrain = Some(BigDecimal("0.71")),
-                code7EthyleneGas = Some(BigDecimal("0.45")),
-                code8Molasses = Some(BigDecimal("0.31")),
-                code9Beer = Some(BigDecimal("0.37")),
-                code10Wine = Some(BigDecimal("0.76")),
-                code11MadeWine = Some(BigDecimal("0.6")),
-                code12CiderOrPerry = Some(BigDecimal("0.04")),
-                code13Other = Some(true),
-                otherMaterialsQuantity = Some(BigDecimal("0.26")),
-                otherMaterialsUom = Some(OtherMaterialsUomType.Tonnes),
-                otherMaterialsType = Some("Coco Pops")
+                typeOfSpiritOther = Some("Coco Pops Vodka")
               )
             )
           )
@@ -832,32 +814,7 @@ trait TestData extends ModelGenerators {
               irishWhiskey = BigDecimal("345.67")
             ),
             typesOfSpirit = Set(AdrTypeOfSpirit.Malt, AdrTypeOfSpirit.Beer, AdrTypeOfSpirit.Other),
-            otherSpiritTypeName = Some("MaltyBeer"),
-            hasOtherMaltedGrain = Some(true),
-            grainsQuantities = AdrSpiritsGrainsQuantities(
-              maltedBarley = Some(BigDecimal("10.00")),
-              otherMaltedGrain = Some(BigDecimal("11.11")),
-              wheat = Some(BigDecimal("22.22")),
-              maize = Some(BigDecimal("33.33")),
-              rye = Some(BigDecimal("44.44")),
-              unmaltedGrain = Some(BigDecimal("55.55"))
-            ),
-            otherMaltedGrainType = Some("Smarties"),
-            ingredientsVolumes = AdrSpiritsIngredientsVolumes(
-              ethylene = Some(BigDecimal("10.10")),
-              molasses = Some(BigDecimal("20.20")),
-              beer = Some(BigDecimal("30.30")),
-              wine = Some(BigDecimal("40.40")),
-              madeWine = Some(BigDecimal("50.50")),
-              ciderOrPerry = Some(BigDecimal("60.60"))
-            ),
-            otherIngredient = Some(
-              AdrOtherIngredient(
-                quantity = BigDecimal("70.70"),
-                unitOfMeasure = AdrUnitOfMeasure.Tonnes,
-                ingredientName = "Coco Pops"
-              )
-            )
+            otherSpiritTypeName = Some("MaltyBeer")
           )
         )
       )
@@ -1081,25 +1038,7 @@ trait TestData extends ModelGenerators {
               scotchWhiskey = BigDecimal("234.56"),
               irishWhisky = BigDecimal("345.67"),
               typeOfSpirit = Set(TypeOfSpiritType.MaltSpirit, TypeOfSpiritType.BeerBased, TypeOfSpiritType.Other),
-              typeOfSpiritOther = Some("MaltyBeer"),
-              code1MaltedBarley = Some(BigDecimal("10.00")),
-              code2Other = Some(true),
-              maltedGrainQuantity = Some(BigDecimal("11.11")),
-              maltedGrainType = Some("Smarties"),
-              code3Wheat = Some(BigDecimal("22.22")),
-              code4Maize = Some(BigDecimal("33.33")),
-              code5Rye = Some(BigDecimal("44.44")),
-              code6UnmaltedGrain = Some(BigDecimal("55.55")),
-              code7EthyleneGas = Some(BigDecimal("10.10")),
-              code8Molasses = Some(BigDecimal("20.20")),
-              code9Beer = Some(BigDecimal("30.30")),
-              code10Wine = Some(BigDecimal("40.40")),
-              code11MadeWine = Some(BigDecimal("50.50")),
-              code12CiderOrPerry = Some(BigDecimal("60.60")),
-              code13Other = Some(true),
-              otherMaterialsQuantity = Some(BigDecimal("70.70")),
-              otherMaterialsUom = Some(OtherMaterialsUomType.Tonnes),
-              otherMaterialsType = Some("Coco Pops")
+              typeOfSpiritOther = Some("MaltyBeer")
             )
           )
         )

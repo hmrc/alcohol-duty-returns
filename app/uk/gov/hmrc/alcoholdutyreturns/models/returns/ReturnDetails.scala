@@ -455,33 +455,6 @@ object TypeOfSpiritType extends Enum[TypeOfSpiritType] {
     }
 }
 
-sealed trait OtherMaterialsUomType extends EnumEntry
-
-object OtherMaterialsUomType extends Enum[OtherMaterialsUomType] {
-  val values = findValues
-
-  case object Tonnes extends OtherMaterialsUomType
-  case object Litres extends OtherMaterialsUomType
-
-  implicit val otherMaterialsUomTypeReads: Reads[OtherMaterialsUomType] = {
-    case JsString("01") => JsSuccess(Tonnes)
-    case JsString("02") => JsSuccess(Litres)
-    case s: JsString    => JsError(s"$s is not a valid OtherMaterialsUomType")
-    case v              => JsError(s"got $v was expecting a string representing a OtherMaterialsUomType")
-  }
-
-  implicit val otherMaterialsUomTypeWrites: Writes[OtherMaterialsUomType] = {
-    case Tonnes => JsString("01")
-    case Litres => JsString("02")
-  }
-
-  def fromAdrUnitOfMeasure(unitOfMeasure: AdrUnitOfMeasure): OtherMaterialsUomType =
-    unitOfMeasure match {
-      case AdrUnitOfMeasure.Tonnes => Tonnes
-      case AdrUnitOfMeasure.Litres => Litres
-    }
-}
-
 case class SpiritsProduced(spiritsProdFilled: Boolean, spiritsProduced: Option[SpiritsProducedDetails])
 
 object SpiritsProduced {
@@ -502,25 +475,7 @@ case class SpiritsProducedDetails(
   scotchWhiskey: BigDecimal,
   irishWhisky: BigDecimal,
   typeOfSpirit: Set[TypeOfSpiritType],
-  typeOfSpiritOther: Option[String],
-  code1MaltedBarley: Option[BigDecimal],
-  code2Other: Option[Boolean],
-  maltedGrainQuantity: Option[BigDecimal],
-  maltedGrainType: Option[String],
-  code3Wheat: Option[BigDecimal],
-  code4Maize: Option[BigDecimal],
-  code5Rye: Option[BigDecimal],
-  code6UnmaltedGrain: Option[BigDecimal],
-  code7EthyleneGas: Option[BigDecimal],
-  code8Molasses: Option[BigDecimal],
-  code9Beer: Option[BigDecimal],
-  code10Wine: Option[BigDecimal],
-  code11MadeWine: Option[BigDecimal],
-  code12CiderOrPerry: Option[BigDecimal],
-  code13Other: Option[Boolean],
-  otherMaterialsQuantity: Option[BigDecimal],
-  otherMaterialsUom: Option[OtherMaterialsUomType],
-  otherMaterialsType: Option[String]
+  typeOfSpiritOther: Option[String]
 )
 
 object SpiritsProducedDetails {
@@ -537,27 +492,7 @@ object SpiritsProducedDetails {
       scotchWhiskey = spiritsProduced.spiritsVolumes.scotchWhisky,
       irishWhisky = spiritsProduced.spiritsVolumes.irishWhiskey,
       typeOfSpirit = spiritsProduced.typesOfSpirit.map(TypeOfSpiritType.fromAdrTypeOfSpirit),
-      typeOfSpiritOther = spiritsProduced.otherSpiritTypeName,
-      code1MaltedBarley = spiritsProduced.grainsQuantities.maltedBarley,
-      code2Other = spiritsProduced.hasOtherMaltedGrain,
-      maltedGrainQuantity = spiritsProduced.grainsQuantities.otherMaltedGrain,
-      maltedGrainType = spiritsProduced.otherMaltedGrainType,
-      code3Wheat = spiritsProduced.grainsQuantities.wheat,
-      code4Maize = spiritsProduced.grainsQuantities.maize,
-      code5Rye = spiritsProduced.grainsQuantities.rye,
-      code6UnmaltedGrain = spiritsProduced.grainsQuantities.unmaltedGrain,
-      code7EthyleneGas = spiritsProduced.ingredientsVolumes.ethylene,
-      code8Molasses = spiritsProduced.ingredientsVolumes.molasses,
-      code9Beer = spiritsProduced.ingredientsVolumes.beer,
-      code10Wine = spiritsProduced.ingredientsVolumes.wine,
-      code11MadeWine = spiritsProduced.ingredientsVolumes.madeWine,
-      code12CiderOrPerry = spiritsProduced.ingredientsVolumes.ciderOrPerry,
-      code13Other = Some(spiritsProduced.otherIngredient.nonEmpty),
-      otherMaterialsQuantity = spiritsProduced.otherIngredient.map(_.quantity),
-      otherMaterialsUom = spiritsProduced.otherIngredient.map(otherIngredient =>
-        OtherMaterialsUomType.fromAdrUnitOfMeasure(otherIngredient.unitOfMeasure)
-      ),
-      otherMaterialsType = spiritsProduced.otherIngredient.map(_.ingredientName)
+      typeOfSpiritOther = spiritsProduced.otherSpiritTypeName
     )
 }
 
