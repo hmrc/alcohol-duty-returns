@@ -81,15 +81,6 @@ object AdrTypeOfSpirit extends Enum[AdrTypeOfSpirit] with PlayJsonEnum[AdrTypeOf
     }
 }
 
-sealed trait AdrUnitOfMeasure extends EnumEntry
-
-object AdrUnitOfMeasure extends Enum[AdrUnitOfMeasure] with PlayJsonEnum[AdrUnitOfMeasure] {
-  val values = findValues
-
-  case object Tonnes extends AdrUnitOfMeasure
-  case object Litres extends AdrUnitOfMeasure
-}
-
 case class AdrDutyDeclaredItem(
   quantityDeclared: AdrAlcoholQuantity,
   dutyDue: AdrDuty
@@ -189,53 +180,10 @@ case object AdrSpiritsVolumes {
   implicit val adrSpiritsVolumesFormat: OFormat[AdrSpiritsVolumes] = Json.format[AdrSpiritsVolumes]
 }
 
-case class AdrSpiritsGrainsQuantities(
-  maltedBarley: Option[BigDecimal],
-  otherMaltedGrain: Option[BigDecimal],
-  wheat: Option[BigDecimal],
-  maize: Option[BigDecimal],
-  rye: Option[BigDecimal],
-  unmaltedGrain: Option[BigDecimal]
-)
-
-case object AdrSpiritsGrainsQuantities {
-  implicit val adrSpiritsGrainsQuantitiesFormat: OFormat[AdrSpiritsGrainsQuantities] =
-    Json.format[AdrSpiritsGrainsQuantities]
-}
-
-case class AdrSpiritsIngredientsVolumes(
-  ethylene: Option[BigDecimal],
-  molasses: Option[BigDecimal],
-  beer: Option[BigDecimal],
-  wine: Option[BigDecimal],
-  madeWine: Option[BigDecimal],
-  ciderOrPerry: Option[BigDecimal]
-)
-
-case object AdrSpiritsIngredientsVolumes {
-  implicit val adrSpiritsIngredientsVolumesFormat: OFormat[AdrSpiritsIngredientsVolumes] =
-    Json.format[AdrSpiritsIngredientsVolumes]
-}
-
-case class AdrOtherIngredient(
-  quantity: BigDecimal,
-  unitOfMeasure: AdrUnitOfMeasure,
-  ingredientName: String
-)
-
-case object AdrOtherIngredient {
-  implicit val adrOtherIngredientFormat: OFormat[AdrOtherIngredient] = Json.format[AdrOtherIngredient]
-}
-
 case class AdrSpiritsProduced(
   spiritsVolumes: AdrSpiritsVolumes,
   typesOfSpirit: Set[AdrTypeOfSpirit],
-  otherSpiritTypeName: Option[String],
-  hasOtherMaltedGrain: Option[Boolean],
-  grainsQuantities: AdrSpiritsGrainsQuantities,
-  otherMaltedGrainType: Option[String],
-  ingredientsVolumes: AdrSpiritsIngredientsVolumes,
-  otherIngredient: Option[AdrOtherIngredient]
+  otherSpiritTypeName: Option[String]
 )
 
 case object AdrSpiritsProduced {
