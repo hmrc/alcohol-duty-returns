@@ -17,17 +17,16 @@
 package uk.gov.hmrc.alcoholdutyreturns.controllers
 
 import play.api.Logging
+import play.api.libs.json._
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import uk.gov.hmrc.alcoholdutyreturns.controllers.actions.{AuthorisedAction, CheckAppaIdAction}
 import uk.gov.hmrc.alcoholdutyreturns.service.AccountService
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
-import play.api.libs.json._
-import uk.gov.hmrc.alcoholdutyreturns.models.ReturnId
 
 import javax.inject.Inject
 import scala.concurrent.ExecutionContext
 
-class ObligationController @Inject() (
+class SubscriptionController @Inject()(
   authorise: AuthorisedAction,
   checkAppaId: CheckAppaIdAction,
   accountService: AccountService,
@@ -36,26 +35,14 @@ class ObligationController @Inject() (
     extends BackendController(controllerComponents)
     with Logging {
 
-  def getObligationDetails(appaId: String): Action[AnyContent] =
+  def getValidSubscriptionRegimes(appaId: String): Action[AnyContent] =
     (authorise andThen checkAppaId(appaId)).async { implicit request =>
-      accountService.getObligations(appaId).value.map {
+      accountService.getSubscriptionSummaryAndCheckStatus(appaId).value.map {
         case Left(errorResponse) =>
           logger
-            .warn(s"Unable to get obligation data for $appaId - ${errorResponse.statusCode} ${errorResponse.message}")
-          NotFound(s"Error: {${errorResponse.statusCode},${errorResponse.message}}")
-        case Right(obligations)  => Ok(Json.toJson(obligations))
-      }
-    }
-
-  def getOpenObligation(appaId: String, periodKey: String): Action[AnyContent] =
-    (authorise andThen checkAppaId(appaId)).async { implicit request =>
-      val returnId = ReturnId(appaId, periodKey)
-      accountService.getOpenObligation(returnId).value.map {
-        case Left(errorResponse) =>
-          logger
-            .warn(s"Unable to get an open obligation for ${returnId.appaId} ${returnId.periodKey} - ${errorResponse.statusCode} ${errorResponse.message}")
-          Status(errorResponse.statusCode)(s"Error: Unable to get an open obligation. Status: ${errorResponse.statusCode}, Message: ${errorResponse.message}")
-        case Right(obligationData) => Ok(Json.toJson(obligationData))
+            .warn(s"Unable to get a valid subscription for $appaId - ${errorResponse.statusCode} ${errorResponse.message}")
+          Status(errorResponse.statusCode)(s"Error: Unable to get a valid subscription. Status: ${errorResponse.statusCode}, Message: ${errorResponse.message}")
+        case Right(subscriptionSummary)  => Ok(Json.toJson(subscriptionSummary.regimes))
       }
     }
 }
