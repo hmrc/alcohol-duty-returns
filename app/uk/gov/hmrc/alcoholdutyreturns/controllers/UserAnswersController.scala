@@ -124,6 +124,21 @@ class UserAnswersController @Inject() (
       }
     }
 
+  def delete(appaId: String, periodKey: String): Action[AnyContent] =
+    (authorise andThen checkAppaId(appaId)).async { implicit request =>
+      val returnId = ReturnId(appaId, periodKey)
+      lockingService
+        .withLock(returnId, request.userId) {
+          userAnswersRepository.clearUserAnswersById(returnId).map { _ =>
+            Ok(s"User answers deleted for user ${request.userId} on return $appaId/$periodKey")
+          }
+        }
+        .map {
+          case Some(result) => result
+          case None         => Locked
+        }
+    }
+
   def releaseReturnLock(appaId: String, periodKey: String): Action[AnyContent] =
     (authorise andThen checkAppaId(appaId)).async { implicit request =>
       lockingService

@@ -226,6 +226,40 @@ class UserAnswersControllerSpec extends SpecBase {
     }
   }
 
+  "delete must" - {
+    "clear user answers and return 200 OK" in {
+      when(mockUserAnswersRepository.clearUserAnswersById(ArgumentMatchers.eq(returnId)))
+        .thenReturn(Future.successful(()))
+
+      val result: Future[Result] =
+        controller.delete(appaId, periodKey)(fakeRequest)
+
+      status(result) mustBe OK
+    }
+
+    "return 423 Locked when user answers is locked by another user" in {
+      val mockLockingService = mock[LockingService]
+      when(mockLockingService.withLock(any(), any())(any())).thenReturn(Future.successful(None))
+
+      val controller = new UserAnswersController(
+        fakeAuthorisedAction,
+        fakeCheckAppaIdAction,
+        mockUserAnswersRepository,
+        mockLockingService,
+        mockAccountService,
+        cc
+      )
+
+      when(mockUserAnswersRepository.clearUserAnswersById(ArgumentMatchers.eq(returnId)))
+        .thenReturn(Future.successful(()))
+
+      val result: Future[Result] =
+        controller.delete(appaId, periodKey)(fakeRequest)
+
+      status(result) mustBe LOCKED
+    }
+  }
+
   "releaseReturnLock must" - {
     "release the lock for a return and return 200 OK" in {
       val mockLockingService = mock[LockingService]

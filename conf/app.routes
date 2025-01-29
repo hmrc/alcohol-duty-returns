@@ -4,6 +4,7 @@
 GET         /user-answers/:appaId/:periodKey                  uk.gov.hmrc.alcoholdutyreturns.controllers.UserAnswersController.get(appaId:String, periodKey:String)
 PUT         /user-answers                                     uk.gov.hmrc.alcoholdutyreturns.controllers.UserAnswersController.set()
 POST        /user-answers                                     uk.gov.hmrc.alcoholdutyreturns.controllers.UserAnswersController.createUserAnswers()
+DELETE      /user-answers/:appaId/:periodKey                  uk.gov.hmrc.alcoholdutyreturns.controllers.UserAnswersController.delete(appaId:String, periodKey:String)
 DELETE      /user-answers/lock/:appaId/:periodKey             uk.gov.hmrc.alcoholdutyreturns.controllers.UserAnswersController.releaseReturnLock(appaId, periodKey)
 PUT         /user-answers/lock/:appaId/:periodKey/ttl         uk.gov.hmrc.alcoholdutyreturns.controllers.UserAnswersController.keepAlive(appaId, periodKey)
 
