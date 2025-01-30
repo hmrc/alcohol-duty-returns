@@ -1,2 +1,2 @@
-DELETE        /user-answers/clear-all        uk.gov.hmrc.alcoholdutyreturns.testonly.controllers.TestOnlyController.clearAllData()
-POST          /user-answers/:regimes         uk.gov.hmrc.alcoholdutyreturns.controllers.TestOnlyController.createUserAnswers(regimes: String)
+DELETE        /user-answers/clear-all                               uk.gov.hmrc.alcoholdutyreturns.testonly.controllers.TestOnlyController.clearAllData()
+POST          /user-answers/:beer/:cider/:wine/:spirits/:OFP        uk.gov.hmrc.alcoholdutyreturns.testonly.controllers.TestOnlyController.createUserAnswers(beer: Boolean, cider: Boolean, wine: Boolean, spirits: Boolean, OFP: Boolean)

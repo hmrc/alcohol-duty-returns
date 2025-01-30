@@ -51,10 +51,14 @@ class ObligationController @Inject() (
     (authorise andThen checkAppaId(appaId)).async { implicit request =>
       val returnId = ReturnId(appaId, periodKey)
       accountService.getOpenObligation(returnId).value.map {
-        case Left(errorResponse) =>
+        case Left(errorResponse)   =>
           logger
-            .warn(s"Unable to get an open obligation for ${returnId.appaId} ${returnId.periodKey} - ${errorResponse.statusCode} ${errorResponse.message}")
-          Status(errorResponse.statusCode)(s"Error: Unable to get an open obligation. Status: ${errorResponse.statusCode}, Message: ${errorResponse.message}")
+            .warn(
+              s"Unable to get an open obligation for ${returnId.appaId} ${returnId.periodKey} - ${errorResponse.statusCode} ${errorResponse.message}"
+            )
+          Status(errorResponse.statusCode)(
+            s"Error: Unable to get an open obligation. Status: ${errorResponse.statusCode}, Message: ${errorResponse.message}"
+          )
         case Right(obligationData) => Ok(Json.toJson(obligationData))
       }
     }

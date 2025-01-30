@@ -55,8 +55,10 @@ class SubscriptionControllerSpec extends SpecBase {
         val result: Future[Result] =
           controller.getValidSubscriptionRegimes(appaId)(fakeRequest)
 
-        status(result)        mustBe errorResponse.statusCode
-        contentAsString(result) mustBe s"Error: Unable to get a valid subscription. Status: ${errorResponse.statusCode}, Message: ${errorResponse.message}"
+        status(result) mustBe errorResponse.statusCode
+        contentAsString(
+          result
+        )              mustBe s"Error: Unable to get a valid subscription. Status: ${errorResponse.statusCode}, Message: ${errorResponse.message}"
       }
     }
   }
@@ -64,6 +66,6 @@ class SubscriptionControllerSpec extends SpecBase {
   class SetUp {
     val mockAccountService: AccountService = mock[AccountService]
 
-    val controller     = new SubscriptionController(fakeAuthorisedAction, fakeCheckAppaIdAction, mockAccountService, cc)
+    val controller = new SubscriptionController(fakeAuthorisedAction, fakeCheckAppaIdAction, mockAccountService, cc)
   }
 }

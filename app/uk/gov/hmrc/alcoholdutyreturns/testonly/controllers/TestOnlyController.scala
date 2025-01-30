@@ -47,36 +47,32 @@ class TestOnlyController @Inject() (
     } yield Ok("All data cleared")
   }
 
-  def createUserAnswers(regimes: String): Action[JsValue] =
+  def createUserAnswers(beer: Boolean, cider: Boolean, wine: Boolean, spirits: Boolean, OFP: Boolean): Action[JsValue] =
     authorise(parse.json).async { implicit request =>
       withJsonBody[ReturnAndUserDetails] { returnAndUserDetails =>
         val returnId = returnAndUserDetails.returnId
         val appaId   = returnId.appaId
 
-        Try(getRegimeFlags(regimes)) match {
-          case Success((noOFP, noSpirits, noWine, noCiderNorPerry, noBeer)) =>
-            checkAppaId(appaId).invokeBlock[JsValue](
-              request,
-              { implicit request =>
-                lockingService
-                  .withLock(returnId, request.userId) {
-                    val alcoholRegimes      = flagsToApprovalTypes(noOFP, noSpirits, noWine, noCiderNorPerry, noBeer)
-                    val subscriptionSummary = SubscriptionSummary(ApprovalStatus.Approved, alcoholRegimes)
-                    val obligationData      = getObligationData(returnId.periodKey, LocalDate.now())
-                    val userAnswers         =
-                      UserAnswers.createUserAnswers(returnAndUserDetails, subscriptionSummary, obligationData)
-                    userAnswersRepository.add(userAnswers).map { userAnswers =>
-                      Created(Json.toJson(userAnswers))
-                    }
-                  }
-                  .map {
-                    case Some(result) => result
-                    case None         => Locked
-                  }
+        checkAppaId(appaId).invokeBlock[JsValue](
+          request,
+          { implicit request =>
+            lockingService
+              .withLock(returnId, request.userId) {
+                val alcoholRegimes      = getAlcoholRegimes(beer, cider, wine, spirits, OFP)
+                val subscriptionSummary = SubscriptionSummary(ApprovalStatus.Approved, alcoholRegimes)
+                val obligationData      = getObligationData(returnId.periodKey, LocalDate.now())
+                val userAnswers         =
+                  UserAnswers.createUserAnswers(returnAndUserDetails, subscriptionSummary, obligationData)
+                userAnswersRepository.add(userAnswers).map { userAnswers =>
+                  Created(Json.toJson(userAnswers))
+                }
               }
-            )
-          case Failure(e)                                                   => Future.successful(BadRequest(e.getMessage))
-        }
+              .map {
+                case Some(result) => result
+                case None         => Locked
+              }
+          }
+        )
       }
     }
 
@@ -88,33 +84,18 @@ class TestOnlyController @Inject() (
     periodKey = periodKey
   )
 
-  private def getRegimeFlags(flagDigits: String) =
-    if (!flagDigits.matches("^\\d{2}$")) {
-      throw new RuntimeException("Invalid flag digits to specify regimes")
-    } else {
-      val flags = flagDigits.toInt
-
-      val noOFP           = (flags & 0x40) != 0
-      val noSpirits       = (flags & 0x08) != 0
-      val noWine          = (flags & 0x04) != 0
-      val noCiderNorPerry = (flags & 0x02) != 0
-      val noBeer          = (flags & 0x01) != 0
-
-      (noOFP, noSpirits, noWine, noCiderNorPerry, noBeer)
-    }
-
-  private def flagsToApprovalTypes(
-    noOFP: Boolean,
-    noSpirits: Boolean,
-    noWine: Boolean,
-    noCiderNorPerry: Boolean,
-    noBeer: Boolean
+  private def getAlcoholRegimes(
+    beer: Boolean,
+    cider: Boolean,
+    wine: Boolean,
+    spirits: Boolean,
+    OFP: Boolean
   ): Set[AlcoholRegime] =
     Set(
-      Some(Beer).filterNot(_ => noBeer),
-      Some(Cider).filterNot(_ => noCiderNorPerry),
-      Some(Wine).filterNot(_ => noWine),
-      Some(Spirits).filterNot(_ => noSpirits),
-      Some(OtherFermentedProduct).filterNot(_ => noOFP)
+      Some(Beer).filter(_ => beer),
+      Some(Cider).filter(_ => cider),
+      Some(Wine).filter(_ => wine),
+      Some(Spirits).filter(_ => spirits),
+      Some(OtherFermentedProduct).filter(_ => OFP)
     ).flatten
 }

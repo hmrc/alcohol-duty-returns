@@ -79,8 +79,10 @@ class ObligationControllerSpec extends SpecBase {
         val result: Future[Result] =
           controller.getOpenObligation(appaId, periodKey)(fakeRequest)
 
-        status(result)        mustBe errorResponse.statusCode
-        contentAsString(result) mustBe s"Error: Unable to get an open obligation. Status: ${errorResponse.statusCode}, Message: ${errorResponse.message}"
+        status(result) mustBe errorResponse.statusCode
+        contentAsString(
+          result
+        )              mustBe s"Error: Unable to get an open obligation. Status: ${errorResponse.statusCode}, Message: ${errorResponse.message}"
       }
     }
   }

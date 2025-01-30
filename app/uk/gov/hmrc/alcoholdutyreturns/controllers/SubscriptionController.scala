@@ -26,7 +26,7 @@ import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import javax.inject.Inject
 import scala.concurrent.ExecutionContext
 
-class SubscriptionController @Inject()(
+class SubscriptionController @Inject() (
   authorise: AuthorisedAction,
   checkAppaId: CheckAppaIdAction,
   accountService: AccountService,
@@ -38,11 +38,15 @@ class SubscriptionController @Inject()(
   def getValidSubscriptionRegimes(appaId: String): Action[AnyContent] =
     (authorise andThen checkAppaId(appaId)).async { implicit request =>
       accountService.getSubscriptionSummaryAndCheckStatus(appaId).value.map {
-        case Left(errorResponse) =>
+        case Left(errorResponse)        =>
           logger
-            .warn(s"Unable to get a valid subscription for $appaId - ${errorResponse.statusCode} ${errorResponse.message}")
-          Status(errorResponse.statusCode)(s"Error: Unable to get a valid subscription. Status: ${errorResponse.statusCode}, Message: ${errorResponse.message}")
-        case Right(subscriptionSummary)  => Ok(Json.toJson(subscriptionSummary.regimes))
+            .warn(
+              s"Unable to get a valid subscription for $appaId - ${errorResponse.statusCode} ${errorResponse.message}"
+            )
+          Status(errorResponse.statusCode)(
+            s"Error: Unable to get a valid subscription. Status: ${errorResponse.statusCode}, Message: ${errorResponse.message}"
+          )
+        case Right(subscriptionSummary) => Ok(Json.toJson(subscriptionSummary.regimes))
       }
     }
 }
