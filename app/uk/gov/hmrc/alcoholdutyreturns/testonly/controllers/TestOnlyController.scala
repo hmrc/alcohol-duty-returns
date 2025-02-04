@@ -20,16 +20,15 @@ import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import uk.gov.hmrc.alcoholdutyreturns.controllers.actions.{AuthorisedAction, CheckAppaIdAction}
 import uk.gov.hmrc.alcoholdutyreturns.models.AlcoholRegime._
-import uk.gov.hmrc.alcoholdutyreturns.models.ObligationStatus.{Fulfilled, Open}
-import uk.gov.hmrc.alcoholdutyreturns.models.{AlcoholRegime, ApprovalStatus, ObligationData, ReturnAndUserDetails, SubscriptionSummary, UserAnswers}
+import uk.gov.hmrc.alcoholdutyreturns.models.ObligationStatus.Open
+import uk.gov.hmrc.alcoholdutyreturns.models._
 import uk.gov.hmrc.alcoholdutyreturns.repositories.UserAnswersRepository
 import uk.gov.hmrc.alcoholdutyreturns.service.LockingService
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import java.time.LocalDate
 import javax.inject.Inject
-import scala.concurrent.{ExecutionContext, Future}
-import scala.util.{Failure, Success, Try}
+import scala.concurrent.ExecutionContext
 
 class TestOnlyController @Inject() (
   cc: ControllerComponents,
@@ -63,9 +62,10 @@ class TestOnlyController @Inject() (
                 val obligationData      = getObligationData(returnId.periodKey, LocalDate.now())
                 val userAnswers         =
                   UserAnswers.createUserAnswers(returnAndUserDetails, subscriptionSummary, obligationData)
-                userAnswersRepository.add(userAnswers).map { userAnswers =>
-                  Created(Json.toJson(userAnswers))
-                }
+                for {
+                  _                  <- userAnswersRepository.clearUserAnswersById(returnId)
+                  createdUserAnswers <- userAnswersRepository.add(userAnswers)
+                } yield Created(Json.toJson(createdUserAnswers))
               }
               .map {
                 case Some(result) => result
