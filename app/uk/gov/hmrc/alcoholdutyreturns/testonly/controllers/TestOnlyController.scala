@@ -16,16 +16,24 @@
 
 package uk.gov.hmrc.alcoholdutyreturns.testonly.controllers
 
+import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
+import uk.gov.hmrc.alcoholdutyreturns.controllers.actions.{AuthorisedAction, CheckAppaIdAction}
+import uk.gov.hmrc.alcoholdutyreturns.models.AlcoholRegime._
+import uk.gov.hmrc.alcoholdutyreturns.models.ObligationStatus.Open
+import uk.gov.hmrc.alcoholdutyreturns.models._
 import uk.gov.hmrc.alcoholdutyreturns.repositories.UserAnswersRepository
 import uk.gov.hmrc.alcoholdutyreturns.service.LockingService
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
+import java.time.LocalDate
 import javax.inject.Inject
 import scala.concurrent.ExecutionContext
 
 class TestOnlyController @Inject() (
   cc: ControllerComponents,
+  authorise: AuthorisedAction,
+  checkAppaId: CheckAppaIdAction,
   userAnswersRepository: UserAnswersRepository,
   lockingService: LockingService
 )(implicit ec: ExecutionContext)
@@ -37,4 +45,57 @@ class TestOnlyController @Inject() (
       _ <- lockingService.releaseAllLocks()
     } yield Ok("All data cleared")
   }
+
+  def createUserAnswers(beer: Boolean, cider: Boolean, wine: Boolean, spirits: Boolean, OFP: Boolean): Action[JsValue] =
+    authorise(parse.json).async { implicit request =>
+      withJsonBody[ReturnAndUserDetails] { returnAndUserDetails =>
+        val returnId = returnAndUserDetails.returnId
+        val appaId   = returnId.appaId
+
+        checkAppaId(appaId).invokeBlock[JsValue](
+          request,
+          { implicit request =>
+            lockingService
+              .withLock(returnId, request.userId) {
+                val alcoholRegimes      = getAlcoholRegimes(beer, cider, wine, spirits, OFP)
+                val subscriptionSummary = SubscriptionSummary(ApprovalStatus.Approved, alcoholRegimes)
+                val obligationData      = getObligationData(returnId.periodKey, LocalDate.now())
+                val userAnswers         =
+                  UserAnswers.createUserAnswers(returnAndUserDetails, subscriptionSummary, obligationData)
+                for {
+                  _                  <- userAnswersRepository.clearUserAnswersById(returnId)
+                  createdUserAnswers <- userAnswersRepository.add(userAnswers)
+                } yield Created(Json.toJson(createdUserAnswers))
+              }
+              .map {
+                case Some(result) => result
+                case None         => Locked
+              }
+          }
+        )
+      }
+    }
+
+  private def getObligationData(periodKey: String, now: LocalDate): ObligationData = ObligationData(
+    status = Open,
+    fromDate = now,
+    toDate = now.plusDays(1),
+    dueDate = now.plusDays(2),
+    periodKey = periodKey
+  )
+
+  private def getAlcoholRegimes(
+    beer: Boolean,
+    cider: Boolean,
+    wine: Boolean,
+    spirits: Boolean,
+    OFP: Boolean
+  ): Set[AlcoholRegime] =
+    Set(
+      Some(Beer).filter(_ => beer),
+      Some(Cider).filter(_ => cider),
+      Some(Wine).filter(_ => wine),
+      Some(Spirits).filter(_ => spirits),
+      Some(OtherFermentedProduct).filter(_ => OFP)
+    ).flatten
 }

@@ -30,7 +30,7 @@ import java.time.LocalDate
 import scala.concurrent.Future
 
 class ObligationControllerSpec extends SpecBase {
-  "ObligationController must" - {
+  "getObligationDetails must" - {
     "return 200 OK with obligations if successful" in new SetUp {
       when(mockAccountService.getObligations(eqTo(appaId))(any(), any()))
         .thenReturn(EitherT.rightT[Future, ErrorResponse](Seq(obligationData)))
@@ -51,6 +51,39 @@ class ObligationControllerSpec extends SpecBase {
 
       status(result)          mustBe NOT_FOUND
       contentAsString(result) mustBe "Error: {500,Unexpected Response}"
+    }
+  }
+
+  "getOpenObligation must" - {
+    "return 200 OK with obligation data if successful" in new SetUp {
+      when(mockAccountService.getOpenObligation(eqTo(returnId))(any(), any()))
+        .thenReturn(EitherT.rightT(obligationData))
+
+      val result: Future[Result] =
+        controller.getOpenObligation(appaId, periodKey)(fakeRequest)
+
+      status(result)        mustBe OK
+      contentAsJson(result) mustBe Json.toJson(obligationData)
+    }
+
+    Seq(
+      ("EntityNotFound", ErrorCodes.entityNotFound),
+      ("InvalidJson", ErrorCodes.invalidJson),
+      ("UnexpectedResponse", ErrorCodes.unexpectedResponse),
+      ("ObligationFulfilled", ErrorCodes.obligationFulfilled)
+    ).foreach { case (errorName, errorResponse) =>
+      s"return the status ${errorResponse.statusCode} if the account service returns the error $errorName when getting the open obligation" in new SetUp {
+        when(mockAccountService.getOpenObligation(eqTo(returnId))(any(), any()))
+          .thenReturn(EitherT.leftT(errorResponse))
+
+        val result: Future[Result] =
+          controller.getOpenObligation(appaId, periodKey)(fakeRequest)
+
+        status(result) mustBe errorResponse.statusCode
+        contentAsString(
+          result
+        )              mustBe s"Error: Unable to get an open obligation. Status: ${errorResponse.statusCode}, Message: ${errorResponse.message}"
+      }
     }
   }
 

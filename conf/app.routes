@@ -4,10 +4,14 @@
 GET         /user-answers/:appaId/:periodKey                  uk.gov.hmrc.alcoholdutyreturns.controllers.UserAnswersController.get(appaId:String, periodKey:String)
 PUT         /user-answers                                     uk.gov.hmrc.alcoholdutyreturns.controllers.UserAnswersController.set()
 POST        /user-answers                                     uk.gov.hmrc.alcoholdutyreturns.controllers.UserAnswersController.createUserAnswers()
+DELETE      /user-answers/:appaId/:periodKey                  uk.gov.hmrc.alcoholdutyreturns.controllers.UserAnswersController.delete(appaId:String, periodKey:String)
 DELETE      /user-answers/lock/:appaId/:periodKey             uk.gov.hmrc.alcoholdutyreturns.controllers.UserAnswersController.releaseReturnLock(appaId, periodKey)
 PUT         /user-answers/lock/:appaId/:periodKey/ttl         uk.gov.hmrc.alcoholdutyreturns.controllers.UserAnswersController.keepAlive(appaId, periodKey)
 
 GET         /obligationDetails/:appaId                        uk.gov.hmrc.alcoholdutyreturns.controllers.ObligationController.getObligationDetails(appaId)
+GET         /openObligation/:appaId/:periodKey                uk.gov.hmrc.alcoholdutyreturns.controllers.ObligationController.getOpenObligation(appaId:String, periodKey:String)
+
+GET         /subscriptionSummary/:appaId                      uk.gov.hmrc.alcoholdutyreturns.controllers.SubscriptionController.getValidSubscriptionRegimes(appaId: String)
 
 GET         /producers/:appaId/returns/:periodKey             uk.gov.hmrc.alcoholdutyreturns.controllers.ReturnsController.getReturn(appaId:String, periodKey:String)
 POST        /producers/:appaId/returns/:periodKey             uk.gov.hmrc.alcoholdutyreturns.controllers.ReturnsController.submitReturn(appaId:String, periodKey:String)
