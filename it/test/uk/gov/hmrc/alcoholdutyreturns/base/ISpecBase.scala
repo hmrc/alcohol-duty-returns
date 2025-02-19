@@ -41,7 +41,8 @@ import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.ExecutionContext.global
 
-trait ISpecBase extends AnyFreeSpec
+trait ISpecBase
+    extends AnyFreeSpec
     with Matchers
     with TryValues
     with OptionValues
@@ -61,13 +62,13 @@ trait ISpecBase extends AnyFreeSpec
     with IntegrationPatience
     with TestData
     with ModelGenerators {
-  implicit lazy val system: ActorSystem = ActorSystem()
+  implicit lazy val system: ActorSystem        = ActorSystem()
   implicit lazy val materializer: Materializer = Materializer(system)
 
   implicit def ec: ExecutionContext = global
 
   val additionalAppConfig: Map[String, Any] = Map(
-    "metrics.enabled" -> false,
+    "metrics.enabled"  -> false,
     "auditing.enabled" -> false
   ) ++ getWireMockAppConfig(Seq("auth", "alcohol-duty-accounts", "alcohol-duty-calculator", "returns"))
 
@@ -89,15 +90,15 @@ trait ISpecBase extends AnyFreeSpec
   }
 
   def callRoute[A](fakeRequest: FakeRequest[A], requiresAuth: Boolean = true)(implicit
-                                                                              app: Application,
-                                                                              w: Writeable[A]
+    app: Application,
+    w: Writeable[A]
   ): Future[Result] = {
     val errorHandler = app.errorHandler
 
     val req = if (requiresAuth) fakeRequest.withHeaders("Authorization" -> "test") else fakeRequest
 
     route(app, req) match {
-      case None => fail("Route does not exist")
+      case None         => fail("Route does not exist")
       case Some(result) =>
         result.recoverWith { case t: Throwable =>
           errorHandler.onServerError(req, t)

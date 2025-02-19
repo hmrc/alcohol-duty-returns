@@ -26,8 +26,16 @@ class CalculatorConnectorSpec extends ISpecBase {
   "Calculator Connector when" - {
     "calculateDutyDueByTaxType is called must" - {
       "successfully calculate duty due by tax type" in new SetUp {
-        stubPost(calculateDutyDueByTaxTypeUrl, OK, Json.toJson(calculateDutyDueByTaxTypeRequest).toString(), Json.toJson(calculatedDutyDueByTaxType).toString())
-        whenReady(connector.calculateDutyDueByTaxType(calculateDutyDueByTaxTypeRequest).value, timeout = Timeout(Span(3, Seconds))) { result =>
+        stubPost(
+          calculateDutyDueByTaxTypeUrl,
+          OK,
+          Json.toJson(calculateDutyDueByTaxTypeRequest).toString(),
+          Json.toJson(calculatedDutyDueByTaxType).toString()
+        )
+        whenReady(
+          connector.calculateDutyDueByTaxType(calculateDutyDueByTaxTypeRequest).value,
+          timeout = Timeout(Span(3, Seconds))
+        ) { result =>
           result mustBe Right(calculatedDutyDueByTaxType)
           verifyPost(calculateDutyDueByTaxTypeUrl)
         }
@@ -35,22 +43,38 @@ class CalculatorConnectorSpec extends ISpecBase {
 
       "return an InvalidJson error if the call returns an invalid response" in new SetUp {
         stubPost(calculateDutyDueByTaxTypeUrl, OK, Json.toJson(calculateDutyDueByTaxTypeRequest).toString(), "invalid")
-        whenReady(connector.calculateDutyDueByTaxType(calculateDutyDueByTaxTypeRequest).value, timeout = Timeout(Span(3, Seconds))) { result =>
+        whenReady(
+          connector.calculateDutyDueByTaxType(calculateDutyDueByTaxTypeRequest).value,
+          timeout = Timeout(Span(3, Seconds))
+        ) { result =>
           result mustBe Left(ErrorCodes.invalidJson)
           verifyPost(calculateDutyDueByTaxTypeUrl)
         }
       }
 
       "return a BadRequest error if the call returns a 400 response" in new SetUp {
-        stubPost(calculateDutyDueByTaxTypeUrl, BAD_REQUEST, Json.toJson(calculateDutyDueByTaxTypeRequest).toString(), "")
-        whenReady(connector.calculateDutyDueByTaxType(calculateDutyDueByTaxTypeRequest).value, timeout = Timeout(Span(3, Seconds))) { result =>
+        stubPost(
+          calculateDutyDueByTaxTypeUrl,
+          BAD_REQUEST,
+          Json.toJson(calculateDutyDueByTaxTypeRequest).toString(),
+          ""
+        )
+        whenReady(
+          connector.calculateDutyDueByTaxType(calculateDutyDueByTaxTypeRequest).value,
+          timeout = Timeout(Span(3, Seconds))
+        ) { result =>
           result mustBe Left(ErrorCodes.badRequest)
           verifyPost(calculateDutyDueByTaxTypeUrl)
         }
       }
 
       "return an UnexpectedResponse error if the call returns a 500 response" in new SetUp {
-        stubPost(calculateDutyDueByTaxTypeUrl, INTERNAL_SERVER_ERROR, Json.toJson(calculateDutyDueByTaxTypeRequest).toString(), Json.toJson(internalServerError).toString())
+        stubPost(
+          calculateDutyDueByTaxTypeUrl,
+          INTERNAL_SERVER_ERROR,
+          Json.toJson(calculateDutyDueByTaxTypeRequest).toString(),
+          Json.toJson(internalServerError).toString()
+        )
         whenReady(connector.calculateDutyDueByTaxType(calculateDutyDueByTaxTypeRequest).value) { result =>
           result mustBe Left(ErrorCodes.unexpectedResponse)
           verifyPost(calculateDutyDueByTaxTypeUrl)
@@ -60,7 +84,7 @@ class CalculatorConnectorSpec extends ISpecBase {
   }
 
   class SetUp {
-    val connector = app.injector.instanceOf[CalculatorConnector]
+    val connector                    = app.injector.instanceOf[CalculatorConnector]
     val calculateDutyDueByTaxTypeUrl = config.getCalculateDutyDueByTaxTypeUrl
   }
 }

@@ -30,13 +30,13 @@ class HealthEndpointIntegrationSpec extends ISpecBase {
       .configure("metrics.enabled" -> false)
       .build()
 
-  "service health endpoint should" - {
+  "service health endpoint must" - {
     "respond with 200 status" in {
       val response =
-      wsClient
-        .url(s"$baseUrl/ping/ping")
-        .get()
-        .futureValue
+        wsClient
+          .url(s"$baseUrl/ping/ping")
+          .get()
+          .futureValue
 
       response.status mustBe 200
     }
