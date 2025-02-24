@@ -64,7 +64,10 @@ trait WireMockHelper {
 
   def stubPost(url: String, status: Int, requestBody: String, returnBody: String): Unit =
     wireMockServer.stubFor(
-      WireMock.post(urlEqualTo(stripToPath(url))).withRequestBody(new EqualToJsonPattern(requestBody, true, false)).willReturn(aResponse().withStatus(status).withBody(returnBody))
+      WireMock
+        .post(urlEqualTo(stripToPath(url)))
+        .withRequestBody(new EqualToJsonPattern(requestBody, true, false))
+        .willReturn(aResponse().withStatus(status).withBody(returnBody))
     )
 
   def verifyGet(url: String): Unit =

@@ -70,10 +70,16 @@ class ReturnsConnectorSpec extends ISpecBase {
 
     "submitReturn is called must" - {
       "successfully submit a return" in new SetUp {
-        stubPost(submitReturnUrl, CREATED, Json.toJson(returnSubmission).toString(), Json.toJson(returnCreated).toString())
-        whenReady(connector.submitReturn(returnSubmission, appaId).value, timeout = Timeout(Span(3, Seconds))) { result =>
-          result mustBe Right(returnCreated.success)
-          verifyPost(submitReturnUrl)
+        stubPost(
+          submitReturnUrl,
+          CREATED,
+          Json.toJson(returnSubmission).toString(),
+          Json.toJson(returnCreated).toString()
+        )
+        whenReady(connector.submitReturn(returnSubmission, appaId).value, timeout = Timeout(Span(3, Seconds))) {
+          result =>
+            result mustBe Right(returnCreated.success)
+            verifyPost(submitReturnUrl)
         }
       }
 
@@ -86,7 +92,12 @@ class ReturnsConnectorSpec extends ISpecBase {
       }
 
       "return a BadRequest error if the call returns a 400 response" in new SetUp {
-        stubPost(submitReturnUrl, BAD_REQUEST, Json.toJson(returnSubmission).toString(), Json.toJson(processingError(now)).toString())
+        stubPost(
+          submitReturnUrl,
+          BAD_REQUEST,
+          Json.toJson(returnSubmission).toString(),
+          Json.toJson(processingError(now)).toString()
+        )
         whenReady(connector.submitReturn(returnSubmission, id).value, timeout = Timeout(Span(3, Seconds))) { result =>
           result mustBe Left(ErrorCodes.badRequest)
           verifyPost(submitReturnUrl)
@@ -102,7 +113,12 @@ class ReturnsConnectorSpec extends ISpecBase {
       }
 
       "return an UnexpectedResponse error if the call returns a 500 response" in new SetUp {
-        stubPost(submitReturnUrl, INTERNAL_SERVER_ERROR, Json.toJson(returnSubmission).toString(), Json.toJson(internalServerError).toString())
+        stubPost(
+          submitReturnUrl,
+          INTERNAL_SERVER_ERROR,
+          Json.toJson(returnSubmission).toString(),
+          Json.toJson(internalServerError).toString()
+        )
         whenReady(connector.submitReturn(returnSubmission, id).value) { result =>
           result mustBe Left(ErrorCodes.unexpectedResponse)
           verifyPost(submitReturnUrl)
@@ -112,16 +128,22 @@ class ReturnsConnectorSpec extends ISpecBase {
   }
 
   class SetUp {
-    val connector = app.injector.instanceOf[ReturnsConnector]
-    val getReturnUrl = config.getReturnUrl(returnId)
+    val connector       = app.injector.instanceOf[ReturnsConnector]
+    val getReturnUrl    = config.getReturnUrl(returnId)
     val submitReturnUrl = config.submitReturnUrl
 
     val periodKey = "24AA"
-    val id = appaId
-    val now = Instant.now()
+    val id        = appaId
+    val now       = Instant.now()
 
-    val returnData = successfulReturnExample(id, periodKey, submissionId, chargeReference, now)
+    val returnData       = successfulReturnExample(id, periodKey, submissionId, chargeReference, now)
     val returnSubmission = returnCreateSubmission(periodKey)
-    val returnCreated = exampleReturnCreatedSuccessfulResponse(periodKey, returnSubmission.totalDutyDue.totalDutyDue, now, chargeReference, submissionId)
+    val returnCreated    = exampleReturnCreatedSuccessfulResponse(
+      periodKey,
+      returnSubmission.totalDutyDue.totalDutyDue,
+      now,
+      chargeReference,
+      submissionId
+    )
   }
 }

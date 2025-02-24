@@ -25,8 +25,7 @@ import uk.gov.hmrc.mongo.test.DefaultPlayMongoRepositorySupport
 import java.time.temporal.ChronoUnit
 import java.time.{Clock, Instant, ZoneId}
 
-class UserAnswersRepositorySpec extends ISpecBase
-    with DefaultPlayMongoRepositorySupport[UserAnswers] {
+class UserAnswersRepositorySpec extends ISpecBase with DefaultPlayMongoRepositorySupport[UserAnswers] {
   private val instant          = Instant.now
   private val stubClock: Clock = Clock.fixed(instant, ZoneId.systemDefault)
 
@@ -55,8 +54,8 @@ class UserAnswersRepositorySpec extends ISpecBase
         validUntil = expectedAddedUserAnswers.validUntil.map(_.truncatedTo(ChronoUnit.MILLIS))
       )
 
-      val updatedUserAnswers     = repository.add(userAnswers).futureValue
-      val updatedRecord = find(Filters.equal("_id", ReturnId(appaId, periodKey))).futureValue.headOption.value
+      val updatedUserAnswers = repository.add(userAnswers).futureValue
+      val updatedRecord      = find(Filters.equal("_id", ReturnId(appaId, periodKey))).futureValue.headOption.value
 
       updatedUserAnswers mustEqual expectedAddedUserAnswers
       verifyUserAnswerResult(updatedRecord, expectedResult)
@@ -65,7 +64,7 @@ class UserAnswersRepositorySpec extends ISpecBase
 
   "set must" - {
     "set the last updated time on the supplied user answers to `now`, and update them" in {
-      val updatedUserAnswers     = repository.add(userAnswers).futureValue
+      val updatedUserAnswers = repository.add(userAnswers).futureValue
 
       val updatedResult = userAnswers.copy(
         internalId = "new-internal-id"
@@ -86,13 +85,13 @@ class UserAnswersRepositorySpec extends ISpecBase
       val updatedRecord = find(Filters.equal("_id", ReturnId(appaId, periodKey))).futureValue.headOption.value
 
       updatedUserAnswers mustEqual expectedAddedUserAnswers
-      setResult mustEqual UpdateSuccess
+      setResult          mustEqual UpdateSuccess
       verifyUserAnswerResult(updatedRecord, expectedResult)
     }
 
     "fail to update a user answer if it wasn't previously saved" in {
       val newUserAnswers = userAnswers.copy(returnId = ReturnId("new-appa-id", "new-period-key"))
-      val setResult     = repository.set(newUserAnswers).futureValue
+      val setResult      = repository.set(newUserAnswers).futureValue
       setResult mustEqual UpdateFailure
     }
   }
@@ -114,7 +113,9 @@ class UserAnswersRepositorySpec extends ISpecBase
 
     "there is no record for this id must" - {
       "return None" in {
-        repository.get(ReturnId("APPA id that does not exist", "period key that does not exist")).futureValue must not be defined
+        repository
+          .get(ReturnId("APPA id that does not exist", "period key that does not exist"))
+          .futureValue must not be defined
       }
     }
   }
@@ -132,8 +133,7 @@ class UserAnswersRepositorySpec extends ISpecBase
         )
 
         result mustEqual true
-        val updatedAnswers = find(Filters.equal("_id", ReturnId(appaId, periodKey))
-        ).futureValue.headOption.value
+        val updatedAnswers = find(Filters.equal("_id", ReturnId(appaId, periodKey))).futureValue.headOption.value
 
         verifyUserAnswerResult(updatedAnswers, expectedUpdatedAnswers)
       }
@@ -141,7 +141,9 @@ class UserAnswersRepositorySpec extends ISpecBase
 
     "there is no record for this id must" - {
       "return true" in {
-        repository.keepAlive(ReturnId("APPA id that does not exist", "period key that does not exist")).futureValue mustEqual true
+        repository
+          .keepAlive(ReturnId("APPA id that does not exist", "period key that does not exist"))
+          .futureValue mustEqual true
       }
     }
   }
@@ -149,23 +151,25 @@ class UserAnswersRepositorySpec extends ISpecBase
   "clearUserAnswersById must" - {
     "clear down existing user answers" in {
       insert(userAnswers).futureValue
-      repository.get(userAnswers.returnId).futureValue.isEmpty mustBe false
+      repository.get(userAnswers.returnId).futureValue.isEmpty          mustBe false
       repository.clearUserAnswersById(userAnswers.returnId).futureValue mustBe ()
-      repository.get(userAnswers.returnId).futureValue.isEmpty mustBe true
+      repository.get(userAnswers.returnId).futureValue.isEmpty          mustBe true
     }
 
     "not fail if user answers doesn't exist" in {
-      repository.get(userAnswers.returnId).futureValue.isEmpty mustBe true
+      repository.get(userAnswers.returnId).futureValue.isEmpty          mustBe true
       repository.clearUserAnswersById(userAnswers.returnId).futureValue mustBe ()
     }
   }
 
   def verifyUserAnswerResult(actual: UserAnswers, expected: UserAnswers) = {
-    actual.returnId mustEqual expected.returnId
-    actual.groupId mustEqual expected.groupId
-    actual.internalId mustEqual expected.internalId
-    actual.data mustEqual expected.data
-    actual.lastUpdated.truncatedTo(ChronoUnit.MILLIS) mustEqual expected.lastUpdated.truncatedTo(ChronoUnit.MILLIS)
-    actual.validUntil.get.truncatedTo(ChronoUnit.MILLIS) mustEqual expected.validUntil.get.truncatedTo(ChronoUnit.MILLIS)
+    actual.returnId                                      mustEqual expected.returnId
+    actual.groupId                                       mustEqual expected.groupId
+    actual.internalId                                    mustEqual expected.internalId
+    actual.data                                          mustEqual expected.data
+    actual.lastUpdated.truncatedTo(ChronoUnit.MILLIS)    mustEqual expected.lastUpdated.truncatedTo(ChronoUnit.MILLIS)
+    actual.validUntil.get.truncatedTo(ChronoUnit.MILLIS) mustEqual expected.validUntil.get.truncatedTo(
+      ChronoUnit.MILLIS
+    )
   }
 }
