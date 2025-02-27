@@ -19,6 +19,7 @@ package uk.gov.hmrc.alcoholdutyreturns.repositories
 import org.mongodb.scala.model.Filters
 import uk.gov.hmrc.alcoholdutyreturns.base.ISpecBase
 import uk.gov.hmrc.alcoholdutyreturns.config.AppConfig
+import uk.gov.hmrc.alcoholdutyreturns.config.Constants.ukTimeZoneStringId
 import uk.gov.hmrc.alcoholdutyreturns.models.{ReturnId, UserAnswers}
 import uk.gov.hmrc.mongo.test.DefaultPlayMongoRepositorySupport
 
@@ -27,7 +28,7 @@ import java.time.{Clock, Instant, ZoneId}
 
 class UserAnswersRepositorySpec extends ISpecBase with DefaultPlayMongoRepositorySupport[UserAnswers] {
   private val instant          = Instant.now
-  private val stubClock: Clock = Clock.fixed(instant, ZoneId.systemDefault)
+  private val stubClock: Clock = Clock.fixed(instant, ZoneId.of(ukTimeZoneStringId))
 
   private val DB_TTL_IN_SEC = 100
 

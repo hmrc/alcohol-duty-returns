@@ -250,7 +250,7 @@ class ReturnsServiceSpec extends SpecBase {
     val periodKey = "24AA"
     val retId     = returnId.copy(periodKey = periodKey)
     val total     = BigDecimal("12345.67")
-    val now       = Instant.now()
+    val now       = Instant.now(clock)
 
     val adrReturnSubmission = exampleReturnSubmissionRequest
     val returnSubmission    = returnCreateSubmission(periodKey)

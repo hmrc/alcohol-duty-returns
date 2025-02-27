@@ -22,11 +22,9 @@ import org.mockito.ArgumentMatchersSugar.eqTo
 import play.api.libs.json.Json
 import play.api.mvc.Result
 import uk.gov.hmrc.alcoholdutyreturns.base.SpecBase
-import uk.gov.hmrc.alcoholdutyreturns.models.{ApprovalStatus, ErrorCodes, ObligationData}
+import uk.gov.hmrc.alcoholdutyreturns.models.{ApprovalStatus, ErrorCodes}
 import uk.gov.hmrc.alcoholdutyreturns.service.AccountService
-import uk.gov.hmrc.play.bootstrap.backend.http.ErrorResponse
 
-import java.time.LocalDate
 import scala.concurrent.Future
 
 class SubscriptionControllerSpec extends SpecBase {

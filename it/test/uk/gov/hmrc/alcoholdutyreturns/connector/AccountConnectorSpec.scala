@@ -87,7 +87,7 @@ class AccountConnectorSpec extends ISpecBase {
     val subscriptionUrl   = config.getSubscriptionSummaryUrl(appaId)
     val openObligationUrl = config.getOpenObligationDataUrl(returnId)
     val obligationUrl     = config.getObligationDataUrl(appaId)
-    val obligationData    = getObligationData(LocalDate.now())
+    val obligationData    = getObligationData(LocalDate.now(clock))
     val dataTestUrl       = subscriptionUrl
 
     type DataTestType = SubscriptionSummary

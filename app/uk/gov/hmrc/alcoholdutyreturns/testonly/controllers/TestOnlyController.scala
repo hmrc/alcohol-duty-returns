@@ -26,7 +26,7 @@ import uk.gov.hmrc.alcoholdutyreturns.repositories.UserAnswersRepository
 import uk.gov.hmrc.alcoholdutyreturns.service.LockingService
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
-import java.time.LocalDate
+import java.time.{Clock, LocalDate}
 import javax.inject.Inject
 import scala.concurrent.ExecutionContext
 
@@ -35,7 +35,8 @@ class TestOnlyController @Inject() (
   authorise: AuthorisedAction,
   checkAppaId: CheckAppaIdAction,
   userAnswersRepository: UserAnswersRepository,
-  lockingService: LockingService
+  lockingService: LockingService,
+  clock: Clock
 )(implicit ec: ExecutionContext)
     extends BackendController(cc) {
 
@@ -59,7 +60,7 @@ class TestOnlyController @Inject() (
               .withLock(returnId, request.userId) {
                 val alcoholRegimes      = getAlcoholRegimes(beer, cider, wine, spirits, OFP)
                 val subscriptionSummary = SubscriptionSummary(ApprovalStatus.Approved, alcoholRegimes)
-                val obligationData      = getObligationData(returnId.periodKey, LocalDate.now())
+                val obligationData      = getObligationData(returnId.periodKey, LocalDate.now(clock))
                 val userAnswers         =
                   UserAnswers.createUserAnswers(returnAndUserDetails, subscriptionSummary, obligationData)
                 for {
