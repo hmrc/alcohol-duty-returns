@@ -341,6 +341,6 @@ class ReturnDetailsSpec extends SpecBase {
     val nilReturnSubmissionData       = exampleNilReturnSubmissionRequest
     val returnCreateSubmissionData    = returnCreateSubmission(periodKey)
     val nilReturnCreateSubmissionData = nilReturnCreateSubmission(periodKey)
-    val nilReturnDetails              = nilReturnExample(appaId, periodKey, submissionId, Instant.now()).success
+    val nilReturnDetails              = nilReturnExample(appaId, periodKey, submissionId, Instant.now(clock)).success
   }
 }
