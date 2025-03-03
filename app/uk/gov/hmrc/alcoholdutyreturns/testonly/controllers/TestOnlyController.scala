@@ -62,7 +62,7 @@ class TestOnlyController @Inject() (
                 val subscriptionSummary = SubscriptionSummary(ApprovalStatus.Approved, alcoholRegimes)
                 val obligationData      = getObligationData(returnId.periodKey, LocalDate.now(clock))
                 val userAnswers         =
-                  UserAnswers.createUserAnswers(returnAndUserDetails, subscriptionSummary, obligationData)
+                  UserAnswers.createUserAnswers(returnAndUserDetails, subscriptionSummary, obligationData, clock)
                 for {
                   _                  <- userAnswersRepository.clearUserAnswersById(returnId)
                   createdUserAnswers <- userAnswersRepository.add(userAnswers)

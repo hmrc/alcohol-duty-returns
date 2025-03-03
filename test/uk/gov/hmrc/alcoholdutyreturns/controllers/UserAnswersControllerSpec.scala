@@ -41,6 +41,7 @@ class UserAnswersControllerSpec extends SpecBase {
     mockUserAnswersRepository,
     mockLockingService,
     mockAccountService,
+    clock,
     cc
   )
 
@@ -76,6 +77,7 @@ class UserAnswersControllerSpec extends SpecBase {
         mockUserAnswersRepository,
         mockLockingService,
         mockAccountService,
+        clock,
         cc
       )
 
@@ -124,6 +126,7 @@ class UserAnswersControllerSpec extends SpecBase {
         mockUserAnswersRepository,
         lockingService,
         mockAccountService,
+        clock,
         cc
       )
 
@@ -163,6 +166,7 @@ class UserAnswersControllerSpec extends SpecBase {
         mockUserAnswersRepository,
         mockLockingService,
         mockAccountService,
+        clock,
         cc
       )
 
@@ -247,6 +251,7 @@ class UserAnswersControllerSpec extends SpecBase {
         mockUserAnswersRepository,
         mockLockingService,
         mockAccountService,
+        clock,
         cc
       )
 
@@ -271,6 +276,7 @@ class UserAnswersControllerSpec extends SpecBase {
         mockUserAnswersRepository,
         mockLockingService,
         mockAccountService,
+        clock,
         cc
       )
 
@@ -292,6 +298,7 @@ class UserAnswersControllerSpec extends SpecBase {
         mockUserAnswersRepository,
         mockLockingService,
         mockAccountService,
+        clock,
         cc
       )
 
@@ -311,6 +318,7 @@ class UserAnswersControllerSpec extends SpecBase {
         mockUserAnswersRepository,
         mockLockingService,
         mockAccountService,
+        clock,
         cc
       )
 

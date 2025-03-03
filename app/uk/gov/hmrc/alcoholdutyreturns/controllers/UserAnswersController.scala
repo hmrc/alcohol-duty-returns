@@ -28,6 +28,7 @@ import uk.gov.hmrc.alcoholdutyreturns.service.{AccountService, LockingService}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import uk.gov.hmrc.play.bootstrap.backend.http.ErrorResponse
 
+import java.time.Clock
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -37,6 +38,7 @@ class UserAnswersController @Inject() (
   userAnswersRepository: UserAnswersRepository,
   lockingService: LockingService,
   accountService: AccountService,
+  clock: Clock,
   override val controllerComponents: ControllerComponents
 )(implicit executionContext: ExecutionContext)
     extends BackendController(controllerComponents)
@@ -108,7 +110,7 @@ class UserAnswersController @Inject() (
                   accountDetails => {
                     val (subscriptionSummary, obligationData) = accountDetails
                     val userAnswers                           =
-                      UserAnswers.createUserAnswers(returnAndUserDetails, subscriptionSummary, obligationData)
+                      UserAnswers.createUserAnswers(returnAndUserDetails, subscriptionSummary, obligationData, clock)
                     userAnswersRepository.add(userAnswers).map { userAnswers =>
                       Created(Json.toJson(userAnswers))
                     }
