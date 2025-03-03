@@ -18,19 +18,18 @@ package helpers
 
 import generators.ModelGenerators
 import play.api.libs.json.{JsObject, Json}
-import uk.gov.hmrc.alcoholdutyreturns.config.Constants.ukTimeZoneStringId
 import uk.gov.hmrc.alcoholdutyreturns.models.AlcoholRegime.{Beer, Cider, OtherFermentedProduct, Spirits, Wine}
 import uk.gov.hmrc.alcoholdutyreturns.models.ApprovalStatus.Approved
 import uk.gov.hmrc.alcoholdutyreturns.models.ObligationStatus.{Fulfilled, Open}
+import uk.gov.hmrc.alcoholdutyreturns.models._
 import uk.gov.hmrc.alcoholdutyreturns.models.calculation.{CalculateDutyDueByTaxTypeRequest, CalculateDutyDueByTaxTypeRequestItem, CalculatedDutyDueByTaxType, CalculatedDutyDueByTaxTypeItem}
 import uk.gov.hmrc.alcoholdutyreturns.models.returns._
-import uk.gov.hmrc.alcoholdutyreturns.models._
 
 import java.time._
 
 trait TestData extends ModelGenerators {
   val clockMillis: Long = 1718118467838L
-  val clock: Clock      = Clock.fixed(Instant.ofEpochMilli(clockMillis), ZoneId.of(ukTimeZoneStringId))
+  val clock: Clock      = Clock.fixed(Instant.ofEpochMilli(clockMillis), ZoneId.of("UTC"))
 
   val regime: String          = "AD"
   val appaId: String          = appaIdGen.sample.get

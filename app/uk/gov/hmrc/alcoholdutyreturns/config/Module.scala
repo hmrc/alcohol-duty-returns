@@ -20,14 +20,14 @@ import com.google.inject.AbstractModule
 import uk.gov.hmrc.alcoholdutyreturns.controllers.actions.{AuthorisedAction, BaseAuthorisedAction}
 import uk.gov.hmrc.alcoholdutyreturns.service.SchemaValidationService
 
-import java.time.{Clock, ZoneId}
+import java.time.{Clock, ZoneOffset}
 
 class Module extends AbstractModule {
 
   override def configure(): Unit = {
     bind(classOf[AppConfig]).asEagerSingleton()
     bind(classOf[AuthorisedAction]).to(classOf[BaseAuthorisedAction]).asEagerSingleton()
-    bind(classOf[Clock]).toInstance(Clock.system(ZoneId.of(Constants.ukTimeZoneStringId)))
+    bind(classOf[Clock]).toInstance(Clock.systemDefaultZone.withZone(ZoneOffset.UTC))
     bind(classOf[SchemaValidationService]).asEagerSingleton()
   }
 }
