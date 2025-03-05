@@ -57,6 +57,10 @@ class UserAnswersRepository @Inject() (
 
   implicit val instantFormat: Format[Instant] = MongoJavatimeFormats.instantFormat
 
+  private val replaceDontUpsert = ReplaceOptions().upsert(false)
+  private val replaceUpsert     = ReplaceOptions().upsert(true)
+  private val updateUpsert      = UpdateOptions().upsert(true)
+
   private def byId(id: ReturnId) = Filters.equal("_id", id)
 
   def keepAlive(id: ReturnId): Future[Boolean] =
@@ -89,7 +93,7 @@ class UserAnswersRepository @Inject() (
       .replaceOne(
         filter = byId(updatedAnswers.returnId),
         replacement = updatedAnswers,
-        options = ReplaceOptions().upsert(false)
+        options = replaceDontUpsert
       )
       .toFuture()
       .map(res => if (res.getModifiedCount == 1) UpdateSuccess else UpdateFailure)
@@ -102,8 +106,17 @@ class UserAnswersRepository @Inject() (
       validUntil = Some(Instant.now(clock).plusSeconds(appConfig.dbTimeToLiveInSeconds))
     )
 
+    /* We want to upsert otherwise a double-click submission will cause the second to error
+       causing an alert. This has an edge case that a replacement could overwrite data if this
+       is called on an existing entry (the before you start page will skip the option to add if
+       it exists, so unless the user crafts a submit, this shouldn't happen. Even if it does it's
+       harmless except the user has to start again. */
     collection
-      .insertOne(updatedAnswers)
+      .replaceOne(
+        filter = byId(updatedAnswers.returnId),
+        replacement = updatedAnswers,
+        options = replaceUpsert
+      )
       .toFuture()
       .map(_ => updatedAnswers)
   }
