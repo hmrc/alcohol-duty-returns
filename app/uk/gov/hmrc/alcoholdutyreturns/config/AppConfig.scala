@@ -16,12 +16,15 @@
 
 package uk.gov.hmrc.alcoholdutyreturns.config
 
+import org.apache.pekko.actor.ActorSystem
 import play.api.Configuration
 import uk.gov.hmrc.alcoholdutyreturns.models.ReturnId
+import uk.gov.hmrc.alcoholdutyreturns.utils.Retry
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import java.text.MessageFormat
 import javax.inject.{Inject, Singleton}
+import scala.concurrent.duration.FiniteDuration
 
 @Singleton
 class AppConfig @Inject() (config: Configuration, servicesConfig: ServicesConfig) {
@@ -77,4 +80,16 @@ class AppConfig @Inject() (config: Configuration, servicesConfig: ServicesConfig
 
   private def getConfStringAndThrowIfNotFound(key: String) =
     servicesConfig.getConfString(key, throw new RuntimeException(s"Could not find services config key '$key'"))
+
+  def newRetryInstance(name: String, actorSystem: ActorSystem): Retry = {
+    val times    = config.get[Int](s"microservice.services.$name.retry.times")
+    val interval = getConfFiniteDuration(s"microservice.services.$name.retry.interval")
+    new Retry(times, interval, actorSystem)
+  }
+
+  private def getConfFiniteDuration(key: String): FiniteDuration = {
+    val d = FiniteDuration(config.get[Int](key), "ms")
+    require(d.isFinite, s"not a finite duration: $key")
+    FiniteDuration(d.length, d.unit)
+  }
 }
