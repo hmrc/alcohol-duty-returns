@@ -16,14 +16,14 @@
 
 package uk.gov.hmrc.alcoholdutyreturns.service
 
-import cats.implicits._
 import cats.data.EitherT
+import cats.implicits._
 import com.google.inject.{Inject, Singleton}
 import play.api.Logging
 import uk.gov.hmrc.alcoholdutyreturns.connector.{CalculatorConnector, ReturnsConnector}
 import uk.gov.hmrc.alcoholdutyreturns.models.calculation.CalculateDutyDueByTaxTypeRequest
-import uk.gov.hmrc.alcoholdutyreturns.models.{ErrorCodes, ReturnId}
 import uk.gov.hmrc.alcoholdutyreturns.models.returns.{AdrReturnSubmission, ReturnCreate, ReturnCreatedDetails, TotalDutyDuebyTaxType}
+import uk.gov.hmrc.alcoholdutyreturns.models.{ErrorCodes, ReturnId}
 import uk.gov.hmrc.alcoholdutyreturns.repositories.UserAnswersRepository
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.backend.http.ErrorResponse
@@ -63,27 +63,55 @@ class ReturnsService @Inject() (
   ): EitherT[Future, ErrorResponse, ReturnCreatedDetails] = {
     val returnConvertedToSubmissionFormat = ReturnCreate.fromAdrReturnSubmission(returnSubmission, returnId.periodKey)
 
-    for {
+    val returnCreatedDetailsEither = for {
       maybeTotalDutyDueByTaxType <- calculateTotalDutyDueByTaxType(returnSubmission)
       returnToSubmit              = returnConvertedToSubmissionFormat.copy(totalDutyDuebyTaxType = maybeTotalDutyDueByTaxType)
       _                          <- validateAgainstSchema(returnToSubmit)
       returnCreatedDetails       <- returnsConnector.submitReturn(returnToSubmit, returnId.appaId)
-      userAnswers                <-
-        EitherT.right[ErrorResponse](
-          userAnswersRepository
-            .get(returnId)
-            .recover { case _ =>
-              logger.warn(
-                s"Failed retrieving user answers for returnId=$returnId. Continuing the process and auditing without user answers. "
-              )
-              None
-            }
-        )
-      _                          <- EitherT.right[ErrorResponse](
-                                      userAnswersRepository
-                                        .clearUserAnswersById(returnId)
-                                    )
     } yield returnCreatedDetails
+
+    EitherT(
+      returnCreatedDetailsEither.value.flatMap {
+        case Right(returnCreatedDetails)                                               =>
+          for {
+            _                        <-
+              userAnswersRepository
+                .get(returnId)
+                .recover { case _ =>
+                  logger.warn(
+                    s"Failed retrieving user answers for returnId=$returnId. Continuing the process and auditing without user answers. "
+                  )
+                  None
+                }
+            _                        <- userAnswersRepository.clearUserAnswersById(returnId)
+            returnCreatedDetailsRight = Right(returnCreatedDetails).withLeft[ErrorResponse]
+          } yield returnCreatedDetailsRight
+        case Left(errorResponse) if errorResponse == ErrorCodes.returnAlreadySubmitted =>
+          handleReturnAlreadySubmitted(returnId)
+        case Left(errorResponse)                                                       =>
+          Future.successful(Left(errorResponse))
+      }
+    )
   }
 
+  private def handleReturnAlreadySubmitted(returnId: ReturnId)(implicit
+    hc: HeaderCarrier
+  ): Future[Either[ErrorResponse, ReturnCreatedDetails]] = {
+    val submittedReturn = returnsConnector.getReturn(returnId)
+    submittedReturn.value.map {
+      case Left(e)              => Left(e).withRight[ReturnCreatedDetails]
+      case Right(returnDetails) =>
+        Right(
+          ReturnCreatedDetails(
+            processingDate = returnDetails.processingDate,
+            adReference = returnDetails.idDetails.adReference,
+            amount = returnDetails.totalDutyDue.totalDutyDue,
+            chargeReference = returnDetails.chargeDetails.chargeReference,
+            paymentDueDate = None, // TODO
+            submissionID = returnDetails.idDetails.submissionID
+          )
+        )
+    }
+  }
 }
+// if (returnDetails.totalDutyDue.totalDutyDue != 0) Some(ReturnPeriod.fromPeriodKeyOrThrow(periodKey).dueDate()) else None
