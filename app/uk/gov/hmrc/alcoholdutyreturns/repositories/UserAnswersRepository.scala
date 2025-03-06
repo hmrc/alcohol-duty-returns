@@ -106,11 +106,6 @@ class UserAnswersRepository @Inject() (
       validUntil = Some(Instant.now(clock).plusSeconds(appConfig.dbTimeToLiveInSeconds))
     )
 
-    /* We want to upsert otherwise a double-click submission will cause the second to error
-       causing an alert. This has an edge case that a replacement could overwrite data if this
-       is called on an existing entry (the before you start page will skip the option to add if
-       it exists, so unless the user crafts a submit, this shouldn't happen. Even if it does it's
-       harmless except the user has to start again. */
     collection
       .replaceOne(
         filter = byId(updatedAnswers.returnId),
