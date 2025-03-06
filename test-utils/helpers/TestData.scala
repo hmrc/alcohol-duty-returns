@@ -21,9 +21,9 @@ import play.api.libs.json.{JsObject, Json}
 import uk.gov.hmrc.alcoholdutyreturns.models.AlcoholRegime.{Beer, Cider, OtherFermentedProduct, Spirits, Wine}
 import uk.gov.hmrc.alcoholdutyreturns.models.ApprovalStatus.Approved
 import uk.gov.hmrc.alcoholdutyreturns.models.ObligationStatus.{Fulfilled, Open}
+import uk.gov.hmrc.alcoholdutyreturns.models._
 import uk.gov.hmrc.alcoholdutyreturns.models.calculation.{CalculateDutyDueByTaxTypeRequest, CalculateDutyDueByTaxTypeRequestItem, CalculatedDutyDueByTaxType, CalculatedDutyDueByTaxTypeItem}
 import uk.gov.hmrc.alcoholdutyreturns.models.returns._
-import uk.gov.hmrc.alcoholdutyreturns.models._
 
 import java.time._
 

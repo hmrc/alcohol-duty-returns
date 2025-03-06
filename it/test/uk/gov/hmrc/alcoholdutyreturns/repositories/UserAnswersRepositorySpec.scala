@@ -22,12 +22,11 @@ import uk.gov.hmrc.alcoholdutyreturns.config.AppConfig
 import uk.gov.hmrc.alcoholdutyreturns.models.{ReturnId, UserAnswers}
 import uk.gov.hmrc.mongo.test.DefaultPlayMongoRepositorySupport
 
+import java.time.Instant
 import java.time.temporal.ChronoUnit
-import java.time.{Clock, Instant, ZoneId}
 
 class UserAnswersRepositorySpec extends ISpecBase with DefaultPlayMongoRepositorySupport[UserAnswers] {
-  private val instant          = Instant.now
-  private val stubClock: Clock = Clock.fixed(instant, ZoneId.systemDefault)
+  private val instant          = Instant.now(clock)
 
   private val DB_TTL_IN_SEC = 100
 
@@ -37,7 +36,7 @@ class UserAnswersRepositorySpec extends ISpecBase with DefaultPlayMongoRepositor
   protected override val repository = new UserAnswersRepository(
     mongoComponent = mongoComponent,
     appConfig = mockAppConfig,
-    clock = stubClock
+    clock = clock
   )
 
   "add must" - {

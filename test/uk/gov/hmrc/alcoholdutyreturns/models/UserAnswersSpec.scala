@@ -45,7 +45,8 @@ class UserAnswersSpec extends SpecBase {
       val createdUserAnswers = UserAnswers.createUserAnswers(
         returnAndUserDetails,
         subscriptionSummary,
-        getObligationData(LocalDate.now(clock))
+        getObligationData(LocalDate.now(clock)),
+        clock
       )
       createdUserAnswers.copy(
         startedTime = userAnswers.startedTime,

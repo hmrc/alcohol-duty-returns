@@ -20,7 +20,7 @@ import play.api.libs.functional.syntax._
 import play.api.libs.json._
 import uk.gov.hmrc.mongo.play.json.formats.MongoJavatimeFormats
 
-import java.time.Instant
+import java.time.{Clock, Instant}
 
 case class ReturnId(
   appaId: String,
@@ -50,8 +50,8 @@ case class UserAnswers(
   internalId: String,
   regimes: AlcoholRegimes,
   data: JsObject = Json.obj(),
-  startedTime: Instant = Instant.now,
-  lastUpdated: Instant = Instant.now,
+  startedTime: Instant,
+  lastUpdated: Instant,
   validUntil: Option[Instant] = None
 )
 
@@ -59,7 +59,8 @@ object UserAnswers {
   def createUserAnswers(
     returnAndUserDetails: ReturnAndUserDetails,
     subscriptionSummary: SubscriptionSummary,
-    obligationData: ObligationData
+    obligationData: ObligationData,
+    clock: Clock
   ): UserAnswers =
     UserAnswers(
       returnId = returnAndUserDetails.returnId,
@@ -68,7 +69,9 @@ object UserAnswers {
       regimes = AlcoholRegimes(subscriptionSummary.regimes),
       data = Json.obj(
         (ObligationData.toString, Json.toJson(obligationData))
-      )
+      ),
+      startedTime = Instant.now(clock),
+      lastUpdated = Instant.now(clock)
     )
 
   import play.api.libs.functional.syntax._

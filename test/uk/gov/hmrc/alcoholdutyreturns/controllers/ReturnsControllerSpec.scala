@@ -181,7 +181,7 @@ class ReturnsControllerSpec extends SpecBase {
 
     val periodKey: String = "24AA"
     val total             = BigDecimal("12345.67")
-    val now               = Instant.now()
+    val now               = Instant.now(clock)
 
     val returnDetails = successfulReturnExample(
       appaId,
