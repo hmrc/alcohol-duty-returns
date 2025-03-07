@@ -40,9 +40,7 @@ class UserAnswersRepositorySpec extends ISpecBase with DefaultPlayMongoRepositor
   )
 
   "add must" - {
-
     "set the last updated time on the supplied user answers to `now`, and save them" in {
-
       val expectedAddedUserAnswers = userAnswers.copy(
         lastUpdated = instant,
         validUntil = Some(instant.plusSeconds(DB_TTL_IN_SEC))
@@ -53,6 +51,25 @@ class UserAnswersRepositorySpec extends ISpecBase with DefaultPlayMongoRepositor
         validUntil = expectedAddedUserAnswers.validUntil.map(_.truncatedTo(ChronoUnit.MILLIS))
       )
 
+      val updatedUserAnswers = repository.add(userAnswers).futureValue
+      val updatedRecord      = find(Filters.equal("_id", ReturnId(appaId, periodKey))).futureValue.headOption.value
+
+      updatedUserAnswers mustEqual expectedAddedUserAnswers
+      verifyUserAnswerResult(updatedRecord, expectedResult)
+    }
+
+    "not fail (upsert) if called twice" in {
+      val expectedAddedUserAnswers = userAnswers.copy(
+        lastUpdated = instant,
+        validUntil = Some(instant.plusSeconds(DB_TTL_IN_SEC))
+      )
+
+      val expectedResult = expectedAddedUserAnswers.copy(
+        lastUpdated = expectedAddedUserAnswers.lastUpdated.truncatedTo(ChronoUnit.MILLIS),
+        validUntil = expectedAddedUserAnswers.validUntil.map(_.truncatedTo(ChronoUnit.MILLIS))
+      )
+
+      repository.add(userAnswers).futureValue
       val updatedUserAnswers = repository.add(userAnswers).futureValue
       val updatedRecord      = find(Filters.equal("_id", ReturnId(appaId, periodKey))).futureValue.headOption.value
 
