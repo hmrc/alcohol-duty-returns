@@ -17,17 +17,15 @@
 package uk.gov.hmrc.alcoholdutyreturns.connector
 
 import cats.data.EitherT
-import org.apache.pekko.actor.ActorSystem
 import play.api.Logging
 import play.api.http.Status._
 import play.api.libs.json.Json
 import uk.gov.hmrc.alcoholdutyreturns.config.AppConfig
 import uk.gov.hmrc.alcoholdutyreturns.connector.helpers.HIPHeaders
+import uk.gov.hmrc.alcoholdutyreturns.models.returns._
 import uk.gov.hmrc.alcoholdutyreturns.models.{ErrorCodes, ReturnId}
-import uk.gov.hmrc.alcoholdutyreturns.models.returns.{GetReturnDetails, GetReturnDetailsSuccess, ReturnCreate, ReturnCreatedDetails, ReturnCreatedSuccess}
-import uk.gov.hmrc.alcoholdutyreturns.utils.Retry
 import uk.gov.hmrc.http.client.HttpClientV2
-import uk.gov.hmrc.http.{GatewayTimeoutException, HeaderCarrier, HttpReadsInstances, HttpResponse, StringContextOps, UpstreamErrorResponse}
+import uk.gov.hmrc.http.{HeaderCarrier, HttpReadsInstances, HttpResponse, StringContextOps, UpstreamErrorResponse}
 import uk.gov.hmrc.play.bootstrap.backend.http.ErrorResponse
 
 import javax.inject.Inject
@@ -37,14 +35,10 @@ import scala.util.{Failure, Success, Try}
 class ReturnsConnector @Inject() (
   config: AppConfig,
   headers: HIPHeaders,
-  system: ActorSystem,
   implicit val httpClient: HttpClientV2
 )(implicit ec: ExecutionContext)
     extends HttpReadsInstances
     with Logging {
-
-  val withRetry: Retry = config.newRetryInstance("returns", system)
-  val retryAttempts    = withRetry.times
 
   def getReturn(returnId: ReturnId)(implicit
     hc: HeaderCarrier
@@ -93,49 +87,39 @@ class ReturnsConnector @Inject() (
     val periodKey = returnToSubmit.periodKey
     logger.info(s"Submitting return (appaId $appaId, periodKey $periodKey)")
     EitherT(
-      withRetry { triesRemaining =>
-        httpClient
-          .post(url"${config.submitReturnUrl}")
-          .setHeader(headers.submitReturnHeaders(appaId): _*)
-          .withBody(Json.toJson(returnToSubmit))
-          .execute[Either[UpstreamErrorResponse, HttpResponse]]
-          .map {
-            case Right(response)                                                    =>
-              Try(response.json.as[ReturnCreatedSuccess]) match {
-                case Success(returnCreatedSuccess) =>
-                  logger.info(s"Return submitted successfully (appaId $appaId, periodKey $periodKey)")
-                  Right(returnCreatedSuccess.success)
-                case Failure(e)                    =>
-                  logger
-                    .warn(s"Parsing failed for submit return response (appaId $appaId, periodKey $periodKey)", e)
-                  Left(ErrorCodes.invalidJson)
-              }
-            case Left(errorResponse) if errorResponse.statusCode == BAD_REQUEST     =>
-              logger.warn(
-                s"Bad request returned for submit return (appaId $appaId, periodKey $periodKey): ${errorResponse.message}"
-              )
-              Left(ErrorCodes.badRequest)
-            case Left(errorResponse) if errorResponse.statusCode == NOT_FOUND       =>
-              logger.warn(s"Not found returned for submit return (appaId $appaId, periodKey $periodKey)")
-              Left(ErrorCodes.entityNotFound)
-            case Left(errorResponse)
-                if errorResponse.statusCode == UNPROCESSABLE_ENTITY && triesRemaining < retryAttempts =>
-              logger.info(s"Unprocessable entity returned for submit return (appaId $appaId, periodKey $periodKey)")
-              Left(ErrorCodes.returnAlreadySubmitted)
-            case Left(errorResponse) if errorResponse.statusCode == GATEWAY_TIMEOUT =>
-              logger.info(
-                s"Gateway timeout for submit return (appaId $appaId, periodKey $periodKey)"
-              )
-              throw new GatewayTimeoutException(
-                s"Gateway timeout for submit return (appaId $appaId, periodKey $periodKey)"
-              )
-            case Left(errorResponse)                                                =>
-              logger.warn(
-                s"Received unexpected response from submitReturn API (appaId $appaId, periodKey $periodKey): ${errorResponse.statusCode} ${errorResponse.message}"
-              )
-              Left(ErrorCodes.unexpectedResponse)
-          }
-      }
+      httpClient
+        .post(url"${config.submitReturnUrl}")
+        .setHeader(headers.submitReturnHeaders(appaId): _*)
+        .withBody(Json.toJson(returnToSubmit))
+        .execute[Either[UpstreamErrorResponse, HttpResponse]]
+        .map {
+          case Right(response)                                                         =>
+            Try(response.json.as[ReturnCreatedSuccess]) match {
+              case Success(returnCreatedSuccess) =>
+                logger.info(s"Return submitted successfully (appaId $appaId, periodKey $periodKey)")
+                Right(returnCreatedSuccess.success)
+              case Failure(e)                    =>
+                logger
+                  .warn(s"Parsing failed for submit return response (appaId $appaId, periodKey $periodKey)", e)
+                Left(ErrorCodes.invalidJson)
+            }
+          case Left(errorResponse) if errorResponse.statusCode == BAD_REQUEST          =>
+            logger.warn(
+              s"Bad request returned for submit return (appaId $appaId, periodKey $periodKey): ${errorResponse.message}"
+            )
+            Left(ErrorCodes.badRequest)
+          case Left(errorResponse) if errorResponse.statusCode == NOT_FOUND            =>
+            logger.warn(s"Not found returned for submit return (appaId $appaId, periodKey $periodKey)")
+            Left(ErrorCodes.entityNotFound)
+          case Left(errorResponse) if errorResponse.statusCode == UNPROCESSABLE_ENTITY =>
+            logger.info(s"Unprocessable entity returned for submit return (appaId $appaId, periodKey $periodKey)")
+            Left(ErrorCodes.returnAlreadySubmitted)
+          case Left(errorResponse)                                                     =>
+            logger.warn(
+              s"Received unexpected response from submitReturn API (appaId $appaId, periodKey $periodKey): ${errorResponse.statusCode} ${errorResponse.message}"
+            )
+            Left(ErrorCodes.unexpectedResponse)
+        }
     )
   }
 }
