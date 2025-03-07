@@ -24,7 +24,7 @@ import play.api.mvc._
 import uk.gov.hmrc.alcoholdutyreturns.connector.ReturnsConnector
 import uk.gov.hmrc.alcoholdutyreturns.controllers.actions.{AuthorisedAction, CheckAppaIdAction}
 import uk.gov.hmrc.alcoholdutyreturns.models.returns.{AdrReturnCreatedDetails, AdrReturnDetails, AdrReturnSubmission}
-import uk.gov.hmrc.alcoholdutyreturns.models.ReturnId
+import uk.gov.hmrc.alcoholdutyreturns.models.{ErrorCodes, ReturnId}
 import uk.gov.hmrc.alcoholdutyreturns.service.{LockingService, ReturnsService}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import uk.gov.hmrc.play.bootstrap.backend.http.ErrorResponse
@@ -67,7 +67,10 @@ class ReturnsController @Inject() (
               .map(AdrReturnCreatedDetails.fromReturnCreatedDetails)
               .fold(
                 e => {
-                  logger.warn(s"Unable to submit return $periodKey for $appaId: $e")
+                  if (e == ErrorCodes.errorHandlingDuplicateSubmission)
+                    logger.warn(s"Return $periodKey for $appaId already submitted, but error getting return details")
+                  else
+                    logger.warn(s"Unable to submit return $periodKey for $appaId: $e")
                   error(e)
                 },
                 returnCreatedDetails => Created(Json.toJson(returnCreatedDetails))

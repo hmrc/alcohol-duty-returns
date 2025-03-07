@@ -21,7 +21,7 @@ import play.api.Logging
 import play.api.http.Status.NOT_FOUND
 import play.api.libs.json.Reads
 import uk.gov.hmrc.alcoholdutyreturns.config.AppConfig
-import uk.gov.hmrc.alcoholdutyreturns.models.{ErrorCodes, ObligationData, ReturnId, SubscriptionSummary}
+import uk.gov.hmrc.alcoholdutyreturns.models.{ErrorCodes, ObligationData, OpenPayments, ReturnId, SubscriptionSummary}
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReadsInstances, HttpResponse, StringContextOps, UpstreamErrorResponse}
 import uk.gov.hmrc.play.bootstrap.backend.http.ErrorResponse
@@ -71,4 +71,9 @@ class AccountConnector @Inject() (
     hc: HeaderCarrier
   ): EitherT[Future, ErrorResponse, Seq[ObligationData]] =
     getData(config.getObligationDataUrl(appaId))
+
+  def getOutstandingPayments(appaId: String)(implicit
+    hc: HeaderCarrier
+  ): EitherT[Future, ErrorResponse, OpenPayments] =
+    getData(config.getOutstandingPaymentsUrl(appaId))
 }

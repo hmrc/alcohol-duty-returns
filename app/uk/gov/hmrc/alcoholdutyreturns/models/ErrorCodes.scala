@@ -30,4 +30,6 @@ object ErrorCodes {
   val unauthorisedRequest: ErrorResponse                                       = ErrorResponse(UNAUTHORIZED, "Unauthorised request")
   val serviceUnavailable: ErrorResponse                                        = ErrorResponse(SERVICE_UNAVAILABLE, "Service unavailable")
   val unexpectedResponse: ErrorResponse                                        = ErrorResponse(INTERNAL_SERVER_ERROR, "Unexpected Response")
+  val errorHandlingDuplicateSubmission: ErrorResponse                          =
+    ErrorResponse(INTERNAL_SERVER_ERROR, "Return already submitted, error getting return details to display")
 }

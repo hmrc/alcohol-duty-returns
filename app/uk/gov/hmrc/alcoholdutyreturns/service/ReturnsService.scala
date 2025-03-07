@@ -20,7 +20,7 @@ import cats.data.EitherT
 import cats.implicits._
 import com.google.inject.{Inject, Singleton}
 import play.api.Logging
-import uk.gov.hmrc.alcoholdutyreturns.connector.{CalculatorConnector, ReturnsConnector}
+import uk.gov.hmrc.alcoholdutyreturns.connector.{AccountConnector, CalculatorConnector, ReturnsConnector}
 import uk.gov.hmrc.alcoholdutyreturns.models.calculation.CalculateDutyDueByTaxTypeRequest
 import uk.gov.hmrc.alcoholdutyreturns.models.returns.{AdrReturnSubmission, ReturnCreate, ReturnCreatedDetails, TotalDutyDuebyTaxType}
 import uk.gov.hmrc.alcoholdutyreturns.models.{ErrorCodes, ReturnId}
@@ -33,6 +33,7 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class ReturnsService @Inject() (
   returnsConnector: ReturnsConnector,
+  accountConnector: AccountConnector,
   calculatorConnector: CalculatorConnector,
   userAnswersRepository: UserAnswersRepository,
   schemaValidationService: SchemaValidationService
@@ -84,7 +85,7 @@ class ReturnsService @Inject() (
                   None
                 }
             _                        <- userAnswersRepository.clearUserAnswersById(returnId)
-            returnCreatedDetailsRight = Right(returnCreatedDetails).withLeft[ErrorResponse]
+            returnCreatedDetailsRight = Right(returnCreatedDetails)
           } yield returnCreatedDetailsRight
         case Left(errorResponse) if errorResponse == ErrorCodes.returnAlreadySubmitted =>
           handleReturnAlreadySubmitted(returnId)
@@ -97,21 +98,41 @@ class ReturnsService @Inject() (
   private def handleReturnAlreadySubmitted(returnId: ReturnId)(implicit
     hc: HeaderCarrier
   ): Future[Either[ErrorResponse, ReturnCreatedDetails]] = {
-    val submittedReturn = returnsConnector.getReturn(returnId)
-    submittedReturn.value.map {
-      case Left(e)              => Left(e).withRight[ReturnCreatedDetails]
+    val submittedReturn = for {
+      _          <- EitherT.right[ErrorResponse](userAnswersRepository.clearUserAnswersById(returnId))
+      returnData <- returnsConnector.getReturn(returnId)
+    } yield returnData
+
+    submittedReturn.value.flatMap {
+      case Left(_)              => Future.successful(Left(ErrorCodes.errorHandlingDuplicateSubmission))
       case Right(returnDetails) =>
-        Right(
-          ReturnCreatedDetails(
-            processingDate = returnDetails.processingDate,
-            adReference = returnDetails.idDetails.adReference,
-            amount = returnDetails.totalDutyDue.totalDutyDue,
-            chargeReference = returnDetails.chargeDetails.chargeReference,
-            paymentDueDate = None, // TODO
-            submissionID = returnDetails.idDetails.submissionID
-          )
+        val amountDue            = returnDetails.totalDutyDue.totalDutyDue
+        val chargeReference      = returnDetails.chargeDetails.chargeReference
+        val returnCreatedDetails = ReturnCreatedDetails(
+          processingDate = returnDetails.processingDate,
+          adReference = returnDetails.idDetails.adReference,
+          amount = amountDue,
+          chargeReference = chargeReference,
+          paymentDueDate = None,
+          submissionID = returnDetails.idDetails.submissionID
         )
+        if (amountDue > 0) {
+          logger.info("Getting outstanding payments to search for matching charge reference")
+          accountConnector.getOutstandingPayments(returnId.appaId).value.map {
+            case Left(_)             => Left(ErrorCodes.errorHandlingDuplicateSubmission)
+            case Right(openPayments) =>
+              val matchingPayments = openPayments.outstandingPayments.filter(_.chargeReference == chargeReference)
+              if (matchingPayments.length == 1) {
+                logger.info("Charge reference found, proceeding to return submitted view")
+                Right(returnCreatedDetails.copy(paymentDueDate = Some(matchingPayments.head.dueDate)))
+              } else {
+                logger.warn("Could not find a unique payment with the matching charge reference")
+                Left(ErrorCodes.errorHandlingDuplicateSubmission)
+              }
+          }
+        } else {
+          Future.successful(Right(returnCreatedDetails))
+        }
     }
   }
 }
-// if (returnDetails.totalDutyDue.totalDutyDue != 0) Some(ReturnPeriod.fromPeriodKeyOrThrow(periodKey).dueDate()) else None
