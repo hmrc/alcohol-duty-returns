@@ -80,8 +80,4 @@ class AppConfig @Inject() (config: Configuration, servicesConfig: ServicesConfig
 
   private def getConfStringAndThrowIfNotFound(key: String) =
     servicesConfig.getConfString(key, throw new RuntimeException(s"Could not find services config key '$key'"))
-
-  def maxRetryAttempts = config.get[Int]("microservice.services.returns.retry.times")
-  def initialWaitMs    = config.get[Int]("microservice.services.returns.retry.initial-wait-ms")
-  def waitFactor       = config.get[String]("microservice.services.returns.retry.wait-factor").toFloat
 }

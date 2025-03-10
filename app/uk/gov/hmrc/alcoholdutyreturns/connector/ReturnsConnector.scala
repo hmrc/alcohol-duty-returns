@@ -112,6 +112,9 @@ class ReturnsConnector @Inject() (
             logger.warn(s"Not found returned for submit return (appaId $appaId, periodKey $periodKey)")
             Left(ErrorCodes.entityNotFound)
           case Left(errorResponse) if errorResponse.statusCode == UNPROCESSABLE_ENTITY =>
+            // TODO: Check for these 2 response bodies:
+            // {"errors":{"processingDate":"2025-03-06T15:41:17Z","code":"999","text":" "}}
+            // {"errors":{"processingDate":"2025-03-06T15:43:01Z","code":"044","text":"Tax Obligation Already Fulfilled"}}
             logger.info(s"Unprocessable entity returned for submit return (appaId $appaId, periodKey $periodKey)")
             Left(ErrorCodes.returnAlreadySubmitted)
           case Left(errorResponse)                                                     =>
