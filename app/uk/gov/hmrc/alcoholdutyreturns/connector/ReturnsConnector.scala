@@ -21,6 +21,7 @@ import play.api.Logging
 import play.api.http.Status._
 import play.api.libs.json.Json
 import uk.gov.hmrc.alcoholdutyreturns.config.AppConfig
+import uk.gov.hmrc.alcoholdutyreturns.config.Constants.{duplicateSubmissionCode1, duplicateSubmissionCode2}
 import uk.gov.hmrc.alcoholdutyreturns.connector.helpers.HIPHeaders
 import uk.gov.hmrc.alcoholdutyreturns.models.returns._
 import uk.gov.hmrc.alcoholdutyreturns.models.{ErrorCodes, ReturnId}
@@ -93,7 +94,7 @@ class ReturnsConnector @Inject() (
         .withBody(Json.toJson(returnToSubmit))
         .execute[Either[UpstreamErrorResponse, HttpResponse]]
         .map {
-          case Right(response)                                                         =>
+          case Right(response)                                                =>
             Try(response.json.as[ReturnCreatedSuccess]) match {
               case Success(returnCreatedSuccess) =>
                 logger.info(s"Return submitted successfully (appaId $appaId, periodKey $periodKey)")
@@ -103,21 +104,20 @@ class ReturnsConnector @Inject() (
                   .warn(s"Parsing failed for submit return response (appaId $appaId, periodKey $periodKey)", e)
                 Left(ErrorCodes.invalidJson)
             }
-          case Left(errorResponse) if errorResponse.statusCode == BAD_REQUEST          =>
+          case Left(errorResponse) if errorResponse.statusCode == BAD_REQUEST =>
             logger.warn(
               s"Bad request returned for submit return (appaId $appaId, periodKey $periodKey): ${errorResponse.message}"
             )
             Left(ErrorCodes.badRequest)
-          case Left(errorResponse) if errorResponse.statusCode == NOT_FOUND            =>
+          case Left(errorResponse) if errorResponse.statusCode == NOT_FOUND   =>
             logger.warn(s"Not found returned for submit return (appaId $appaId, periodKey $periodKey)")
             Left(ErrorCodes.entityNotFound)
-          case Left(errorResponse) if errorResponse.statusCode == UNPROCESSABLE_ENTITY =>
-            // TODO: Check for these 2 response bodies:
-            // {"errors":{"processingDate":"2025-03-06T15:41:17Z","code":"999","text":" "}}
-            // {"errors":{"processingDate":"2025-03-06T15:43:01Z","code":"044","text":"Tax Obligation Already Fulfilled"}}
+          case Left(errorResponse)
+              if errorResponse.statusCode == UNPROCESSABLE_ENTITY && (errorResponse.message
+                .contains(duplicateSubmissionCode1) || errorResponse.message.contains(duplicateSubmissionCode2)) =>
             logger.info(s"Unprocessable entity returned for submit return (appaId $appaId, periodKey $periodKey)")
             Left(ErrorCodes.returnAlreadySubmitted)
-          case Left(errorResponse)                                                     =>
+          case Left(errorResponse)                                            =>
             logger.warn(
               s"Received unexpected response from submitReturn API (appaId $appaId, periodKey $periodKey): ${errorResponse.statusCode} ${errorResponse.message}"
             )

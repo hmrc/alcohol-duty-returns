@@ -71,9 +71,4 @@ class AccountConnector @Inject() (
     hc: HeaderCarrier
   ): EitherT[Future, ErrorResponse, Seq[ObligationData]] =
     getData(config.getObligationDataUrl(appaId))
-
-  def getOutstandingPayments(appaId: String)(implicit
-    hc: HeaderCarrier
-  ): EitherT[Future, ErrorResponse, OpenPayments] =
-    getData(config.getOutstandingPaymentsUrl(appaId))
 }

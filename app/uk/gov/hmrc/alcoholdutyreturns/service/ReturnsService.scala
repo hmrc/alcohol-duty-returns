@@ -103,36 +103,21 @@ class ReturnsService @Inject() (
       returnData <- returnsConnector.getReturn(returnId)
     } yield returnData
 
-    submittedReturn.value.flatMap {
-      case Left(_)              => Future.successful(Left(ErrorCodes.errorHandlingDuplicateSubmission))
+    submittedReturn.value.map {
+      case Left(_)              => Left(ErrorCodes.errorHandlingDuplicateSubmission)
       case Right(returnDetails) =>
-        val amountDue            = returnDetails.totalDutyDue.totalDutyDue
-        val chargeReference      = returnDetails.chargeDetails.chargeReference
-        val returnCreatedDetails = ReturnCreatedDetails(
-          processingDate = returnDetails.processingDate,
-          adReference = returnDetails.idDetails.adReference,
-          amount = amountDue,
-          chargeReference = chargeReference,
-          paymentDueDate = None,
-          submissionID = returnDetails.idDetails.submissionID
+        val amountDue       = returnDetails.totalDutyDue.totalDutyDue
+        val chargeReference = returnDetails.chargeDetails.chargeReference
+        Right(
+          ReturnCreatedDetails(
+            processingDate = returnDetails.processingDate,
+            adReference = returnDetails.idDetails.adReference,
+            amount = amountDue,
+            chargeReference = chargeReference,
+            paymentDueDate = None,
+            submissionID = returnDetails.idDetails.submissionID
+          )
         )
-        if (amountDue > 0) {
-          logger.info("Getting outstanding payments to search for matching charge reference")
-          accountConnector.getOutstandingPayments(returnId.appaId).value.map {
-            case Left(_)             => Left(ErrorCodes.errorHandlingDuplicateSubmission)
-            case Right(openPayments) =>
-              val matchingPayments = openPayments.outstandingPayments.filter(_.chargeReference == chargeReference)
-              if (matchingPayments.length == 1) {
-                logger.info("Charge reference found, proceeding to return submitted view")
-                Right(returnCreatedDetails.copy(paymentDueDate = Some(matchingPayments.head.dueDate)))
-              } else {
-                logger.warn("Could not find a unique payment with the matching charge reference")
-                Left(ErrorCodes.errorHandlingDuplicateSubmission)
-              }
-          }
-        } else {
-          Future.successful(Right(returnCreatedDetails))
-        }
     }
   }
 }
