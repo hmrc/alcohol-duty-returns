@@ -20,7 +20,7 @@ import org.scalatest.concurrent.PatienceConfiguration.Timeout
 import org.scalatest.time.{Seconds, Span}
 import play.api.libs.json.Json
 import uk.gov.hmrc.alcoholdutyreturns.base.ISpecBase
-import uk.gov.hmrc.alcoholdutyreturns.models.ErrorCodes
+import uk.gov.hmrc.alcoholdutyreturns.models.{DownstreamErrorsDetails, DuplicateSubmissionError, ErrorCodes}
 
 import java.time.Instant
 
@@ -83,10 +83,10 @@ class ReturnsConnectorSpec extends ISpecBase {
         }
       }
 
-      "return an InvalidJson error if the call returns an invalid response" in new SetUp {
+      "return an UnexpectedResponse error if the call returns an invalid response json" in new SetUp {
         stubPost(submitReturnUrl, CREATED, Json.toJson(returnSubmission).toString(), "invalid")
         whenReady(connector.submitReturn(returnSubmission, id).value, timeout = Timeout(Span(3, Seconds))) { result =>
-          result mustBe Left(ErrorCodes.invalidJson)
+          result mustBe Left(ErrorCodes.unexpectedResponse)
           verifyPost(submitReturnUrl)
         }
       }
@@ -108,6 +108,32 @@ class ReturnsConnectorSpec extends ISpecBase {
         stubPost(submitReturnUrl, NOT_FOUND, Json.toJson(returnSubmission).toString(), "")
         whenReady(connector.submitReturn(returnSubmission, id).value, timeout = Timeout(Span(3, Seconds))) { result =>
           result mustBe Left(ErrorCodes.entityNotFound)
+          verifyPost(submitReturnUrl)
+        }
+      }
+
+      "return an UnprocessableEntity if the call returns a 422 indicating a duplicate submission" in new SetUp {
+        stubPost(
+          submitReturnUrl,
+          UNPROCESSABLE_ENTITY,
+          Json.toJson(returnSubmission).toString(),
+          Json.toJson(duplicateSubmission044).toString()
+        )
+        whenReady(connector.submitReturn(returnSubmission, id).value, timeout = Timeout(Span(3, Seconds))) { result =>
+          result mustBe Left(ErrorCodes.duplicateSubmission)
+          verifyPost(submitReturnUrl)
+        }
+      }
+
+      "return an UnexpectedResponse error if the call returns a 422 with a different code in the response body" in new SetUp {
+        stubPost(
+          submitReturnUrl,
+          UNPROCESSABLE_ENTITY,
+          Json.toJson(returnSubmission).toString(),
+          Json.toJson(duplicateSubmissionWrongCode).toString()
+        )
+        whenReady(connector.submitReturn(returnSubmission, id).value, timeout = Timeout(Span(3, Seconds))) { result =>
+          result mustBe Left(ErrorCodes.unexpectedResponse)
           verifyPost(submitReturnUrl)
         }
       }
@@ -144,6 +170,13 @@ class ReturnsConnectorSpec extends ISpecBase {
       now,
       chargeReference,
       submissionId
+    )
+
+    val duplicateSubmission044       = DuplicateSubmissionError(
+      DownstreamErrorsDetails(now, "044", "Tax Obligation Already Fulfilled")
+    )
+    val duplicateSubmissionWrongCode = DuplicateSubmissionError(
+      DownstreamErrorsDetails(now, "888", "Wrong code")
     )
   }
 }
