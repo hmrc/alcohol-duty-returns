@@ -18,11 +18,11 @@ package uk.gov.hmrc.alcoholdutyreturns.connector
 
 import cats.data.EitherT
 import play.api.Logging
-import play.api.http.Status.{BAD_REQUEST, NOT_FOUND}
+import play.api.http.Status._
 import play.api.libs.json.Json
 import uk.gov.hmrc.alcoholdutyreturns.config.AppConfig
 import uk.gov.hmrc.alcoholdutyreturns.connector.helpers.HIPHeaders
-import uk.gov.hmrc.alcoholdutyreturns.models.{ErrorCodes, ReturnId}
+import uk.gov.hmrc.alcoholdutyreturns.models.{DuplicateSubmissionError, ErrorCodes, ReturnId}
 import uk.gov.hmrc.alcoholdutyreturns.models.returns.{GetReturnDetails, GetReturnDetailsSuccess, ReturnCreate, ReturnCreatedDetails, ReturnCreatedSuccess}
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReadsInstances, HttpResponse, StringContextOps, UpstreamErrorResponse}
@@ -91,9 +91,9 @@ class ReturnsConnector @Inject() (
         .post(url"${config.submitReturnUrl}")
         .setHeader(headers.submitReturnHeaders(appaId): _*)
         .withBody(Json.toJson(returnToSubmit))
-        .execute[Either[UpstreamErrorResponse, HttpResponse]]
+        .execute[HttpResponse]
         .map {
-          case Right(response)                                                =>
+          case response if response.status == CREATED              =>
             Try(response.json.as[ReturnCreatedSuccess]) match {
               case Success(returnCreatedSuccess) =>
                 logger.info(s"Return submitted successfully (appaId $appaId, periodKey $periodKey)")
@@ -101,19 +101,30 @@ class ReturnsConnector @Inject() (
               case Failure(e)                    =>
                 logger
                   .warn(s"Parsing failed for submit return response (appaId $appaId, periodKey $periodKey)", e)
-                Left(ErrorCodes.invalidJson)
+                Left(ErrorCodes.unexpectedResponse)
             }
-          case Left(errorResponse) if errorResponse.statusCode == BAD_REQUEST =>
+          case response if response.status == BAD_REQUEST          =>
             logger.warn(
-              s"Bad request returned for submit return (appaId $appaId, periodKey $periodKey): ${errorResponse.message}"
+              s"Bad request returned for submit return (appaId $appaId, periodKey $periodKey): ${response.body}"
             )
             Left(ErrorCodes.badRequest)
-          case Left(errorResponse) if errorResponse.statusCode == NOT_FOUND   =>
+          case response if response.status == NOT_FOUND            =>
             logger.warn(s"Not found returned for submit return (appaId $appaId, periodKey $periodKey)")
             Left(ErrorCodes.entityNotFound)
-          case Left(errorResponse)                                            =>
+          case response if response.status == UNPROCESSABLE_ENTITY =>
+            Try(response.json.as[DuplicateSubmissionError]) match {
+              case Success(dupError) if dupError.errors.code == "044" || dupError.errors.code == "999" =>
+                logger.info(s"Return already submitted (appaId $appaId, periodKey $periodKey)")
+                Left(ErrorCodes.duplicateSubmission)
+              case _                                                                                   =>
+                logger.warn(
+                  s"Unprocessable entity returned for submit return response (appaId $appaId, periodKey $periodKey), not duplicate submission: ${response.body}"
+                )
+                Left(ErrorCodes.unexpectedResponse)
+            }
+          case response                                            =>
             logger.warn(
-              s"Received unexpected response from submitReturn API (appaId $appaId, periodKey $periodKey): ${errorResponse.statusCode} ${errorResponse.message}"
+              s"Received unexpected response from submitReturn API (appaId $appaId, periodKey $periodKey). Status: ${response.status}, Body: ${response.body}"
             )
             Left(ErrorCodes.unexpectedResponse)
         }

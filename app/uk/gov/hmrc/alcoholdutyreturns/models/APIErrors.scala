@@ -55,3 +55,9 @@ case class DownstreamErrorDetails(code: String, message: String, logID: String)
 object DownstreamErrorDetails {
   implicit val downstreamErrorDetailsWrites: OFormat[DownstreamErrorDetails] = Json.format[DownstreamErrorDetails]
 }
+
+case class DuplicateSubmissionError(errors: DownstreamErrorsDetails)
+
+object DuplicateSubmissionError {
+  implicit val duplicateSubmissionErrorWrites: OFormat[DuplicateSubmissionError] = Json.format[DuplicateSubmissionError]
+}
