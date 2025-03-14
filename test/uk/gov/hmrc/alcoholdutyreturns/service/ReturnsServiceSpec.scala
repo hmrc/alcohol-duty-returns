@@ -164,7 +164,7 @@ class ReturnsServiceSpec extends SpecBase {
       verify(mockUserAnswersRespository, never).clearUserAnswersById(any())
     }
 
-    "return any error from the returns connector if failure" in new SetUp {
+    "return any non-422 error from the returns connector if failure" in new SetUp {
       when(mockCalculatorConnector.calculateDutyDueByTaxType(any())(any()))
         .thenReturn(EitherT.right[ErrorResponse](Future.successful(calculatedDutyDueByTaxTypeForExampleSubmission)))
 
@@ -183,6 +183,29 @@ class ReturnsServiceSpec extends SpecBase {
       verify(mockReturnsConnector).submitReturn(returnSubmission, retId.appaId)
       verify(mockUserAnswersRespository, never).get(any())
       verify(mockUserAnswersRespository, never).clearUserAnswersById(any())
+    }
+
+    "return a 422 error from the returns connector if the return was already submitted" in new SetUp {
+      when(mockCalculatorConnector.calculateDutyDueByTaxType(any())(any()))
+        .thenReturn(EitherT.right[ErrorResponse](Future.successful(calculatedDutyDueByTaxTypeForExampleSubmission)))
+
+      when(mockSchemaValidationService.validateAgainstSchema(returnSubmission)).thenReturn(true)
+
+      when(mockReturnsConnector.submitReturn(returnSubmission, retId.appaId))
+        .thenReturn(EitherT.leftT[Future, ReturnCreatedDetails](ErrorCodes.duplicateSubmission))
+
+      when(mockUserAnswersRespository.clearUserAnswersById(retId)).thenReturn(Future.unit)
+
+      when(mockUserAnswersRespository.get(retId)).thenReturn(Future.successful(Some(userAnswers)))
+
+      whenReady(returnsService.submitReturn(adrReturnSubmission, retId).value) {
+        _ mustBe Left[ErrorResponse, ReturnCreatedDetails](ErrorCodes.duplicateSubmission)
+      }
+
+      verify(mockSchemaValidationService).validateAgainstSchema(returnSubmission)
+      verify(mockReturnsConnector).submitReturn(returnSubmission, retId.appaId)
+      verify(mockUserAnswersRespository).get(any())
+      verify(mockUserAnswersRespository).clearUserAnswersById(any())
     }
 
     "return a failed failure if the returns connector fails" in new SetUp {

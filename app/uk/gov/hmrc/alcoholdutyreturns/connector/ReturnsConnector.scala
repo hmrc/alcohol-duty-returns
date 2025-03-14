@@ -118,7 +118,7 @@ class ReturnsConnector @Inject() (
                 Left(ErrorCodes.duplicateSubmission)
               case _                                                                                   =>
                 logger.warn(
-                  s"Unprocessable entity returned for submit return response (appaId $appaId, periodKey $periodKey), not duplicate submission: ${response.body}"
+                  s"Unprocessable entity returned for submit return response (appaId $appaId, periodKey $periodKey): ${response.body}"
                 )
                 Left(ErrorCodes.unexpectedResponse)
             }
