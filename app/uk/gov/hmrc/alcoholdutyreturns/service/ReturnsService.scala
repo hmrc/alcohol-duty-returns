@@ -63,27 +63,45 @@ class ReturnsService @Inject() (
   ): EitherT[Future, ErrorResponse, ReturnCreatedDetails] = {
     val returnConvertedToSubmissionFormat = ReturnCreate.fromAdrReturnSubmission(returnSubmission, returnId.periodKey)
 
-    for {
+    val returnCreatedDetailsEither = for {
       maybeTotalDutyDueByTaxType <- calculateTotalDutyDueByTaxType(returnSubmission)
       returnToSubmit              = returnConvertedToSubmissionFormat.copy(totalDutyDuebyTaxType = maybeTotalDutyDueByTaxType)
       _                          <- validateAgainstSchema(returnToSubmit)
       returnCreatedDetails       <- returnsConnector.submitReturn(returnToSubmit, returnId.appaId)
-      userAnswers                <-
-        EitherT.right[ErrorResponse](
-          userAnswersRepository
-            .get(returnId)
-            .recover { case _ =>
-              logger.warn(
-                s"Failed retrieving user answers for returnId=$returnId. Continuing the process and auditing without user answers. "
-              )
-              None
-            }
-        )
-      _                          <- EitherT.right[ErrorResponse](
-                                      userAnswersRepository
-                                        .clearUserAnswersById(returnId)
-                                    )
     } yield returnCreatedDetails
+
+    EitherT(
+      returnCreatedDetailsEither.value.flatMap {
+        case Right(returnCreatedDetails)                                            =>
+          for {
+            _ <-
+              userAnswersRepository
+                .get(returnId)
+                .recover { case _ =>
+                  logger.warn(
+                    s"Failed retrieving user answers for returnId=$returnId. Continuing the process and auditing without user answers. "
+                  )
+                  None
+                }
+            _ <- userAnswersRepository.clearUserAnswersById(returnId)
+          } yield Right(returnCreatedDetails)
+        case Left(errorResponse) if errorResponse == ErrorCodes.duplicateSubmission =>
+          for {
+            _ <-
+              userAnswersRepository
+                .get(returnId)
+                .recover { case _ =>
+                  logger.warn(
+                    s"Failed retrieving user answers for returnId=$returnId. Continuing the process without user answers."
+                  )
+                  None
+                }
+            _ <- userAnswersRepository.clearUserAnswersById(returnId)
+          } yield Left(errorResponse)
+        case Left(errorResponse)                                                    =>
+          Future.successful(Left(errorResponse))
+      }
+    )
   }
 
 }

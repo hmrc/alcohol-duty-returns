@@ -92,6 +92,20 @@ class ReturnsControllerSpec extends SpecBase {
         contentAsJson(result) mustBe Json.toJson(adrReturnCreatedDetails)
       }
 
+      "return 422 UNPROCESSABLE_ENTITY when there is a duplicate submission" in new SetUp {
+        when(
+          mockReturnsService.submitReturn(eqTo(adrReturnsSubmission), eqTo(returnId.copy(periodKey = periodKey)))(any())
+        )
+          .thenReturn(EitherT.leftT[Future, ReturnCreatedDetails](ErrorCodes.duplicateSubmission))
+
+        val result: Future[Result] =
+          controller.submitReturn(appaId, periodKey)(
+            fakeRequestWithJsonBody(Json.toJson(adrReturnsSubmission))
+          )
+
+        status(result) mustBe UNPROCESSABLE_ENTITY
+      }
+
       "return 400 BAD_REQUEST when there is a BAD_REQUEST" in new SetUp {
         when(
           mockReturnsService.submitReturn(eqTo(adrReturnsSubmission), eqTo(returnId.copy(periodKey = periodKey)))(any())
