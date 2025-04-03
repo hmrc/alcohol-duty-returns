@@ -59,7 +59,6 @@ class UserAnswersRepository @Inject() (
 
   private val replaceDontUpsert = ReplaceOptions().upsert(false)
   private val replaceUpsert     = ReplaceOptions().upsert(true)
-  private val updateUpsert      = UpdateOptions().upsert(true)
 
   private def byId(id: ReturnId) = Filters.equal("_id", id)
 

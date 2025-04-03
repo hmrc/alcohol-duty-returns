@@ -20,6 +20,7 @@ import com.google.inject.{ImplementedBy, Singleton}
 import play.api.Logging
 import uk.gov.hmrc.alcoholdutyreturns.config.AppConfig
 import uk.gov.hmrc.alcoholdutyreturns.models.ReturnId
+import uk.gov.hmrc.alcoholdutyreturns.utils.ADRMongoLockRepository
 import uk.gov.hmrc.mongo.lock.MongoLockRepository
 
 import javax.inject.Inject
@@ -39,7 +40,7 @@ trait LockingService {
 @Singleton
 class LockingServiceImpl @Inject() (
   config: AppConfig,
-  mongoLockRepository: MongoLockRepository
+  mongoLockRepository: ADRMongoLockRepository
 )(implicit ec: ExecutionContext)
     extends LockingService
     with Logging {

@@ -20,7 +20,8 @@ import org.mockito.ArgumentMatchers.any
 import org.mongodb.scala.{MongoCollection, SingleObservable}
 import uk.gov.hmrc.alcoholdutyreturns.base.SpecBase
 import uk.gov.hmrc.alcoholdutyreturns.models.ReturnId
-import uk.gov.hmrc.mongo.lock.{Lock, MongoLockRepository}
+import uk.gov.hmrc.alcoholdutyreturns.utils.ADRMongoLockRepository
+import uk.gov.hmrc.mongo.lock.Lock
 
 import scala.concurrent.Future
 
@@ -191,8 +192,8 @@ class LockingServiceSpec extends SpecBase {
   class SetUp {
     val returnId: ReturnId = ReturnId(appaId, periodKey)
 
-    val mongoLockRepository: MongoLockRepository = mock[MongoLockRepository]
-    val lockingService                           = new LockingServiceImpl(appConfig, mongoLockRepository)
+    val mongoLockRepository: ADRMongoLockRepository = mock[ADRMongoLockRepository]
+    val lockingService                              = new LockingServiceImpl(appConfig, mongoLockRepository)
 
     val testData: Future[Boolean]        = Future.successful(true)
     val successResponse: Option[Boolean] = Some(true)
