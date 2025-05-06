@@ -33,7 +33,19 @@ trait WireMockHelper {
       .flatMap(endpointName =>
         Seq(
           s"$endpointConfigurationPath.$endpointName.host" -> wireMockHost,
-          s"$endpointConfigurationPath.$endpointName.port" -> wireMockPort
+          s"$endpointConfigurationPath.$endpointName.port" -> wireMockPort,
+          s"$endpointConfigurationPath.retry.retry-attempts" -> 0
+        )
+      )
+      .toMap
+
+  protected def getWireMockAppConfigWithRetry(endpointNames: Seq[String]): Map[String, Any] =
+    endpointNames
+      .flatMap(endpointName =>
+        Seq(
+          s"$endpointConfigurationPath.$endpointName.host" -> wireMockHost,
+          s"$endpointConfigurationPath.$endpointName.port" -> wireMockPort,
+          s"$endpointConfigurationPath.retry.retry-attempts" -> 1
         )
       )
       .toMap

@@ -17,6 +17,7 @@
 package uk.gov.hmrc.alcoholdutyreturns.config
 
 import com.google.inject.AbstractModule
+import org.apache.pekko.pattern.CircuitBreaker
 import uk.gov.hmrc.alcoholdutyreturns.controllers.actions.{AuthorisedAction, BaseAuthorisedAction}
 import uk.gov.hmrc.alcoholdutyreturns.service.SchemaValidationService
 
@@ -29,5 +30,6 @@ class Module extends AbstractModule {
     bind(classOf[AuthorisedAction]).to(classOf[BaseAuthorisedAction]).asEagerSingleton()
     bind(classOf[Clock]).toInstance(Clock.systemDefaultZone.withZone(ZoneOffset.UTC))
     bind(classOf[SchemaValidationService]).asEagerSingleton()
+    bind(classOf[CircuitBreaker]).toProvider(classOf[CircuitBreakerProvider])
   }
 }

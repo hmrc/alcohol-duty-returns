@@ -42,18 +42,17 @@ class ReturnsController @Inject() (
 )(implicit executionContext: ExecutionContext)
     extends BackendController(controllerComponents)
     with Logging {
+
   def getReturn(appaId: String, periodKey: String): Action[AnyContent] =
     (authorise andThen checkAppaId(appaId)).async { implicit request =>
-      returnsConnector
-        .getReturn(ReturnId(appaId, periodKey))
-        .map(AdrReturnDetails.fromGetReturnDetails)
-        .fold(
-          e => {
-            logger.warn(s"Unable to get return $periodKey for $appaId: $e")
-            error(e)
-          },
-          returnDetails => Ok(Json.toJson(returnDetails))
-        )
+      returnsConnector.getReturn(ReturnId(appaId, periodKey)).map {
+        case Left(e)                 =>
+          logger.warn(s"Unable to get return $periodKey for $appaId: $e")
+          error(e)
+        case Right(getReturnDetails) =>
+          val returnDetails = AdrReturnDetails.fromGetReturnDetails(getReturnDetails)
+          Ok(Json.toJson(returnDetails))
+      }
     }
 
   def submitReturn(appaId: String, periodKey: String): Action[JsValue] =
