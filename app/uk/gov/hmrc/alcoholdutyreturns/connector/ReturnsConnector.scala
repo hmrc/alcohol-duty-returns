@@ -89,13 +89,13 @@ class ReturnsConnector @Inject() (
               logger.warn(
                 s"Bad request returned for get return (appaId ${returnId.appaId}, periodKey ${returnId.periodKey})"
               )
-              Future.successful(Left(ErrorResponse(BAD_REQUEST, "Bad request")))
+              Future.successful(Left(ErrorResponse(BAD_REQUEST, ErrorCodes.badRequest.message)))
             case NOT_FOUND            =>
               logger.warn(s"Return not found (appaId ${returnId.appaId}, periodKey ${returnId.periodKey})")
               Future.successful(Left(ErrorResponse(NOT_FOUND, ErrorCodes.entityNotFound.message)))
             case UNPROCESSABLE_ENTITY =>
               logger.info(s"Return request unprocessable for appaId ${returnId.appaId}")
-              Future.successful(Left(ErrorResponse(UNPROCESSABLE_ENTITY, "Unprocessable entity")))
+              Future.successful(Left(ErrorResponse(UNPROCESSABLE_ENTITY, ErrorCodes.unprocessableEntity.message)))
             case _                    =>
               val error: String = response.json.as[HttpErrorResponse].message
               logger.warn(
