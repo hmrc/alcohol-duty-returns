@@ -45,35 +45,35 @@ class ReturnsConnectorSpec extends ISpecBase {
         }
       }
 
-      "return a BadRequest error if the call returns a 400 response" in new SetUp {
+      "return a BadRequest error if the call returns a 400 response without retry" in new SetUp {
         stubGet(getReturnUrl, BAD_REQUEST, Json.toJson(processingError(now)).toString())
-        whenReady(connector.getReturn(returnId), timeout = Timeout(Span(3, Seconds))) { result =>
+        whenReady(connectorWithRetry.getReturn(returnId), timeout = Timeout(Span(3, Seconds))) { result =>
           result mustBe Left(ErrorCodes.badRequest)
-          verifyGet(getReturnUrl)
+          verifyGetWithoutRetry(getReturnUrl)
         }
       }
 
-      "return a NotFound error if the call returns a 404 response" in new SetUp {
+      "return a NotFound error if the call returns a 404 response without retry" in new SetUp {
         stubGet(getReturnUrl, NOT_FOUND, "")
-        whenReady(connector.getReturn(returnId), timeout = Timeout(Span(3, Seconds))) { result =>
+        whenReady(connectorWithRetry.getReturn(returnId), timeout = Timeout(Span(3, Seconds))) { result =>
           result mustBe Left(ErrorCodes.entityNotFound)
-          verifyGet(getReturnUrl)
+          verifyGetWithoutRetry(getReturnUrl)
         }
       }
 
-      "return a Unprocessable error if the call returns a 422 response" in new SetUp {
+      "return a Unprocessable error if the call returns a 422 response without retry" in new SetUp {
         stubGet(getReturnUrl, UNPROCESSABLE_ENTITY, "")
-        whenReady(connector.getReturn(returnId), timeout = Timeout(Span(3, Seconds))) { result =>
+        whenReady(connectorWithRetry.getReturn(returnId), timeout = Timeout(Span(3, Seconds))) { result =>
           result mustBe Left(ErrorCodes.unprocessableEntity)
-          verifyGet(getReturnUrl)
+          verifyGetWithoutRetry(getReturnUrl)
         }
       }
 
-      "return a UnexpectedResponse error if the call return a 500 response" in new SetUp {
+      "return a UnexpectedResponse error if the call return a 500 response with retry" in new SetUp {
         stubGet(getReturnUrl, INTERNAL_SERVER_ERROR, Json.toJson(internalServerError).toString())
-        whenReady(connector.getReturn(returnId)) { result =>
+        whenReady(connectorWithRetry.getReturn(returnId)) { result =>
           result mustBe Left(ErrorCodes.unexpectedResponse)
-          verifyGet(getReturnUrl)
+          verifyGetWitRetry(getReturnUrl)
         }
       }
     }

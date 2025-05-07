@@ -78,7 +78,7 @@ trait ISpecBase
   val additionalAppConfigWithRetry: Map[String, Any] = Map(
     "metrics.enabled"  -> false,
     "auditing.enabled" -> false
-  ) ++ getWireMockAppConfig(Seq("auth", "alcohol-duty-accounts", "alcohol-duty-calculator", "returns"))
+  ) ++ getWireMockAppConfigWithRetry(Seq("auth", "alcohol-duty-accounts", "alcohol-duty-calculator", "returns"))
 
   override def fakeApplication(): Application =
     GuiceApplicationBuilder()

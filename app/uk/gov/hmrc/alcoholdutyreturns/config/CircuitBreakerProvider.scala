@@ -23,10 +23,10 @@ import org.apache.pekko.pattern.CircuitBreaker
 import scala.concurrent.ExecutionContext
 
 @Singleton
-class CircuitBreakerProvider @Inject()(implicit
-                                       ec: ExecutionContext,
-                                       sys: ActorSystem,
-                                       appConfig: AppConfig
+class CircuitBreakerProvider @Inject() (implicit
+  ec: ExecutionContext,
+  sys: ActorSystem,
+  appConfig: AppConfig
 ) extends Provider[CircuitBreaker] {
 
   private val maxFailures  = appConfig.maxFailures
