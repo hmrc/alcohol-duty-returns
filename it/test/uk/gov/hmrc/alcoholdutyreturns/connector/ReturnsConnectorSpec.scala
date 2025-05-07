@@ -24,8 +24,6 @@ import uk.gov.hmrc.alcoholdutyreturns.models.{DownstreamErrorsDetails, Duplicate
 
 import java.time.Instant
 
-// TODO - [ADR-2035] - Add tests for retry logic
-
 class ReturnsConnectorSpec extends ISpecBase {
   "Returns Connector when" - {
     "getReturn is called must" - {
@@ -73,7 +71,7 @@ class ReturnsConnectorSpec extends ISpecBase {
         stubGet(getReturnUrl, INTERNAL_SERVER_ERROR, Json.toJson(internalServerError).toString())
         whenReady(connectorWithRetry.getReturn(returnId)) { result =>
           result mustBe Left(ErrorCodes.unexpectedResponse)
-          verifyGetWitRetry(getReturnUrl)
+          verifyGetWithRetry(getReturnUrl)
         }
       }
     }

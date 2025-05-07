@@ -100,7 +100,7 @@ trait WireMockHelper {
   def verifyGetWithoutRetry(url: String): Unit =
     wireMockServer.verify(1, getRequestedFor(urlEqualTo(stripToPath(url))))
 
-  def verifyGetWitRetry(url: String): Unit =
+  def verifyGetWithRetry(url: String): Unit =
     wireMockServer.verify(2, getRequestedFor(urlEqualTo(stripToPath(url))))
 
   def verifyPostNeverCalled(url: String): Unit =
