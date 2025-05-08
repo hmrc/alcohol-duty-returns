@@ -17,10 +17,11 @@
 package uk.gov.hmrc.alcoholdutyreturns.models
 
 import play.api.http.Status.{BAD_REQUEST, FORBIDDEN, GONE, INTERNAL_SERVER_ERROR, NOT_FOUND, SERVICE_UNAVAILABLE, UNAUTHORIZED, UNPROCESSABLE_ENTITY}
+import play.api.libs.json.{Json, OFormat}
 import uk.gov.hmrc.play.bootstrap.backend.http.ErrorResponse
 
 object ErrorCodes {
-  val badRequest: ErrorResponse                                                = ErrorResponse(BAD_REQUEST, "Bad request made")
+  val badRequest: ErrorResponse                                                = ErrorResponse(BAD_REQUEST, "Bad request")
   val entityNotFound: ErrorResponse                                            = ErrorResponse(NOT_FOUND, "Entity not found")
   val invalidJson: ErrorResponse                                               = ErrorResponse(UNPROCESSABLE_ENTITY, "Invalid Json received")
   val duplicateSubmission: ErrorResponse                                       = ErrorResponse(UNPROCESSABLE_ENTITY, "Return already submitted")
@@ -30,4 +31,14 @@ object ErrorCodes {
   val unauthorisedRequest: ErrorResponse                                       = ErrorResponse(UNAUTHORIZED, "Unauthorised request")
   val serviceUnavailable: ErrorResponse                                        = ErrorResponse(SERVICE_UNAVAILABLE, "Service unavailable")
   val unexpectedResponse: ErrorResponse                                        = ErrorResponse(INTERNAL_SERVER_ERROR, "Unexpected Response")
+  val unprocessableEntity: ErrorResponse                                       = ErrorResponse(UNPROCESSABLE_ENTITY, "Unprocessable entity")
+}
+
+case class HttpErrorResponse(
+  code: String,
+  message: String
+)
+
+object HttpErrorResponse {
+  implicit val format: OFormat[HttpErrorResponse] = Json.format[HttpErrorResponse]
 }

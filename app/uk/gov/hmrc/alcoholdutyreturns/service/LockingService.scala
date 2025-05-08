@@ -21,7 +21,6 @@ import play.api.Logging
 import uk.gov.hmrc.alcoholdutyreturns.config.AppConfig
 import uk.gov.hmrc.alcoholdutyreturns.models.ReturnId
 import uk.gov.hmrc.alcoholdutyreturns.utils.ADRMongoLockRepository
-import uk.gov.hmrc.mongo.lock.MongoLockRepository
 
 import javax.inject.Inject
 import scala.concurrent.duration.DurationInt

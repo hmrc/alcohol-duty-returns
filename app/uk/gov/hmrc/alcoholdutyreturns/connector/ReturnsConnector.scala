@@ -17,15 +17,17 @@
 package uk.gov.hmrc.alcoholdutyreturns.connector
 
 import cats.data.EitherT
+import org.apache.pekko.actor.{ActorSystem, Scheduler}
+import org.apache.pekko.pattern.retry
 import play.api.Logging
 import play.api.http.Status._
 import play.api.libs.json.Json
-import uk.gov.hmrc.alcoholdutyreturns.config.AppConfig
+import uk.gov.hmrc.alcoholdutyreturns.config.{AppConfig, CircuitBreakerProvider}
 import uk.gov.hmrc.alcoholdutyreturns.connector.helpers.HIPHeaders
-import uk.gov.hmrc.alcoholdutyreturns.models.{DuplicateSubmissionError, ErrorCodes, ReturnId}
-import uk.gov.hmrc.alcoholdutyreturns.models.returns.{GetReturnDetails, GetReturnDetailsSuccess, ReturnCreate, ReturnCreatedDetails, ReturnCreatedSuccess}
+import uk.gov.hmrc.alcoholdutyreturns.models.returns._
+import uk.gov.hmrc.alcoholdutyreturns.models.{DuplicateSubmissionError, ErrorCodes, HttpErrorResponse, ReturnId}
 import uk.gov.hmrc.http.client.HttpClientV2
-import uk.gov.hmrc.http.{HeaderCarrier, HttpReadsInstances, HttpResponse, StringContextOps, UpstreamErrorResponse}
+import uk.gov.hmrc.http.{HeaderCarrier, HttpReadsInstances, HttpResponse, InternalServerException, StringContextOps}
 import uk.gov.hmrc.play.bootstrap.backend.http.ErrorResponse
 
 import javax.inject.Inject
@@ -35,51 +37,75 @@ import scala.util.{Failure, Success, Try}
 class ReturnsConnector @Inject() (
   config: AppConfig,
   headers: HIPHeaders,
+  circuitBreakerProvider: CircuitBreakerProvider,
+  implicit val system: ActorSystem,
   implicit val httpClient: HttpClientV2
 )(implicit ec: ExecutionContext)
     extends HttpReadsInstances
     with Logging {
 
+  implicit val scheduler: Scheduler = system.scheduler
+
   def getReturn(returnId: ReturnId)(implicit
     hc: HeaderCarrier
-  ): EitherT[Future, ErrorResponse, GetReturnDetails] = {
-    logger.info(s"Getting return (appaId ${returnId.appaId}, periodKey ${returnId.periodKey})")
-    EitherT(
+  ): Future[Either[ErrorResponse, GetReturnDetails]] =
+    retry(
+      () => call(returnId),
+      attempts = config.retryAttempts,
+      delay = config.retryAttemptsDelay
+    ).recoverWith { _ =>
+      Future.successful(Left(ErrorResponse(INTERNAL_SERVER_ERROR, ErrorCodes.unexpectedResponse.message)))
+    }
+
+  def call(returnId: ReturnId)(implicit
+    hc: HeaderCarrier
+  ): Future[Either[ErrorResponse, GetReturnDetails]] =
+    circuitBreakerProvider.get().withCircuitBreaker {
+      logger.info(s"Getting return (appaId ${returnId.appaId}, periodKey ${returnId.periodKey})")
       httpClient
         .get(url"${config.getReturnUrl(returnId)}")
         .setHeader(headers.getReturnsHeaders: _*)
-        .execute[Either[UpstreamErrorResponse, HttpResponse]]
-        .map {
-          case Right(response)                                                =>
-            Try(response.json.as[GetReturnDetailsSuccess]) match {
-              case Success(returnDetailsSuccess) =>
-                logger
-                  .info(s"Return obtained successfully (appaId ${returnId.appaId}, periodKey ${returnId.periodKey})")
-                Right(returnDetailsSuccess.success)
-              case Failure(e)                    =>
-                logger.warn(
-                  s"Parsing failed for return (appaId ${returnId.appaId}, periodKey ${returnId.periodKey})",
-                  e
-                )
-                Left(ErrorCodes.invalidJson)
-            }
-          case Left(errorResponse) if errorResponse.statusCode == BAD_REQUEST =>
-            logger.warn(
-              s"Bad request returned for get return (appaId ${returnId.appaId}, periodKey ${returnId.periodKey}): ${errorResponse.message}"
-            )
-            Left(ErrorCodes.badRequest)
-          case Left(errorResponse) if errorResponse.statusCode == NOT_FOUND   =>
-            logger.warn(s"Return not found (appaId ${returnId.appaId}, periodKey ${returnId.periodKey})")
-            Left(ErrorCodes.entityNotFound)
-          case Left(errorResponse)                                            =>
-            logger.warn(
-              s"Received unexpected response from returns API (appaId ${returnId.appaId}, " +
-                s"periodKey ${returnId.periodKey}): ${errorResponse.statusCode} ${errorResponse.message}"
-            )
-            Left(ErrorCodes.unexpectedResponse)
+        .execute[HttpResponse]
+        .flatMap { response =>
+          response.status match {
+            case OK                   =>
+              Try {
+                response.json
+                  .as[GetReturnDetailsSuccess]
+              } match {
+                case Success(returnDetailsSuccess) =>
+                  logger.info(
+                    s"Return obtained successfully (appaId ${returnId.appaId}, periodKey ${returnId.periodKey})"
+                  )
+                  Future.successful(Right(returnDetailsSuccess.success))
+                case Failure(e)                    =>
+                  logger.warn(
+                    s"Parsing failed for return (appaId ${returnId.appaId}, periodKey ${returnId.periodKey})",
+                    e
+                  )
+                  Future.successful(Left(ErrorResponse(UNPROCESSABLE_ENTITY, ErrorCodes.invalidJson.message)))
+              }
+            case BAD_REQUEST          =>
+              logger.warn(
+                s"Bad request returned for get return (appaId ${returnId.appaId}, periodKey ${returnId.periodKey})"
+              )
+              Future.successful(Left(ErrorResponse(BAD_REQUEST, ErrorCodes.badRequest.message)))
+            case NOT_FOUND            =>
+              logger.warn(s"Return not found (appaId ${returnId.appaId}, periodKey ${returnId.periodKey})")
+              Future.successful(Left(ErrorResponse(NOT_FOUND, ErrorCodes.entityNotFound.message)))
+            case UNPROCESSABLE_ENTITY =>
+              logger
+                .warn(s"Return request unprocessable for (appaId ${returnId.appaId}, periodKey ${returnId.periodKey})")
+              Future.successful(Left(ErrorResponse(UNPROCESSABLE_ENTITY, ErrorCodes.unprocessableEntity.message)))
+            case _                    =>
+              val error: String = response.json.as[HttpErrorResponse].message
+              logger.warn(
+                s"An exception was returned while trying to fetch return for (appaId ${returnId.appaId}, periodKey ${returnId.periodKey}): $error"
+              )
+              Future.failed(new InternalServerException(response.body))
+          }
         }
-    )
-  }
+    }
 
   def submitReturn(returnToSubmit: ReturnCreate, appaId: String)(implicit
     hc: HeaderCarrier

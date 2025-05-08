@@ -29,15 +29,18 @@ import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import play.api.{Application, Mode}
 import play.api.http.{HeaderNames, Status, Writeable}
+import play.api.inject.bind
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.mvc.{Result, Results}
 import play.api.test.Helpers.route
 import play.api.test.{DefaultAwaitTimeout, FakeRequest, ResultExtractors, Writeables}
 import uk.gov.hmrc.alcoholdutyreturns.config.AppConfig
 import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.test.{HttpClientV2Support, WireMockSupport}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
+import java.time.Clock
 import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.ExecutionContext.global
 
@@ -72,12 +75,35 @@ trait ISpecBase
     "auditing.enabled" -> false
   ) ++ getWireMockAppConfig(Seq("auth", "alcohol-duty-accounts", "alcohol-duty-calculator", "returns"))
 
+  val additionalAppConfigWithRetry: Map[String, Any] = Map(
+    "metrics.enabled"  -> false,
+    "auditing.enabled" -> false
+  ) ++ getWireMockAppConfigWithRetry(Seq("auth", "alcohol-duty-accounts", "alcohol-duty-calculator", "returns"))
+
   override def fakeApplication(): Application =
     GuiceApplicationBuilder()
       .disable[com.codahale.metrics.MetricRegistry]
       .configure(additionalAppConfig)
       .in(Mode.Test)
       .build()
+
+  val appWithHttpClientV2: Application = new GuiceApplicationBuilder()
+    .configure(additionalAppConfig)
+    .overrides(
+      bind[HttpClientV2].toInstance(httpClientV2),
+      bind[Clock].toInstance(clock)
+    )
+    .in(Mode.Test)
+    .build()
+
+  val appWithHttpClientV2WithRetry: Application = new GuiceApplicationBuilder()
+    .configure(additionalAppConfigWithRetry)
+    .overrides(
+      bind[HttpClientV2].toInstance(httpClientV2),
+      bind[Clock].toInstance(clock)
+    )
+    .in(Mode.Test)
+    .build()
 
   lazy val config = new AppConfig(app.configuration, new ServicesConfig(app.configuration))
 

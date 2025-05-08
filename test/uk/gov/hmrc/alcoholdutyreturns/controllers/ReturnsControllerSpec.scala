@@ -24,7 +24,7 @@ import play.api.mvc.Result
 import uk.gov.hmrc.alcoholdutyreturns.base.SpecBase
 import uk.gov.hmrc.alcoholdutyreturns.connector.ReturnsConnector
 import uk.gov.hmrc.alcoholdutyreturns.models.ErrorCodes
-import uk.gov.hmrc.alcoholdutyreturns.models.returns.{GetReturnDetails, ReturnCreatedDetails}
+import uk.gov.hmrc.alcoholdutyreturns.models.returns.ReturnCreatedDetails
 import uk.gov.hmrc.alcoholdutyreturns.service.{FakeLockingService, LockingService, ReturnsService}
 import uk.gov.hmrc.play.bootstrap.backend.http.ErrorResponse
 
@@ -36,7 +36,7 @@ class ReturnsControllerSpec extends SpecBase {
     "calling getReturn must" - {
       "return 200 OK and the return when successful" in new SetUp {
         when(mockReturnsConnector.getReturn(eqTo(returnId.copy(periodKey = periodKey)))(any()))
-          .thenReturn(EitherT.rightT[Future, ErrorResponse](returnDetails.success))
+          .thenReturn(Future.successful(Right(returnDetails.success)))
 
         val result: Future[Result] =
           controller.getReturn(appaId, periodKey)(fakeRequest)
@@ -47,7 +47,7 @@ class ReturnsControllerSpec extends SpecBase {
 
       "return 400 BAD_REQUEST when there is a BAD_REQUEST" in new SetUp {
         when(mockReturnsConnector.getReturn(eqTo(returnId.copy(periodKey = periodKey)))(any()))
-          .thenReturn(EitherT.leftT[Future, GetReturnDetails](ErrorCodes.badRequest))
+          .thenReturn(Future.successful(Left(ErrorCodes.badRequest)))
 
         val result: Future[Result] =
           controller.getReturn(appaId, periodKey)(fakeRequest)
@@ -57,7 +57,7 @@ class ReturnsControllerSpec extends SpecBase {
 
       "return 404 NOT_FOUND when not found" in new SetUp {
         when(mockReturnsConnector.getReturn(eqTo(returnId.copy(periodKey = periodKey)))(any()))
-          .thenReturn(EitherT.leftT[Future, GetReturnDetails](ErrorCodes.entityNotFound))
+          .thenReturn(Future.successful(Left(ErrorCodes.entityNotFound)))
 
         val result: Future[Result] =
           controller.getReturn(appaId, periodKey)(fakeRequest)
@@ -65,9 +65,19 @@ class ReturnsControllerSpec extends SpecBase {
         status(result) mustBe NOT_FOUND
       }
 
+      "return 422 UNPROCESSABLE_ENTITY when not found" in new SetUp {
+        when(mockReturnsConnector.getReturn(eqTo(returnId.copy(periodKey = periodKey)))(any()))
+          .thenReturn(Future.successful(Left(ErrorCodes.unprocessableEntity)))
+
+        val result: Future[Result] =
+          controller.getReturn(appaId, periodKey)(fakeRequest)
+
+        status(result) mustBe UNPROCESSABLE_ENTITY
+      }
+
       "return 500 INTERNAL_SERVER_ERROR when an unexpected response" in new SetUp {
         when(mockReturnsConnector.getReturn(eqTo(returnId.copy(periodKey = periodKey)))(any()))
-          .thenReturn(EitherT.leftT[Future, GetReturnDetails](ErrorCodes.unexpectedResponse))
+          .thenReturn(Future.successful(Left(ErrorCodes.unexpectedResponse)))
 
         val result: Future[Result] =
           controller.getReturn(appaId, periodKey)(fakeRequest)

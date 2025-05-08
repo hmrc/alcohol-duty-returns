@@ -22,6 +22,7 @@ import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import java.text.MessageFormat
 import javax.inject.{Inject, Singleton}
+import scala.concurrent.duration.FiniteDuration
 
 @Singleton
 class AppConfig @Inject() (config: Configuration, servicesConfig: ServicesConfig) {
@@ -77,4 +78,16 @@ class AppConfig @Inject() (config: Configuration, servicesConfig: ServicesConfig
 
   private def getConfStringAndThrowIfNotFound(key: String) =
     servicesConfig.getConfString(key, throw new RuntimeException(s"Could not find services config key '$key'"))
+
+  // API retry attempts
+  lazy val retryAttempts: Int                 = config.get[Int]("microservice.services.retry.retry-attempts")
+  lazy val retryAttemptsDelay: FiniteDuration =
+    config.get[FiniteDuration]("microservice.services.retry.retry-attempts-delay")
+
+  // Circuit breaker
+  lazy val maxFailures: Int             = config.get[Int]("microservice.services.circuit-breaker.max-failures")
+  lazy val callTimeout: FiniteDuration  =
+    config.get[FiniteDuration]("microservice.services.circuit-breaker.call-timeout")
+  lazy val resetTimeout: FiniteDuration =
+    config.get[FiniteDuration]("microservice.services.circuit-breaker.reset-timeout")
 }

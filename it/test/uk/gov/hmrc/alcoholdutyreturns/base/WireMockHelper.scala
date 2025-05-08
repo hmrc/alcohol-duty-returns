@@ -33,7 +33,19 @@ trait WireMockHelper {
       .flatMap(endpointName =>
         Seq(
           s"$endpointConfigurationPath.$endpointName.host" -> wireMockHost,
-          s"$endpointConfigurationPath.$endpointName.port" -> wireMockPort
+          s"$endpointConfigurationPath.$endpointName.port" -> wireMockPort,
+          s"$endpointConfigurationPath.retry.retry-attempts" -> 0
+        )
+      )
+      .toMap
+
+  protected def getWireMockAppConfigWithRetry(endpointNames: Seq[String]): Map[String, Any] =
+    endpointNames
+      .flatMap(endpointName =>
+        Seq(
+          s"$endpointConfigurationPath.$endpointName.host" -> wireMockHost,
+          s"$endpointConfigurationPath.$endpointName.port" -> wireMockPort,
+          s"$endpointConfigurationPath.retry.retry-attempts" -> 1
         )
       )
       .toMap
@@ -84,6 +96,12 @@ trait WireMockHelper {
 
   def verifyPost(url: String): Unit =
     wireMockServer.verify(postRequestedFor(urlEqualTo(stripToPath(url))))
+
+  def verifyGetWithoutRetry(url: String): Unit =
+    wireMockServer.verify(1, getRequestedFor(urlEqualTo(stripToPath(url))))
+
+  def verifyGetWithRetry(url: String): Unit =
+    wireMockServer.verify(2, getRequestedFor(urlEqualTo(stripToPath(url))))
 
   def verifyPostNeverCalled(url: String): Unit =
     wireMockServer.verify(0, postRequestedFor(urlEqualTo(stripToPath(url))))

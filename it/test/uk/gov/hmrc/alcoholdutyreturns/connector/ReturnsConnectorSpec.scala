@@ -29,7 +29,7 @@ class ReturnsConnectorSpec extends ISpecBase {
     "getReturn is called must" - {
       "successfully get a return" in new SetUp {
         stubGet(getReturnUrl, OK, Json.toJson(returnData).toString())
-        whenReady(connector.getReturn(returnId).value, timeout = Timeout(Span(3, Seconds))) { result =>
+        whenReady(connector.getReturn(returnId), timeout = Timeout(Span(3, Seconds))) { result =>
           result mustBe Right(returnData.success)
           verifyGet(getReturnUrl)
         }
@@ -37,33 +37,41 @@ class ReturnsConnectorSpec extends ISpecBase {
 
       "return an InvalidJson error if the call returns an invalid response" in new SetUp {
         stubGet(getReturnUrl, OK, "invalid")
-        whenReady(connector.getReturn(returnId).value, timeout = Timeout(Span(3, Seconds))) { result =>
+        whenReady(connector.getReturn(returnId), timeout = Timeout(Span(3, Seconds))) { result =>
           result mustBe Left(ErrorCodes.invalidJson)
           verifyGet(getReturnUrl)
         }
       }
 
-      "return a BadRequest error if the call returns a 400 response" in new SetUp {
+      "return a BadRequest error if the call returns a 400 response without retry" in new SetUp {
         stubGet(getReturnUrl, BAD_REQUEST, Json.toJson(processingError(now)).toString())
-        whenReady(connector.getReturn(returnId).value, timeout = Timeout(Span(3, Seconds))) { result =>
+        whenReady(connectorWithRetry.getReturn(returnId), timeout = Timeout(Span(3, Seconds))) { result =>
           result mustBe Left(ErrorCodes.badRequest)
-          verifyGet(getReturnUrl)
+          verifyGetWithoutRetry(getReturnUrl)
         }
       }
 
-      "return a NotFound error if the call returns a 404 response" in new SetUp {
+      "return a NotFound error if the call returns a 404 response without retry" in new SetUp {
         stubGet(getReturnUrl, NOT_FOUND, "")
-        whenReady(connector.getReturn(returnId).value, timeout = Timeout(Span(3, Seconds))) { result =>
+        whenReady(connectorWithRetry.getReturn(returnId), timeout = Timeout(Span(3, Seconds))) { result =>
           result mustBe Left(ErrorCodes.entityNotFound)
-          verifyGet(getReturnUrl)
+          verifyGetWithoutRetry(getReturnUrl)
         }
       }
 
-      "return a UnexpectedResponse error if the call return a 500 response" in new SetUp {
+      "return a Unprocessable error if the call returns a 422 response without retry" in new SetUp {
+        stubGet(getReturnUrl, UNPROCESSABLE_ENTITY, "")
+        whenReady(connectorWithRetry.getReturn(returnId), timeout = Timeout(Span(3, Seconds))) { result =>
+          result mustBe Left(ErrorCodes.unprocessableEntity)
+          verifyGetWithoutRetry(getReturnUrl)
+        }
+      }
+
+      "return a UnexpectedResponse error if the call return a 500 response with retry" in new SetUp {
         stubGet(getReturnUrl, INTERNAL_SERVER_ERROR, Json.toJson(internalServerError).toString())
-        whenReady(connector.getReturn(returnId).value) { result =>
+        whenReady(connectorWithRetry.getReturn(returnId)) { result =>
           result mustBe Left(ErrorCodes.unexpectedResponse)
-          verifyGet(getReturnUrl)
+          verifyGetWithRetry(getReturnUrl)
         }
       }
     }
@@ -154,7 +162,8 @@ class ReturnsConnectorSpec extends ISpecBase {
   }
 
   class SetUp {
-    val connector       = app.injector.instanceOf[ReturnsConnector]
+    val connector       = appWithHttpClientV2.injector.instanceOf[ReturnsConnector]
+    val connectorWithRetry = appWithHttpClientV2WithRetry.injector.instanceOf[ReturnsConnector]
     val getReturnUrl    = config.getReturnUrl(returnId)
     val submitReturnUrl = config.submitReturnUrl
 
