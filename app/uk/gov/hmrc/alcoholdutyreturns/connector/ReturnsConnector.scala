@@ -95,12 +95,14 @@ class ReturnsConnector @Inject() (
               Future.successful(Left(ErrorResponse(NOT_FOUND, ErrorCodes.entityNotFound.message)))
             case UNPROCESSABLE_ENTITY =>
               logger
-                .warn(s"Return request unprocessable for (appaId ${returnId.appaId}, periodKey ${returnId.periodKey})")
-              Future.successful(Left(ErrorResponse(UNPROCESSABLE_ENTITY, ErrorCodes.unprocessableEntity.message)))
+                .warn(
+                  s"Get return unprocessable for (appaId ${returnId.appaId}, periodKey ${returnId.periodKey}): ${response.body}"
+                )
+              Future.successful(Left(ErrorCodes.unexpectedResponse))
             case _                    =>
               val error: String = response.json.as[HttpErrorResponse].message
               logger.warn(
-                s"An exception was returned while trying to fetch return for (appaId ${returnId.appaId}, periodKey ${returnId.periodKey}): $error"
+                s"An exception was returned while trying to get return for (appaId ${returnId.appaId}, periodKey ${returnId.periodKey}): $error"
               )
               Future.failed(new InternalServerException(response.body))
           }

@@ -59,15 +59,15 @@ class ReturnsConnectorSpec extends ISpecBase {
         }
       }
 
-      "return a Unprocessable error if the call returns a 422 response without retry" in new SetUp {
+      "return an UnexpectedResponse error if the call returns a 422 response without retry" in new SetUp {
         stubGet(getReturnUrl, UNPROCESSABLE_ENTITY, "")
         whenReady(connectorWithRetry.getReturn(returnId), timeout = Timeout(Span(3, Seconds))) { result =>
-          result mustBe Left(ErrorCodes.unprocessableEntity)
+          result mustBe Left(ErrorCodes.unexpectedResponse)
           verifyGetWithoutRetry(getReturnUrl)
         }
       }
 
-      "return a UnexpectedResponse error if the call return a 500 response with retry" in new SetUp {
+      "return an UnexpectedResponse error if the call return a 500 response with retry" in new SetUp {
         stubGet(getReturnUrl, INTERNAL_SERVER_ERROR, Json.toJson(internalServerError).toString())
         whenReady(connectorWithRetry.getReturn(returnId)) { result =>
           result mustBe Left(ErrorCodes.unexpectedResponse)

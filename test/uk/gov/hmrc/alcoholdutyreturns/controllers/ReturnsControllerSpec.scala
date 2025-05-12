@@ -67,12 +67,12 @@ class ReturnsControllerSpec extends SpecBase {
 
       "return 422 UNPROCESSABLE_ENTITY when not found" in new SetUp {
         when(mockReturnsConnector.getReturn(eqTo(returnId.copy(periodKey = periodKey)))(any()))
-          .thenReturn(Future.successful(Left(ErrorCodes.unprocessableEntity)))
+          .thenReturn(Future.successful(Left(ErrorCodes.unexpectedResponse)))
 
         val result: Future[Result] =
           controller.getReturn(appaId, periodKey)(fakeRequest)
 
-        status(result) mustBe UNPROCESSABLE_ENTITY
+        status(result) mustBe INTERNAL_SERVER_ERROR
       }
 
       "return 500 INTERNAL_SERVER_ERROR when an unexpected response" in new SetUp {
