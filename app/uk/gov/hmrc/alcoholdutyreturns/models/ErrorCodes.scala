@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.alcoholdutyreturns.models
 
-import play.api.http.Status.{BAD_REQUEST, FORBIDDEN, GONE, INTERNAL_SERVER_ERROR, NOT_FOUND, SERVICE_UNAVAILABLE, UNAUTHORIZED, UNPROCESSABLE_ENTITY}
+import play.api.http.Status._
 import play.api.libs.json.{Json, OFormat}
 import uk.gov.hmrc.play.bootstrap.backend.http.ErrorResponse
 
@@ -29,9 +29,7 @@ object ErrorCodes {
   def invalidSubscriptionStatus(approvalStatus: ApprovalStatus): ErrorResponse =
     ErrorResponse(FORBIDDEN, s"Invalid subscription status: $approvalStatus")
   val unauthorisedRequest: ErrorResponse                                       = ErrorResponse(UNAUTHORIZED, "Unauthorised request")
-  val serviceUnavailable: ErrorResponse                                        = ErrorResponse(SERVICE_UNAVAILABLE, "Service unavailable")
   val unexpectedResponse: ErrorResponse                                        = ErrorResponse(INTERNAL_SERVER_ERROR, "Unexpected Response")
-  val unprocessableEntity: ErrorResponse                                       = ErrorResponse(UNPROCESSABLE_ENTITY, "Unprocessable entity")
 }
 
 case class HttpErrorResponse(
