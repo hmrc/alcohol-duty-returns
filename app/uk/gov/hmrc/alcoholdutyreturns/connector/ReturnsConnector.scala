@@ -83,16 +83,16 @@ class ReturnsConnector @Inject() (
                     s"Parsing failed for return (appaId ${returnId.appaId}, periodKey ${returnId.periodKey})",
                     e
                   )
-                  Future.successful(Left(ErrorResponse(UNPROCESSABLE_ENTITY, ErrorCodes.invalidJson.message)))
+                  Future.successful(Left(ErrorCodes.invalidJson))
               }
             case BAD_REQUEST          =>
               logger.warn(
                 s"Bad request returned for get return (appaId ${returnId.appaId}, periodKey ${returnId.periodKey})"
               )
-              Future.successful(Left(ErrorResponse(BAD_REQUEST, ErrorCodes.badRequest.message)))
+              Future.successful(Left(ErrorCodes.badRequest))
             case NOT_FOUND            =>
               logger.warn(s"Return not found (appaId ${returnId.appaId}, periodKey ${returnId.periodKey})")
-              Future.successful(Left(ErrorResponse(NOT_FOUND, ErrorCodes.entityNotFound.message)))
+              Future.successful(Left(ErrorCodes.entityNotFound))
             case UNPROCESSABLE_ENTITY =>
               logger
                 .warn(
