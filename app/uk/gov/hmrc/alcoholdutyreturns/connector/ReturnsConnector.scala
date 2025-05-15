@@ -142,7 +142,9 @@ class ReturnsConnector @Inject() (
           case response if response.status == UNPROCESSABLE_ENTITY =>
             Try(response.json.as[DuplicateSubmissionError]) match {
               case Success(dupError) if dupError.errors.code == "044" || dupError.errors.code == "999" =>
-                logger.info(s"Return already submitted (appaId $appaId, periodKey $periodKey)")
+                logger.warn(
+                  s"Return already submitted (appaId $appaId, periodKey $periodKey) - Error code: ${dupError.errors.code}"
+                )
                 Left(ErrorCodes.duplicateSubmission)
               case _                                                                                   =>
                 logger.warn(

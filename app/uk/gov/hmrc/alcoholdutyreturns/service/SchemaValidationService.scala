@@ -135,7 +135,7 @@ class SchemaValidationService @Inject() (
         val validationFailures = schema.validate(json, InputFormat.JSON).asScala
 
         if (validationFailures.nonEmpty) {
-          logger.warn(s"Validation of return submission against schema failed: ${validationFailures.mkString("; ")}")
+          logger.error(s"Validation of return submission against schema failed: ${validationFailures.mkString("; ")}")
           false
         } else {
           logger.info(s"Validation of return submission against schema successful")

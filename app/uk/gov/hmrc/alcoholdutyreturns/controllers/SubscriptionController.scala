@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.alcoholdutyreturns.controllers
 
-import play.api.Logging
 import play.api.libs.json._
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import uk.gov.hmrc.alcoholdutyreturns.controllers.actions.{AuthorisedAction, CheckAppaIdAction}
@@ -32,17 +31,12 @@ class SubscriptionController @Inject() (
   accountService: AccountService,
   override val controllerComponents: ControllerComponents
 )(implicit executionContext: ExecutionContext)
-    extends BackendController(controllerComponents)
-    with Logging {
+    extends BackendController(controllerComponents) {
 
   def getValidSubscriptionRegimes(appaId: String): Action[AnyContent] =
     (authorise andThen checkAppaId(appaId)).async { implicit request =>
       accountService.getSubscriptionSummaryAndCheckStatus(appaId).value.map {
         case Left(errorResponse)        =>
-          logger
-            .warn(
-              s"Unable to get a valid subscription for $appaId - ${errorResponse.statusCode} ${errorResponse.message}"
-            )
           Status(errorResponse.statusCode)(
             s"Error: Unable to get a valid subscription. Status: ${errorResponse.statusCode}, Message: ${errorResponse.message}"
           )
