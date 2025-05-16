@@ -16,13 +16,12 @@
 
 package uk.gov.hmrc.alcoholdutyreturns.controllers
 
-import play.api.Logging
+import play.api.libs.json._
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import uk.gov.hmrc.alcoholdutyreturns.controllers.actions.{AuthorisedAction, CheckAppaIdAction}
+import uk.gov.hmrc.alcoholdutyreturns.models.ReturnId
 import uk.gov.hmrc.alcoholdutyreturns.service.AccountService
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
-import play.api.libs.json._
-import uk.gov.hmrc.alcoholdutyreturns.models.ReturnId
 
 import javax.inject.Inject
 import scala.concurrent.ExecutionContext
@@ -33,15 +32,12 @@ class ObligationController @Inject() (
   accountService: AccountService,
   override val controllerComponents: ControllerComponents
 )(implicit executionContext: ExecutionContext)
-    extends BackendController(controllerComponents)
-    with Logging {
+    extends BackendController(controllerComponents) {
 
   def getObligationDetails(appaId: String): Action[AnyContent] =
     (authorise andThen checkAppaId(appaId)).async { implicit request =>
       accountService.getObligations(appaId).value.map {
         case Left(errorResponse) =>
-          logger
-            .warn(s"Unable to get obligation data for $appaId - ${errorResponse.statusCode} ${errorResponse.message}")
           NotFound(s"Error: {${errorResponse.statusCode},${errorResponse.message}}")
         case Right(obligations)  => Ok(Json.toJson(obligations))
       }
@@ -52,10 +48,6 @@ class ObligationController @Inject() (
       val returnId = ReturnId(appaId, periodKey)
       accountService.getOpenObligation(returnId).value.map {
         case Left(errorResponse)   =>
-          logger
-            .warn(
-              s"Unable to get an open obligation for ${returnId.appaId} ${returnId.periodKey} - ${errorResponse.statusCode} ${errorResponse.message}"
-            )
           Status(errorResponse.statusCode)(
             s"Error: Unable to get an open obligation. Status: ${errorResponse.statusCode}, Message: ${errorResponse.message}"
           )

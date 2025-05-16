@@ -17,14 +17,13 @@
 package uk.gov.hmrc.alcoholdutyreturns.controllers
 
 import org.apache.pekko.util.ByteString
-import play.api.Logging
 import play.api.http.HttpEntity
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc._
 import uk.gov.hmrc.alcoholdutyreturns.connector.ReturnsConnector
 import uk.gov.hmrc.alcoholdutyreturns.controllers.actions.{AuthorisedAction, CheckAppaIdAction}
+import uk.gov.hmrc.alcoholdutyreturns.models.ReturnId
 import uk.gov.hmrc.alcoholdutyreturns.models.returns.{AdrReturnCreatedDetails, AdrReturnDetails, AdrReturnSubmission}
-import uk.gov.hmrc.alcoholdutyreturns.models.{ErrorCodes, ReturnId}
 import uk.gov.hmrc.alcoholdutyreturns.service.{LockingService, ReturnsService}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import uk.gov.hmrc.play.bootstrap.backend.http.ErrorResponse
@@ -40,15 +39,12 @@ class ReturnsController @Inject() (
   returnsConnector: ReturnsConnector,
   override val controllerComponents: ControllerComponents
 )(implicit executionContext: ExecutionContext)
-    extends BackendController(controllerComponents)
-    with Logging {
+    extends BackendController(controllerComponents) {
 
   def getReturn(appaId: String, periodKey: String): Action[AnyContent] =
     (authorise andThen checkAppaId(appaId)).async { implicit request =>
       returnsConnector.getReturn(ReturnId(appaId, periodKey)).map {
-        case Left(e)                 =>
-          logger.warn(s"Unable to get return $periodKey for $appaId: $e")
-          error(e)
+        case Left(e)                 => error(e)
         case Right(getReturnDetails) =>
           val returnDetails = AdrReturnDetails.fromGetReturnDetails(getReturnDetails)
           Ok(Json.toJson(returnDetails))
@@ -65,14 +61,7 @@ class ReturnsController @Inject() (
               .submitReturn(returnSubmission, returnId)
               .map(AdrReturnCreatedDetails.fromReturnCreatedDetails)
               .fold(
-                e =>
-                  if (e == ErrorCodes.duplicateSubmission) {
-                    logger.info(s"Return $periodKey for $appaId already submitted")
-                    error(e)
-                  } else {
-                    logger.warn(s"Unable to submit return $periodKey for $appaId: $e")
-                    error(e)
-                  },
+                e => error(e),
                 returnCreatedDetails => Created(Json.toJson(returnCreatedDetails))
               )
           }
