@@ -20,7 +20,6 @@ lazy val microservice = Project("alcohol-duty-returns", file("."))
     scalafmtOnCompile := true,
   )
   .settings(inConfig(Test)(testSettings): _*)
-  .settings(resolvers += Resolver.jcenterRepo)
   .settings(
     ScoverageKeys.coverageExcludedFiles := scoverageExcludedList.mkString(";"),
     ScoverageKeys.coverageMinimumStmtTotal := 99,
