@@ -72,8 +72,10 @@ class ADRMongoLockRepository @Inject() (
                           )
                         )
                         .toFuture()
-      _             = if (deleteResult.getDeletedCount != 0)
-                        logger.info(s"Removed ${deleteResult.getDeletedCount} expired locks for $lockId")
+      _             =
+        if (deleteResult.getDeletedCount != 0) {
+          logger.info(s"Removed ${deleteResult.getDeletedCount} expired locks for $lockId")
+        }
       lock          = Lock(
                         id = lockId,
                         owner = owner,
