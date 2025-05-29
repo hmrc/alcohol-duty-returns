@@ -50,14 +50,14 @@ class ReturnsConnector @Inject() (
     hc: HeaderCarrier
   ): Future[Either[ErrorResponse, GetReturnDetails]] =
     retry(
-      () => call(returnId),
+      () => fetchCall(returnId),
       attempts = config.retryAttempts,
       delay = config.retryAttemptsDelay
     ).recoverWith { _ =>
       Future.successful(Left(ErrorResponse(INTERNAL_SERVER_ERROR, ErrorCodes.unexpectedResponse.message)))
     }
 
-  def call(returnId: ReturnId)(implicit
+  private def fetchCall(returnId: ReturnId)(implicit
     hc: HeaderCarrier
   ): Future[Either[ErrorResponse, GetReturnDetails]] =
     circuitBreakerProvider.get().withCircuitBreaker {
@@ -111,53 +111,65 @@ class ReturnsConnector @Inject() (
 
   def submitReturn(returnToSubmit: ReturnCreate, appaId: String)(implicit
     hc: HeaderCarrier
-  ): EitherT[Future, ErrorResponse, ReturnCreatedDetails] = {
-    val periodKey = returnToSubmit.periodKey
-    logger.info(s"Submitting return (appaId $appaId, periodKey $periodKey)")
+  ): EitherT[Future, ErrorResponse, ReturnCreatedDetails] =
     EitherT(
+      retry(
+        () => submitCall(returnToSubmit, appaId),
+        attempts = config.retryAttemptsPost,
+        delay = config.retryAttemptsDelay
+      ).recoverWith { _ =>
+        Future.successful(Left(ErrorResponse(INTERNAL_SERVER_ERROR, ErrorCodes.unexpectedResponse.message)))
+      }
+    )
+
+  private def submitCall(returnToSubmit: ReturnCreate, appaId: String)(implicit
+    hc: HeaderCarrier
+  ): Future[Either[ErrorResponse, ReturnCreatedDetails]] =
+    circuitBreakerProvider.get().withCircuitBreaker {
+      val periodKey = returnToSubmit.periodKey
+      logger.info(s"Submitting return (appaId $appaId, periodKey $periodKey)")
       httpClient
         .post(url"${config.submitReturnUrl}")
         .setHeader(headers.submitReturnHeaders(appaId): _*)
         .withBody(Json.toJson(returnToSubmit))
         .execute[HttpResponse]
-        .map {
+        .flatMap {
           case response if response.status == CREATED              =>
             Try(response.json.as[ReturnCreatedSuccess]) match {
               case Success(returnCreatedSuccess) =>
                 logger.info(s"Return submitted successfully (appaId $appaId, periodKey $periodKey)")
-                Right(returnCreatedSuccess.success)
+                Future.successful(Right(returnCreatedSuccess.success))
               case Failure(e)                    =>
                 logger
                   .warn(s"Parsing failed for submit return response (appaId $appaId, periodKey $periodKey)", e)
-                Left(ErrorCodes.unexpectedResponse)
+                Future.successful(Left(ErrorCodes.unexpectedResponse))
             }
           case response if response.status == BAD_REQUEST          =>
             logger.warn(
               s"Bad request returned for submit return (appaId $appaId, periodKey $periodKey): ${response.body}"
             )
-            Left(ErrorCodes.badRequest)
+            Future.successful(Left(ErrorCodes.badRequest))
           case response if response.status == NOT_FOUND            =>
             logger.warn(s"Not found returned for submit return (appaId $appaId, periodKey $periodKey)")
-            Left(ErrorCodes.entityNotFound)
+            Future.successful(Left(ErrorCodes.entityNotFound))
           case response if response.status == UNPROCESSABLE_ENTITY =>
             Try(response.json.as[DuplicateSubmissionError]) match {
               case Success(dupError) if dupError.errors.code == "044" || dupError.errors.code == "999" =>
                 logger.warn(
                   s"Return already submitted (appaId $appaId, periodKey $periodKey) - Error code: ${dupError.errors.code}"
                 )
-                Left(ErrorCodes.duplicateSubmission)
+                Future.successful(Left(ErrorCodes.duplicateSubmission))
               case _                                                                                   =>
                 logger.warn(
                   s"Unprocessable entity returned for submit return response (appaId $appaId, periodKey $periodKey): ${response.body}"
                 )
-                Left(ErrorCodes.unexpectedResponse)
+                Future.successful(Left(ErrorCodes.unexpectedResponse))
             }
           case response                                            =>
             logger.warn(
               s"Received unexpected response from submitReturn API (appaId $appaId, periodKey $periodKey). Status: ${response.status}, Body: ${response.body}"
             )
-            Left(ErrorCodes.unexpectedResponse)
+            Future.failed(new InternalServerException(response.body))
         }
-    )
-  }
+    }
 }

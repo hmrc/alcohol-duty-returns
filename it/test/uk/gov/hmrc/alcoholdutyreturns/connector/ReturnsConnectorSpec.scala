@@ -99,63 +99,63 @@ class ReturnsConnectorSpec extends ISpecBase {
         }
       }
 
-      "return a BadRequest error if the call returns a 400 response" in new SetUp {
+      "return a BadRequest error if the call returns a 400 response without retry" in new SetUp {
         stubPost(
           submitReturnUrl,
           BAD_REQUEST,
           Json.toJson(returnSubmission).toString(),
           Json.toJson(processingError(now)).toString()
         )
-        whenReady(connector.submitReturn(returnSubmission, id).value, timeout = Timeout(Span(3, Seconds))) { result =>
+        whenReady(connectorWithRetry.submitReturn(returnSubmission, id).value, timeout = Timeout(Span(3, Seconds))) { result =>
           result mustBe Left(ErrorCodes.badRequest)
-          verifyPost(submitReturnUrl)
+          verifyPostWithoutRetry(submitReturnUrl)
         }
       }
 
-      "return a NotFound error if the call returns a 404 response" in new SetUp {
+      "return a NotFound error if the call returns a 404 response without retry" in new SetUp {
         stubPost(submitReturnUrl, NOT_FOUND, Json.toJson(returnSubmission).toString(), "")
-        whenReady(connector.submitReturn(returnSubmission, id).value, timeout = Timeout(Span(3, Seconds))) { result =>
+        whenReady(connectorWithRetry.submitReturn(returnSubmission, id).value, timeout = Timeout(Span(3, Seconds))) { result =>
           result mustBe Left(ErrorCodes.entityNotFound)
-          verifyPost(submitReturnUrl)
+          verifyPostWithoutRetry(submitReturnUrl)
         }
       }
 
-      "return an UnprocessableEntity if the call returns a 422 indicating a duplicate submission" in new SetUp {
+      "return an UnprocessableEntity if the call returns a 422 indicating a duplicate submission without retry" in new SetUp {
         stubPost(
           submitReturnUrl,
           UNPROCESSABLE_ENTITY,
           Json.toJson(returnSubmission).toString(),
           Json.toJson(duplicateSubmission044).toString()
         )
-        whenReady(connector.submitReturn(returnSubmission, id).value, timeout = Timeout(Span(3, Seconds))) { result =>
+        whenReady(connectorWithRetry.submitReturn(returnSubmission, id).value, timeout = Timeout(Span(3, Seconds))) { result =>
           result mustBe Left(ErrorCodes.duplicateSubmission)
-          verifyPost(submitReturnUrl)
+          verifyPostWithoutRetry(submitReturnUrl)
         }
       }
 
-      "return an UnexpectedResponse error if the call returns a 422 with a different code in the response body" in new SetUp {
+      "return an UnexpectedResponse error if the call returns a 422 with a different code in the response body without retry" in new SetUp {
         stubPost(
           submitReturnUrl,
           UNPROCESSABLE_ENTITY,
           Json.toJson(returnSubmission).toString(),
           Json.toJson(duplicateSubmissionWrongCode).toString()
         )
-        whenReady(connector.submitReturn(returnSubmission, id).value, timeout = Timeout(Span(3, Seconds))) { result =>
+        whenReady(connectorWithRetry.submitReturn(returnSubmission, id).value, timeout = Timeout(Span(3, Seconds))) { result =>
           result mustBe Left(ErrorCodes.unexpectedResponse)
-          verifyPost(submitReturnUrl)
+          verifyPostWithoutRetry(submitReturnUrl)
         }
       }
 
-      "return an UnexpectedResponse error if the call returns a 500 response" in new SetUp {
+      "return an UnexpectedResponse error if the call returns a 500 response with retry" in new SetUp {
         stubPost(
           submitReturnUrl,
           INTERNAL_SERVER_ERROR,
           Json.toJson(returnSubmission).toString(),
           Json.toJson(internalServerError).toString()
         )
-        whenReady(connector.submitReturn(returnSubmission, id).value) { result =>
+        whenReady(connectorWithRetry.submitReturn(returnSubmission, id).value) { result =>
           result mustBe Left(ErrorCodes.unexpectedResponse)
-          verifyPost(submitReturnUrl)
+          verifyPostWithRetry(submitReturnUrl)
         }
       }
     }

@@ -34,7 +34,8 @@ trait WireMockHelper {
         Seq(
           s"$endpointConfigurationPath.$endpointName.host" -> wireMockHost,
           s"$endpointConfigurationPath.$endpointName.port" -> wireMockPort,
-          s"$endpointConfigurationPath.retry.retry-attempts" -> 0
+          s"$endpointConfigurationPath.retry.retry-attempts" -> 0,
+          s"$endpointConfigurationPath.retry.retry-attempts-post" -> 0
         )
       )
       .toMap
@@ -45,7 +46,8 @@ trait WireMockHelper {
         Seq(
           s"$endpointConfigurationPath.$endpointName.host" -> wireMockHost,
           s"$endpointConfigurationPath.$endpointName.port" -> wireMockPort,
-          s"$endpointConfigurationPath.retry.retry-attempts" -> 1
+          s"$endpointConfigurationPath.retry.retry-attempts" -> 1,
+          s"$endpointConfigurationPath.retry.retry-attempts-post" -> 1
         )
       )
       .toMap
@@ -96,6 +98,12 @@ trait WireMockHelper {
 
   def verifyPost(url: String): Unit =
     wireMockServer.verify(postRequestedFor(urlEqualTo(stripToPath(url))))
+
+  def verifyPostWithoutRetry(url: String): Unit =
+    wireMockServer.verify(1, postRequestedFor(urlEqualTo(stripToPath(url))))
+
+  def verifyPostWithRetry(url: String): Unit =
+    wireMockServer.verify(2, postRequestedFor(urlEqualTo(stripToPath(url))))
 
   def verifyGetWithoutRetry(url: String): Unit =
     wireMockServer.verify(1, getRequestedFor(urlEqualTo(stripToPath(url))))
