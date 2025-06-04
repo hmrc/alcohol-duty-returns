@@ -144,7 +144,7 @@ object AdrReturnAdjustments {
       returnDetailsSuccess.repackagedDraught.repackagedDraughtProducts
         .map(
           _.map(rpd =>
-            AdrReturnAdjustmentsRow.fromReturnDetails(repackagedDraughtKey, rpd.toReturnDetailsForAdjustment)
+            AdrReturnAdjustmentsRow.fromReturnDetails(repackagedDraughtKey, rpd.toReturnDetailsForAdjustment())
           )
         )
         .getOrElse(Seq.empty),

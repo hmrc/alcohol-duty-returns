@@ -81,6 +81,7 @@ class AppConfig @Inject() (config: Configuration, servicesConfig: ServicesConfig
 
   // API retry attempts
   lazy val retryAttempts: Int                 = config.get[Int]("microservice.services.retry.retry-attempts")
+  lazy val retryAttemptsPost: Int             = config.get[Int]("microservice.services.retry.retry-attempts-post")
   lazy val retryAttemptsDelay: FiniteDuration =
     config.get[FiniteDuration]("microservice.services.retry.retry-attempts-delay")
 
