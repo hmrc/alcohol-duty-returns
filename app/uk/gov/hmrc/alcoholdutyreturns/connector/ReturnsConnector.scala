@@ -57,6 +57,19 @@ class ReturnsConnector @Inject() (
       Future.successful(Left(ErrorResponse(INTERNAL_SERVER_ERROR, ErrorCodes.unexpectedResponse.message)))
     }
 
+  def submitReturn(returnToSubmit: ReturnCreate, appaId: String)(implicit
+    hc: HeaderCarrier
+  ): EitherT[Future, ErrorResponse, ReturnCreatedDetails] =
+    EitherT(
+      retry(
+        () => submitCall(returnToSubmit, appaId),
+        attempts = config.retryAttemptsPost,
+        delay = config.retryAttemptsDelay
+      ).recoverWith { _ =>
+        Future.successful(Left(ErrorResponse(INTERNAL_SERVER_ERROR, ErrorCodes.unexpectedResponse.message)))
+      }
+    )
+
   private def fetchCall(returnId: ReturnId)(implicit
     hc: HeaderCarrier
   ): Future[Either[ErrorResponse, GetReturnDetails]] =
@@ -108,19 +121,6 @@ class ReturnsConnector @Inject() (
           }
         }
     }
-
-  def submitReturn(returnToSubmit: ReturnCreate, appaId: String)(implicit
-    hc: HeaderCarrier
-  ): EitherT[Future, ErrorResponse, ReturnCreatedDetails] =
-    EitherT(
-      retry(
-        () => submitCall(returnToSubmit, appaId),
-        attempts = config.retryAttemptsPost,
-        delay = config.retryAttemptsDelay
-      ).recoverWith { _ =>
-        Future.successful(Left(ErrorResponse(INTERNAL_SERVER_ERROR, ErrorCodes.unexpectedResponse.message)))
-      }
-    )
 
   private def submitCall(returnToSubmit: ReturnCreate, appaId: String)(implicit
     hc: HeaderCarrier
