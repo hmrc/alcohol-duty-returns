@@ -69,7 +69,6 @@ class ReturnsService @Inject() (
       _                          <- validateAgainstSchema(returnToSubmit)
       returnCreatedDetails       <- returnsConnector.submitReturn(returnToSubmit, returnId.appaId)
     } yield returnCreatedDetails
-
     EitherT(
       returnCreatedDetailsEither.value.flatMap {
         case Right(returnCreatedDetails)                                            =>
@@ -103,5 +102,4 @@ class ReturnsService @Inject() (
       }
     )
   }
-
 }
