@@ -24,7 +24,7 @@ import uk.gov.hmrc.alcoholdutyreturns.models.ApprovalStatus.{Approved, Insolvent
 import uk.gov.hmrc.alcoholdutyreturns.models.ObligationStatus.{Fulfilled, Open}
 import uk.gov.hmrc.alcoholdutyreturns.models.{ErrorCodes, ObligationData, ReturnId, SubscriptionSummary}
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.play.bootstrap.backend.http.ErrorResponse
+import uk.gov.hmrc.play.bootstrap.http.ErrorResponse
 
 import scala.concurrent.{ExecutionContext, Future}
 

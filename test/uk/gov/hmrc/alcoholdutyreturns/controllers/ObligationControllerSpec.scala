@@ -24,7 +24,7 @@ import uk.gov.hmrc.alcoholdutyreturns.service.AccountService
 import play.api.libs.json.Json
 import org.mockito.ArgumentMatchers.any
 import org.mockito.ArgumentMatchersSugar.eqTo
-import uk.gov.hmrc.play.bootstrap.backend.http.ErrorResponse
+import uk.gov.hmrc.play.bootstrap.http.ErrorResponse
 
 import java.time.LocalDate
 import scala.concurrent.Future

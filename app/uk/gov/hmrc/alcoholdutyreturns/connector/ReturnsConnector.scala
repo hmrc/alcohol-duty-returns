@@ -28,7 +28,7 @@ import uk.gov.hmrc.alcoholdutyreturns.models.returns._
 import uk.gov.hmrc.alcoholdutyreturns.models.{DuplicateSubmissionError, ErrorCodes, HttpErrorResponse, ReturnId}
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReadsInstances, HttpResponse, InternalServerException, StringContextOps}
-import uk.gov.hmrc.play.bootstrap.backend.http.ErrorResponse
+import uk.gov.hmrc.play.bootstrap.http.ErrorResponse
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}

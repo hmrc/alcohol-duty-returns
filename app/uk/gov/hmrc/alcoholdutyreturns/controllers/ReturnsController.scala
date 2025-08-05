@@ -26,7 +26,7 @@ import uk.gov.hmrc.alcoholdutyreturns.models.ReturnId
 import uk.gov.hmrc.alcoholdutyreturns.models.returns.{AdrReturnCreatedDetails, AdrReturnDetails, AdrReturnSubmission}
 import uk.gov.hmrc.alcoholdutyreturns.service.{LockingService, ReturnsService}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
-import uk.gov.hmrc.play.bootstrap.backend.http.ErrorResponse
+import uk.gov.hmrc.play.bootstrap.http.ErrorResponse
 
 import javax.inject.Inject
 import scala.concurrent.ExecutionContext

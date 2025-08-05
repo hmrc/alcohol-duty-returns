@@ -26,7 +26,7 @@ import uk.gov.hmrc.alcoholdutyreturns.models.{ErrorCodes, ReturnId}
 import uk.gov.hmrc.alcoholdutyreturns.models.returns.{AdrReturnSubmission, ReturnCreate, ReturnCreatedDetails, TotalDutyDuebyTaxType}
 import uk.gov.hmrc.alcoholdutyreturns.repositories.UserAnswersRepository
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.play.bootstrap.backend.http.ErrorResponse
+import uk.gov.hmrc.play.bootstrap.http.ErrorResponse
 
 import scala.concurrent.{ExecutionContext, Future}
 

@@ -32,7 +32,7 @@ import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals.{authorisedEnrolments, inter
 import uk.gov.hmrc.auth.core.retrieve.~
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendHeaderCarrierProvider
-import uk.gov.hmrc.play.bootstrap.backend.http.ErrorResponse
+import uk.gov.hmrc.play.bootstrap.http.ErrorResponse
 
 import scala.concurrent.{ExecutionContext, Future}
 
