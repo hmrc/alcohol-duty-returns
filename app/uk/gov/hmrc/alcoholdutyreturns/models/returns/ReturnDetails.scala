@@ -187,9 +187,9 @@ object Drawback {
 }
 
 case class ReturnDetails(
-  returnPeriodAffected: String,
+  returnPeriodAffected: Option[String],
   taxType: String,
-  dutyRate: BigDecimal,
+  dutyRate: Option[BigDecimal],
   litresProduced: BigDecimal,
   litresOfPureAlcohol: BigDecimal,
   dutyDue: BigDecimal,
@@ -201,9 +201,9 @@ object ReturnDetails {
 
   def fromAdrAdjustmentItem(adrAdjustmentItem: AdrAdjustmentItem): ReturnDetails =
     ReturnDetails(
-      returnPeriodAffected = adrAdjustmentItem.returnPeriod,
+      returnPeriodAffected = Some(adrAdjustmentItem.returnPeriod),
       taxType = adrAdjustmentItem.dutyDue.taxCode,
-      dutyRate = adrAdjustmentItem.dutyDue.dutyRate,
+      dutyRate = Some(adrAdjustmentItem.dutyDue.dutyRate),
       litresProduced = adrAdjustmentItem.adjustmentQuantity.litres,
       litresOfPureAlcohol = adrAdjustmentItem.adjustmentQuantity.lpa,
       dutyDue = adrAdjustmentItem.dutyDue.dutyDue.abs,
@@ -246,9 +246,10 @@ case class RepackagedDraughtProduct(
 ) {
   def toReturnDetailsForAdjustment(): ReturnDetails =
     ReturnDetails(
-      returnPeriodAffected = returnPeriodAffected,
+      returnPeriodAffected = Some(returnPeriodAffected),
       taxType = newTaxType,
-      dutyRate = dutyRate, // Duty is to be paid on the difference between original and new rate, but display the new
+      dutyRate =
+        Some(dutyRate), // Duty is to be paid on the difference between original and new rate, but display the new
       litresProduced = BigDecimal(0), // Not used in returns display
       litresOfPureAlcohol = litresOfPureAlcohol,
       dutyDue = dutyDue,

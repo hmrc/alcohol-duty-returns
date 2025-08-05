@@ -22,7 +22,7 @@ import uk.gov.hmrc.alcoholdutyreturns.models.AlcoholRegime.{Beer, Cider, OtherFe
 import uk.gov.hmrc.alcoholdutyreturns.models.ApprovalStatus.Approved
 import uk.gov.hmrc.alcoholdutyreturns.models.ObligationStatus.{Fulfilled, Open}
 import uk.gov.hmrc.alcoholdutyreturns.models._
-import uk.gov.hmrc.alcoholdutyreturns.models.calculation.{CalculateDutyDueByTaxTypeRequest, CalculateDutyDueByTaxTypeRequestItem, CalculatedDutyDueByTaxType, CalculatedDutyDueByTaxTypeItem}
+import uk.gov.hmrc.alcoholdutyreturns.models.calculation._
 import uk.gov.hmrc.alcoholdutyreturns.models.returns._
 
 import java.time._
@@ -128,9 +128,9 @@ trait TestData extends ModelGenerators {
           overDeclarationProducts = Some(
             Seq(
               ReturnDetails(
-                returnPeriodAffected = periodKeyFromDate(periodFrom(1, periodDate)),
+                returnPeriodAffected = Some(periodKeyFromDate(periodFrom(1, periodDate))),
                 taxType = "302",
-                dutyRate = BigDecimal("3.56"),
+                dutyRate = Some(BigDecimal("3.56")),
                 litresProduced = BigDecimal("5000.79"),
                 litresOfPureAlcohol = BigDecimal("100.58"),
                 dutyDue = BigDecimal("358.07"),
@@ -145,9 +145,9 @@ trait TestData extends ModelGenerators {
           underDeclarationProducts = Some(
             Seq(
               ReturnDetails(
-                returnPeriodAffected = periodKeyFromDate(periodFrom(2, periodDate)),
+                returnPeriodAffected = Some(periodKeyFromDate(periodFrom(2, periodDate))),
                 taxType = "301",
-                dutyRate = BigDecimal("5.27"),
+                dutyRate = Some(BigDecimal("5.27")),
                 litresProduced = BigDecimal("49000.78"),
                 litresOfPureAlcohol = BigDecimal("989"),
                 dutyDue = BigDecimal("5212.03"),
@@ -161,9 +161,9 @@ trait TestData extends ModelGenerators {
           spoiltProductProducts = Some(
             Seq(
               ReturnDetails(
-                returnPeriodAffected = periodKeyFromDate(periodFrom(3, periodDate)),
+                returnPeriodAffected = None,
                 taxType = "305",
-                dutyRate = BigDecimal("1.75"),
+                dutyRate = None,
                 litresProduced = BigDecimal("50000.69"),
                 litresOfPureAlcohol = BigDecimal("1000.94"),
                 dutyDue = BigDecimal("1751.65"),
@@ -177,9 +177,9 @@ trait TestData extends ModelGenerators {
           drawbackProducts = Some(
             Seq(
               ReturnDetails(
-                returnPeriodAffected = periodKeyFromDate(periodFrom(4, periodDate)),
+                returnPeriodAffected = Some(periodKeyFromDate(periodFrom(4, periodDate))),
                 taxType = "309",
-                dutyRate = BigDecimal("5.12"),
+                dutyRate = Some(BigDecimal("5.12")),
                 litresProduced = BigDecimal("60000.02"),
                 litresOfPureAlcohol = BigDecimal("1301.11"),
                 dutyDue = BigDecimal("6661.69"),
@@ -422,42 +422,42 @@ trait TestData extends ModelGenerators {
           Seq(
             AdrReturnAdjustmentsRow(
               adjustmentTypeKey = "underdeclaration",
-              returnPeriodAffected = periodKeyFromDate(periodFrom(2, periodDate)),
+              returnPeriodAffected = Some(periodKeyFromDate(periodFrom(2, periodDate))),
               taxType = "301",
               litresOfPureAlcohol = BigDecimal("989"),
-              dutyRate = BigDecimal("5.27"),
+              dutyRate = Some(BigDecimal("5.27")),
               dutyValue = BigDecimal("5212.03")
             ),
             AdrReturnAdjustmentsRow(
               adjustmentTypeKey = "overdeclaration",
-              returnPeriodAffected = periodKeyFromDate(periodFrom(1, periodDate)),
+              returnPeriodAffected = Some(periodKeyFromDate(periodFrom(1, periodDate))),
               taxType = "302",
               litresOfPureAlcohol = BigDecimal("100.58"),
-              dutyRate = BigDecimal("3.56"),
+              dutyRate = Some(BigDecimal("3.56")),
               dutyValue = BigDecimal("-358.07")
             ),
             AdrReturnAdjustmentsRow(
               adjustmentTypeKey = "repackagedDraught",
-              returnPeriodAffected = periodKeyFromDate(periodFrom(5, periodDate)),
+              returnPeriodAffected = Some(periodKeyFromDate(periodFrom(5, periodDate))),
               taxType = "304",
               litresOfPureAlcohol = BigDecimal("100.81"),
-              dutyRate = BigDecimal("12.76"),
+              dutyRate = Some(BigDecimal("12.76")),
               dutyValue = BigDecimal("1221.82")
             ),
             AdrReturnAdjustmentsRow(
               adjustmentTypeKey = "spoilt",
-              returnPeriodAffected = periodKeyFromDate(periodFrom(3, periodDate)),
+              returnPeriodAffected = None,
               taxType = "305",
               litresOfPureAlcohol = BigDecimal("1000.94"),
-              dutyRate = BigDecimal("1.75"),
+              dutyRate = None,
               dutyValue = BigDecimal("-1751.65")
             ),
             AdrReturnAdjustmentsRow(
               adjustmentTypeKey = "drawback",
-              returnPeriodAffected = periodKeyFromDate(periodFrom(4, periodDate)),
+              returnPeriodAffected = Some(periodKeyFromDate(periodFrom(4, periodDate))),
               taxType = "309",
               litresOfPureAlcohol = BigDecimal("1301.11"),
-              dutyRate = BigDecimal("5.12"),
+              dutyRate = Some(BigDecimal("5.12")),
               dutyValue = BigDecimal("-6661.69")
             )
           )
@@ -576,34 +576,34 @@ trait TestData extends ModelGenerators {
           Seq(
             AdrReturnAdjustmentsRow(
               adjustmentTypeKey = AdrReturnAdjustments.underDeclaredKey,
-              returnPeriodAffected = periodKeyFromDate(periodFrom(1, periodDate)),
+              returnPeriodAffected = Some(periodKeyFromDate(periodFrom(1, periodDate))),
               taxType = "321",
               litresOfPureAlcohol = BigDecimal(150),
-              dutyRate = BigDecimal("21.01"),
+              dutyRate = Some(BigDecimal("21.01")),
               dutyValue = BigDecimal("3151.50")
             ),
             AdrReturnAdjustmentsRow(
               adjustmentTypeKey = AdrReturnAdjustments.spoiltKey,
-              returnPeriodAffected = periodKeyFromDate(periodFrom(2, periodDate)),
+              returnPeriodAffected = None,
               taxType = "321",
               litresOfPureAlcohol = BigDecimal(1150),
-              dutyRate = BigDecimal("21.01"),
+              dutyRate = None,
               dutyValue = BigDecimal("-24161.50")
             ),
             AdrReturnAdjustmentsRow(
               adjustmentTypeKey = AdrReturnAdjustments.spoiltKey,
-              returnPeriodAffected = periodKeyFromDate(periodFrom(3, periodDate)),
+              returnPeriodAffected = Some(periodKeyFromDate(periodFrom(3, periodDate))),
               taxType = "321",
               litresOfPureAlcohol = BigDecimal(75),
-              dutyRate = BigDecimal("21.01"),
+              dutyRate = Some(BigDecimal("21.01")),
               dutyValue = BigDecimal("-1575.50")
             ),
             AdrReturnAdjustmentsRow(
               adjustmentTypeKey = AdrReturnAdjustments.repackagedDraughtKey,
-              returnPeriodAffected = periodKeyFromDate(periodFrom(4, periodDate)),
+              returnPeriodAffected = Some(periodKeyFromDate(periodFrom(4, periodDate))),
               taxType = "321",
               litresOfPureAlcohol = BigDecimal(150),
-              dutyRate = BigDecimal("21.01"),
+              dutyRate = Some(BigDecimal("21.01")),
               dutyValue = BigDecimal("3151.50")
             )
           )
@@ -897,9 +897,9 @@ trait TestData extends ModelGenerators {
         overDeclarationProducts = Some(
           Seq(
             ReturnDetails(
-              returnPeriodAffected = "24AD",
+              returnPeriodAffected = Some("24AD"),
               taxType = "352",
-              dutyRate = BigDecimal("1.32"),
+              dutyRate = Some(BigDecimal("1.32")),
               litresProduced = BigDecimal("400.04"),
               litresOfPureAlcohol = BigDecimal("40.0404"),
               dutyDue = BigDecimal("52.85"),
@@ -914,9 +914,9 @@ trait TestData extends ModelGenerators {
         underDeclarationProducts = Some(
           Seq(
             ReturnDetails(
-              returnPeriodAffected = "24AC",
+              returnPeriodAffected = Some("24AC"),
               taxType = "351",
-              dutyRate = BigDecimal("2.32"),
+              dutyRate = Some(BigDecimal("2.32")),
               litresProduced = BigDecimal("300.03"),
               litresOfPureAlcohol = BigDecimal("30.0303"),
               dutyDue = BigDecimal("69.67"),
@@ -930,9 +930,9 @@ trait TestData extends ModelGenerators {
         spoiltProductProducts = Some(
           Seq(
             ReturnDetails(
-              returnPeriodAffected = "24AE",
+              returnPeriodAffected = Some("24AE"),
               taxType = "353",
-              dutyRate = BigDecimal("1.82"),
+              dutyRate = Some(BigDecimal("1.82")),
               litresProduced = BigDecimal("500.05"),
               litresOfPureAlcohol = BigDecimal("50.0505"),
               dutyDue = BigDecimal("91.09"),
@@ -946,9 +946,9 @@ trait TestData extends ModelGenerators {
         drawbackProducts = Some(
           Seq(
             ReturnDetails(
-              returnPeriodAffected = "24AF",
+              returnPeriodAffected = Some("24AF"),
               taxType = "361",
-              dutyRate = BigDecimal("2.21"),
+              dutyRate = Some(BigDecimal("2.21")),
               litresProduced = BigDecimal("600.06"),
               litresOfPureAlcohol = BigDecimal("60.0606"),
               dutyDue = BigDecimal("132.73"),
