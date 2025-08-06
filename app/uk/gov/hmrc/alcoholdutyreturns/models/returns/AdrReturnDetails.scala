@@ -179,10 +179,10 @@ object AdrReturnAdjustments {
 
 case class AdrReturnAdjustmentsRow(
   adjustmentTypeKey: String,
-  returnPeriodAffected: String,
+  returnPeriodAffected: Option[String],
   taxType: String,
   litresOfPureAlcohol: BigDecimal,
-  dutyRate: BigDecimal,
+  dutyRate: Option[BigDecimal],
   dutyValue: BigDecimal
 )
 

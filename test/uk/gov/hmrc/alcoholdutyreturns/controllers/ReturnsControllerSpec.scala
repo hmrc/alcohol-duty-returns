@@ -26,7 +26,7 @@ import uk.gov.hmrc.alcoholdutyreturns.connector.ReturnsConnector
 import uk.gov.hmrc.alcoholdutyreturns.models.ErrorCodes
 import uk.gov.hmrc.alcoholdutyreturns.models.returns.ReturnCreatedDetails
 import uk.gov.hmrc.alcoholdutyreturns.service.{FakeLockingService, LockingService, ReturnsService}
-import uk.gov.hmrc.play.bootstrap.backend.http.ErrorResponse
+import uk.gov.hmrc.play.bootstrap.http.ErrorResponse
 
 import java.time.Instant
 import scala.concurrent.Future

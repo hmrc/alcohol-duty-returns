@@ -255,9 +255,7 @@ class ReturnDetailsSpec extends SpecBase {
          |      "spoiltProdFilled": "1",
          |      "spoiltProductProducts": [
          |        {
-         |          "returnPeriodAffected": "23AJ",
          |          "taxType": "305",
-         |          "dutyRate": 1.75,
          |          "litresProduced": 50000.69,
          |          "litresOfPureAlcohol": 1000.94,
          |          "dutyDue": 1751.65

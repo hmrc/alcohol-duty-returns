@@ -18,7 +18,7 @@ package uk.gov.hmrc.alcoholdutyreturns.models
 
 import play.api.http.Status._
 import play.api.libs.json.{Json, OFormat}
-import uk.gov.hmrc.play.bootstrap.backend.http.ErrorResponse
+import uk.gov.hmrc.play.bootstrap.http.ErrorResponse
 
 object ErrorCodes {
   val badRequest: ErrorResponse                                                = ErrorResponse(BAD_REQUEST, "Bad request")

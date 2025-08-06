@@ -18,7 +18,6 @@ package uk.gov.hmrc.alcoholdutyreturns.utils
 
 import org.mongodb.scala.model.Filters._
 import org.mongodb.scala.model.{IndexModel, IndexOptions, Indexes, Updates}
-import org.mongodb.scala.{ObservableFuture, SingleObservableFuture}
 import play.api.Logger
 import uk.gov.hmrc.alcoholdutyreturns.config.AppConfig
 import uk.gov.hmrc.mongo.MongoUtils.DuplicateKey

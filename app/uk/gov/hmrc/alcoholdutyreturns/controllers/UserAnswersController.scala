@@ -26,7 +26,7 @@ import uk.gov.hmrc.alcoholdutyreturns.models.{ReturnAndUserDetails, ReturnId, Us
 import uk.gov.hmrc.alcoholdutyreturns.repositories.{UpdateFailure, UpdateSuccess, UserAnswersRepository}
 import uk.gov.hmrc.alcoholdutyreturns.service.{AccountService, LockingService}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
-import uk.gov.hmrc.play.bootstrap.backend.http.ErrorResponse
+import uk.gov.hmrc.play.bootstrap.http.ErrorResponse
 
 import java.time.Clock
 import javax.inject.Inject
