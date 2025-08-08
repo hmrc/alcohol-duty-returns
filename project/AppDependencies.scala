@@ -2,7 +2,7 @@ import sbt._
 
 object AppDependencies {
 
-  private val bootstrapVersion = "9.19.0"
+  private val bootstrapVersion = "10.1.0"
   private val hmrcMongoVersion = "2.7.0"
   private val mockitoScalaVersion      = "1.17.37"
 
@@ -10,9 +10,9 @@ object AppDependencies {
     "uk.gov.hmrc"       %% "bootstrap-backend-play-30" % bootstrapVersion,
     "ai.x"              %% "play-json-extensions"      % "0.42.0",
     "uk.gov.hmrc.mongo" %% "hmrc-mongo-play-30"        % hmrcMongoVersion,
-    "org.typelevel"     %% "cats-core"                 % "2.12.0",
-    "com.beachape"      %% "enumeratum-play"           % "1.8.1",
-    "com.networknt"     % "json-schema-validator"      % "1.5.1" exclude("org.slf4j", "slf4j-api")
+    "org.typelevel"     %% "cats-core"                 % "2.13.0",
+    "com.beachape"      %% "enumeratum-play"           % "1.9.0",
+    "com.networknt"     % "json-schema-validator"      % "1.5.8" exclude("org.slf4j", "slf4j-api")
       exclude("com.fasterxml.jackson.core", "jackson-databind"),
   )
 
