@@ -8,7 +8,8 @@ DELETE      /user-answers/:appaId/:periodKey                  uk.gov.hmrc.alcoho
 DELETE      /user-answers/lock/:appaId/:periodKey             uk.gov.hmrc.alcoholdutyreturns.controllers.UserAnswersController.releaseReturnLock(appaId, periodKey)
 PUT         /user-answers/lock/:appaId/:periodKey/ttl         uk.gov.hmrc.alcoholdutyreturns.controllers.UserAnswersController.keepAlive(appaId, periodKey)
 
-GET         /obligationDetails/:appaId                        uk.gov.hmrc.alcoholdutyreturns.controllers.ObligationController.getObligationDetails(appaId)
+GET         /obligationDetails/open/:appaId                   uk.gov.hmrc.alcoholdutyreturns.controllers.ObligationController.getOpenObligationDetails(appaId: String)
+GET         /obligationDetails/fulfilled/:appaId              uk.gov.hmrc.alcoholdutyreturns.controllers.ObligationController.getFulfilledObligationDetails(appaId: String)
 GET         /openObligation/:appaId/:periodKey                uk.gov.hmrc.alcoholdutyreturns.controllers.ObligationController.getOpenObligation(appaId:String, periodKey:String)
 
 GET         /subscriptionSummary/:appaId                      uk.gov.hmrc.alcoholdutyreturns.controllers.SubscriptionController.getValidSubscriptionRegimes(appaId: String)

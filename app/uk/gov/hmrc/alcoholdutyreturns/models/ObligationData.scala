@@ -42,3 +42,12 @@ object ObligationData {
 
   override def toString: String = "obligationData"
 }
+
+case class FulfilledObligations(
+  year: Int,
+  obligations: Seq[ObligationData]
+)
+
+object FulfilledObligations {
+  implicit val fulfilledObligationsFormat: OFormat[FulfilledObligations] = Json.format[FulfilledObligations]
+}
