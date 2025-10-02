@@ -64,31 +64,42 @@ class AccountConnectorSpec extends ISpecBase {
 
   "getOpenObligationData must" - {
     "successfully get an obligation" in new SetUp {
-      stubGet(openObligationUrl, OK, Json.toJson(obligationData).toString())
+      stubGet(openObligationForPeriodUrl, OK, Json.toJson(obligationData).toString())
       whenReady(connector.getOpenObligationData(returnId).value) { result =>
         result mustBe Right(obligationData)
-        verifyGet(openObligationUrl)
+        verifyGet(openObligationForPeriodUrl)
       }
     }
   }
 
-  "getObligationData must" - {
-    "successfully get obligations" in new SetUp {
-      stubGet(obligationUrl, OK, Json.toJson(Seq(obligationData)).toString())
-      whenReady(connector.getObligationData(appaId).value) { result =>
+  "getOpenObligations must" - {
+    "successfully get open obligations" in new SetUp {
+      stubGet(openObligationsUrl, OK, Json.toJson(Seq(obligationData)).toString())
+      whenReady(connector.getOpenObligations(appaId).value) { result =>
         result mustBe Right(Seq(obligationData))
-        verifyGet(obligationUrl)
+        verifyGet(openObligationsUrl)
+      }
+    }
+  }
+
+  "getFulfilledObligations must" - {
+    "successfully get fulfilled obligations" in new SetUp {
+      stubGet(fulfilledObligationsUrl, OK, Json.toJson(fulfilledObligationData).toString())
+      whenReady(connector.getFulfilledObligations(appaId).value) { result =>
+        result mustBe Right(fulfilledObligationData)
+        verifyGet(fulfilledObligationsUrl)
       }
     }
   }
 
   class SetUp {
-    val connector         = app.injector.instanceOf[AccountConnector]
-    val subscriptionUrl   = config.getSubscriptionSummaryUrl(appaId)
-    val openObligationUrl = config.getOpenObligationDataUrl(returnId)
-    val obligationUrl     = config.getObligationDataUrl(appaId)
-    val obligationData    = getObligationData(LocalDate.now(clock))
-    val dataTestUrl       = subscriptionUrl
+    val connector                  = app.injector.instanceOf[AccountConnector]
+    val subscriptionUrl            = config.getSubscriptionSummaryUrl(appaId)
+    val openObligationForPeriodUrl = config.getOpenObligationDataUrl(returnId)
+    val openObligationsUrl         = config.getOpenObligationsUrl(appaId)
+    val fulfilledObligationsUrl    = config.getFulfilledObligationsUrl(appaId)
+    val obligationData             = getObligationData(LocalDate.now(clock))
+    val dataTestUrl                = subscriptionUrl
 
     type DataTestType = SubscriptionSummary
   }

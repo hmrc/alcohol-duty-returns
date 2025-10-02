@@ -19,7 +19,7 @@ package uk.gov.hmrc.alcoholdutyreturns.controllers
 import cats.data.EitherT
 import play.api.mvc.Result
 import uk.gov.hmrc.alcoholdutyreturns.base.SpecBase
-import uk.gov.hmrc.alcoholdutyreturns.models.{ErrorCodes, ObligationData}
+import uk.gov.hmrc.alcoholdutyreturns.models.{ErrorCodes, FulfilledObligations, ObligationData}
 import uk.gov.hmrc.alcoholdutyreturns.service.AccountService
 import play.api.libs.json.Json
 import org.mockito.ArgumentMatchers.any
@@ -30,27 +30,52 @@ import java.time.LocalDate
 import scala.concurrent.Future
 
 class ObligationControllerSpec extends SpecBase {
-  "getObligationDetails must" - {
-    "return 200 OK with obligations if successful" in new SetUp {
-      when(mockAccountService.getObligations(eqTo(appaId))(any(), any()))
+  "getOpenObligationDetails must" - {
+    "return 200 OK with open obligations if successful" in new SetUp {
+      when(mockAccountService.getOpenObligations(eqTo(appaId))(any(), any()))
         .thenReturn(EitherT.rightT[Future, ErrorResponse](Seq(obligationData)))
 
       val result: Future[Result] =
-        controller.getObligationDetails(appaId)(fakeRequest)
+        controller.getOpenObligationDetails(appaId)(fakeRequest)
 
       status(result)        mustBe OK
       contentAsJson(result) mustBe Json.toJson(Seq(obligationData))
     }
 
     "return 404 NOT_FOUND when there is an issue" in new SetUp {
-      when(mockAccountService.getObligations(eqTo(appaId))(any(), any()))
+      when(mockAccountService.getOpenObligations(eqTo(appaId))(any(), any()))
         .thenReturn(EitherT.leftT[Future, Seq[ObligationData]](ErrorCodes.unexpectedResponse))
 
       val result: Future[Result] =
-        controller.getObligationDetails(appaId)(fakeRequest)
+        controller.getOpenObligationDetails(appaId)(fakeRequest)
 
       status(result)          mustBe NOT_FOUND
       contentAsString(result) mustBe "Error: {500,Unexpected Response}"
+    }
+  }
+
+  "getFulfilledObligationDetails must" - {
+    "return 200 OK with fulfilled obligations if successful" in new SetUp {
+      when(mockAccountService.getFulfilledObligations(eqTo(appaId))(any(), any()))
+        .thenReturn(EitherT.rightT(fulfilledObligationData))
+
+      val result: Future[Result] =
+        controller.getFulfilledObligationDetails(appaId)(fakeRequest)
+
+      status(result)        mustBe OK
+      contentAsJson(result) mustBe Json.toJson(fulfilledObligationData)
+    }
+
+    "return 500 INTERNAL_SERVER_ERROR when there is an issue" in new SetUp {
+      when(mockAccountService.getFulfilledObligations(eqTo(appaId))(any(), any()))
+        .thenReturn(EitherT.leftT[Future, Seq[FulfilledObligations]](ErrorCodes.unexpectedResponse))
+
+      val result: Future[Result] =
+        controller.getFulfilledObligationDetails(appaId)(fakeRequest)
+
+      status(result)          mustBe INTERNAL_SERVER_ERROR
+      contentAsString(result) mustBe
+        "Error: Unable to get fulfilled obligations. Status: 500, Message: Unexpected Response"
     }
   }
 
@@ -79,10 +104,9 @@ class ObligationControllerSpec extends SpecBase {
         val result: Future[Result] =
           controller.getOpenObligation(appaId, periodKey)(fakeRequest)
 
-        status(result) mustBe errorResponse.statusCode
-        contentAsString(
-          result
-        )              mustBe s"Error: Unable to get an open obligation. Status: ${errorResponse.statusCode}, Message: ${errorResponse.message}"
+        status(result)          mustBe errorResponse.statusCode
+        contentAsString(result) mustBe
+          s"Error: Unable to get an open obligation. Status: ${errorResponse.statusCode}, Message: ${errorResponse.message}"
       }
     }
   }

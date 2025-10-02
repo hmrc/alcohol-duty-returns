@@ -90,18 +90,33 @@ class AccountServiceSpec extends SpecBase {
     }
   }
 
-  "getObligations must" - {
-    "return a sequence of obligations when successful" in new SetUp {
-      val expectedObligationData = Seq(fulfilledObligationData, obligationData)
-      when(accountConnector.getObligationData(any())(any())).thenReturn(EitherT.rightT(expectedObligationData))
-      whenReady(accountService.getObligations(appaId).value) { result =>
-        result mustBe Right(expectedObligationData)
+  "getOpenObligations must" - {
+    "return a sequence of open obligations when successful" in new SetUp {
+      when(accountConnector.getOpenObligations(any())(any())).thenReturn(EitherT.rightT(openObligations))
+      whenReady(accountService.getOpenObligations(appaId).value) { result =>
+        result mustBe Right(openObligations)
       }
     }
 
     "return unexpectedResponse if the connector returns an error" in new SetUp {
-      when(accountConnector.getObligationData(any())(any())).thenReturn(EitherT.leftT(ErrorCodes.invalidJson))
-      whenReady(accountService.getObligations(appaId).value) { result =>
+      when(accountConnector.getOpenObligations(any())(any())).thenReturn(EitherT.leftT(ErrorCodes.invalidJson))
+      whenReady(accountService.getOpenObligations(appaId).value) { result =>
+        result mustBe Left(ErrorCodes.unexpectedResponse)
+      }
+    }
+  }
+
+  "getFulfilledObligations must" - {
+    "return a sequence of fulfilled obligations by year when successful" in new SetUp {
+      when(accountConnector.getFulfilledObligations(any())(any())).thenReturn(EitherT.rightT(fulfilledObligationData))
+      whenReady(accountService.getFulfilledObligations(appaId).value) { result =>
+        result mustBe Right(fulfilledObligationData)
+      }
+    }
+
+    "return unexpectedResponse if the connector returns an error" in new SetUp {
+      when(accountConnector.getFulfilledObligations(any())(any())).thenReturn(EitherT.leftT(ErrorCodes.badRequest))
+      whenReady(accountService.getFulfilledObligations(appaId).value) { result =>
         result mustBe Left(ErrorCodes.unexpectedResponse)
       }
     }
@@ -110,8 +125,9 @@ class AccountServiceSpec extends SpecBase {
   class SetUp {
     val accountConnector = mock[AccountConnector]
 
-    val obligationData          = getObligationData(LocalDate.now(clock))
-    val fulfilledObligationData = getFulfilledObligationData(LocalDate.now(clock))
+    val obligationData = getObligationData(LocalDate.now(clock))
+
+    val openObligations = Seq(obligationData, getObligationData(LocalDate.now(clock).minusMonths(1)))
 
     val accountService = new AccountService(accountConnector)
   }
