@@ -1,6 +1,6 @@
-# Get Obligation Details
+# Get Fulfilled Obligation Details
 
-Returns the Obligation Details for fulfilled obligations by year.
+Returns fulfilled obligations for the last 7 calendar years including the current year, with a minimum year of 2024.
 
 Calls to this API must be made by an authenticated and authorised user with an ADR enrolment in order for the data to be
 returned.

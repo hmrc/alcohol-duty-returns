@@ -1,4 +1,4 @@
-# Get Obligation Details
+# Get Open Obligation Details
 
 Returns the Obligation Details for open obligations.
 

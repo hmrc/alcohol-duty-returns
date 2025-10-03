@@ -1,4 +1,4 @@
-# Get Open Obligation
+# Get Open Obligation for Period
 
 Returns the details of an Open Obligation for the specified APPA ID and period key.
 
