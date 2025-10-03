@@ -1,10 +1,10 @@
 # Get Obligation Details
 
-Returns the Obligation Details (including those not Open).
+Returns the Obligation Details for open obligations.
 
 Calls to this API must be made by an authenticated and authorised user with an ADR enrolment in order for the data to be returned.
 
-**URL**: `/alcohol-duty-returns/obligationDetails/:appaId`
+**URL**: `/alcohol-duty-returns/obligationDetails/open/:appaId`
 
 **Method**: `GET`
 
@@ -22,7 +22,7 @@ Calls to this API must be made by an authenticated and authorised user with an A
 
 ***Example request:***
 
-/alcohol-duty-returns/obligationDetails/AP0000000001
+/alcohol-duty-returns/obligationDetails/open/XMADP0000000001
 
 ## Responses
 
@@ -38,7 +38,7 @@ If NOT_FOUND is returned by the upstream API, an empty array is returned.
 
 | Field Name | Description                                        | Data Type | Mandatory/Optional | Notes                       |
 |------------|----------------------------------------------------|-----------|--------------------|-----------------------------|
-| status     | The current obligation status                      | Enum      | Mandatory          | Open, Fulfilled             |
+| status     | The current obligation status                      | Enum      | Mandatory          | Open                        |
 | fromDate   | The date from which the period applies             | Date      | Mandatory          | YYYY-MM-DD                  |
 | toDate     | The date to which the period applies               | Date      | Mandatory          | YYYY-MM-DD                  |
 | dueDate    | The date the return is due to be filed and paid by | Date      | Mandatory          | YYYY-MM-DD                  |
@@ -46,7 +46,7 @@ If NOT_FOUND is returned by the upstream API, an empty array is returned.
 
 **Response Body Examples**
 
-***Two obligations returned, one open, one fulfilled:***
+***Two open obligations:***
 
 ```json
 [
@@ -58,7 +58,7 @@ If NOT_FOUND is returned by the upstream API, an empty array is returned.
     "periodKey": "24AH"
   },
   {
-    "status": "Fulfilled",
+    "status": "Open",
     "fromDate": "2024-05-01",
     "toDate": "2024-05-31",
     "dueDate": "2024-06-15",
