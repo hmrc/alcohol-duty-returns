@@ -30,6 +30,7 @@ object ErrorCodes {
     ErrorResponse(FORBIDDEN, s"Invalid subscription status: $approvalStatus")
   val unauthorisedRequest: ErrorResponse                                       = ErrorResponse(UNAUTHORIZED, "Unauthorised request")
   val unexpectedResponse: ErrorResponse                                        = ErrorResponse(INTERNAL_SERVER_ERROR, "Unexpected Response")
+  val forbiddenResponse: ErrorResponse                                         = ErrorResponse(FORBIDDEN, "Forbidden request")
 }
 
 case class HttpErrorResponse(
