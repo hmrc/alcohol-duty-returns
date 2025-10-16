@@ -25,7 +25,7 @@ import play.api.libs.json.Json
 import uk.gov.hmrc.alcoholdutyreturns.config.{AppConfig, CircuitBreakerProvider}
 import uk.gov.hmrc.alcoholdutyreturns.connector.helpers.HIPHeaders
 import uk.gov.hmrc.alcoholdutyreturns.models.returns._
-import uk.gov.hmrc.alcoholdutyreturns.models.{DuplicateSubmissionError, ErrorCodes, HttpErrorResponse, ReturnId}
+import uk.gov.hmrc.alcoholdutyreturns.models.{DuplicateSubmissionError, ErrorCodes, ReturnId}
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReadsInstances, HttpResponse, InternalServerException, StringContextOps}
 import uk.gov.hmrc.play.bootstrap.http.ErrorResponse
@@ -53,7 +53,10 @@ class ReturnsConnector @Inject() (
       () => fetchCall(returnId),
       attempts = config.retryAttempts,
       delay = config.retryAttemptsDelay
-    ).recoverWith { _ =>
+    ).recoverWith { error =>
+      logger.error(
+        s"An exception was returned while trying to get return for (appaId ${returnId.appaId}, periodKey ${returnId.periodKey}): $error"
+      )
       Future.successful(Left(ErrorResponse(INTERNAL_SERVER_ERROR, ErrorCodes.unexpectedResponse.message)))
     }
 
@@ -65,7 +68,10 @@ class ReturnsConnector @Inject() (
         () => submitCall(returnToSubmit, appaId),
         attempts = config.retryAttemptsPost,
         delay = config.retryAttemptsDelay
-      ).recoverWith { _ =>
+      ).recoverWith { error =>
+        logger.error(
+          s"Received unexpected response from submitReturn API (appaId $appaId, periodKey $returnToSubmit.periodKey). Error: ${error.getMessage}"
+        )
         Future.successful(Left(ErrorResponse(INTERNAL_SERVER_ERROR, ErrorCodes.unexpectedResponse.message)))
       }
     )
@@ -92,7 +98,7 @@ class ReturnsConnector @Inject() (
                   )
                   Future.successful(Right(returnDetailsSuccess.success))
                 case Failure(e)                    =>
-                  logger.warn(
+                  logger.error(
                     s"Parsing failed for return (appaId ${returnId.appaId}, periodKey ${returnId.periodKey})",
                     e
                   )
@@ -113,10 +119,7 @@ class ReturnsConnector @Inject() (
                 )
               Future.successful(Left(ErrorCodes.unexpectedResponse))
             case _                    =>
-              val error: String = response.json.as[HttpErrorResponse].message
-              logger.warn(
-                s"An exception was returned while trying to get return for (appaId ${returnId.appaId}, periodKey ${returnId.periodKey}): $error"
-              )
+              // Retry - do not log until final failure
               Future.failed(new InternalServerException(response.body))
           }
         }
@@ -141,7 +144,7 @@ class ReturnsConnector @Inject() (
                 Future.successful(Right(returnCreatedSuccess.success))
               case Failure(e)                    =>
                 logger
-                  .warn(s"Parsing failed for submit return response (appaId $appaId, periodKey $periodKey)", e)
+                  .error(s"Parsing failed for submit return response (appaId $appaId, periodKey $periodKey)", e)
                 Future.successful(Left(ErrorCodes.unexpectedResponse))
             }
           case response if response.status == BAD_REQUEST          =>
@@ -165,10 +168,11 @@ class ReturnsConnector @Inject() (
                 )
                 Future.successful(Left(ErrorCodes.unexpectedResponse))
             }
+          case response if response.status == FORBIDDEN            =>
+            logger.warn(s"Forbidden returned for submit return (appaId $appaId, periodKey $periodKey)")
+            Future.successful(Left(ErrorCodes.forbiddenResponse))
           case response                                            =>
-            logger.warn(
-              s"Received unexpected response from submitReturn API (appaId $appaId, periodKey $periodKey). Status: ${response.status}, Body: ${response.body}"
-            )
+            // Retry - do not log until final failure
             Future.failed(new InternalServerException(response.body))
         }
     }

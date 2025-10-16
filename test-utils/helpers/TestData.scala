@@ -390,7 +390,7 @@ trait TestData extends ModelGenerators {
     ReturnDetailsInternalServerError(
       ReturnDetailsInternalServerErrorInternal(
         "500",
-        "Error&#x20;while&#x20;sending&#x20;message&#x20;to&#x20;module&#x20;processor&#x3a;&#x20;Sender&#x20;Channel&#x20;&#x27;CCOS_01_REST_Out_EXCISE_AD_ReturnDisplay_GET&#x27;&#x20;&#x28;ID&#x3a;&#x20;f14c255c0ced3f84852a066298b31ab4&#x29;&#x3a;&#x20;Catching&#x20;exception&#x20;calling&#x20;messaging&#x20;system&#x3a;&#x20;com.sap.aii.af.sdk.xi.srt.BubbleException&#x3a;&#x20;System&#x20;Error&#x20;Received.&#x20;HTTP&#x20;Status&#x20;Code&#x20;&#x3d;&#x20;200&#x3a;&#x20;However&#x20;System&#x20;Error&#x20;received&#x20;in&#x20;payload&#x20;ErrorCode&#x20;&#x3d;&#x20;INCORRECT_PAYLOAD_DATA&#x20;ErrorCategory&#x20;&#x3d;&#x20;XIServer&#x20;Parameter1&#x20;&#x3d;&#x20;&#x20;Parameter2&#x20;&#x3d;&#x20;&#x20;Parameter3&#x20;&#x3d;&#x20;&#x20;Parameter4&#x20;&#x3d;&#x20;&#x20;Additional&#x20;text&#x20;&#x3d;&#x20;&#x20;ErrorStack&#x20;&#x3d;&#x20;Error&#x20;while&#x20;processing&#x20;message&#x20;payload&#xa;&#xa;An&#x20;error&#x20;occurred&#x20;when&#x20;deserializing&#x20;in&#x20;the&#x20;simple&#x20;transformation&#x20;program&#x20;&#x2f;1SAI&#x2f;SAS95E681E8E61376C8825A&#xa;The&#x20;value&#x20;&#x27;9.999999999999E10&#x27;&#x20;is&#x20;not&#x20;in&#x20;the&#x20;value&#x20;range&#x20;of&#x20;the&#x20;XML&#x20;schema&#x20;type&#x20;&#x27;decimal&#x27;&#x20;or&#x20;it&#x20;does&#x20;not&#x20;meet&#x20;the&#x20;specified&#x20;limitations&#xa;&#x20;&#x5b;http&#x3a;&#x2f;&#x2f;sap.com&#x2f;xi&#x2f;XI&#x2f;Message&#x2f;30&#x5e;Error&#x20;&quot;INCORRECT_PAYLOAD_DATA&quot;&#x5d;",
+        "Something went wrong",
         "C0000AB8190CB66000000003000007A6"
       )
     )
