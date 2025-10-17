@@ -168,9 +168,6 @@ class ReturnsConnector @Inject() (
                 )
                 Future.successful(Left(ErrorCodes.unexpectedResponse))
             }
-          case response if response.status == FORBIDDEN            =>
-            logger.warn(s"Forbidden returned for submit return (appaId $appaId, periodKey $periodKey)")
-            Future.successful(Left(ErrorCodes.forbiddenResponse))
           case response                                            =>
             // Retry - do not log until final failure
             Future.failed(new InternalServerException(response.body))
