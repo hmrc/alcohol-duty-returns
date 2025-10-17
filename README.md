@@ -7,8 +7,9 @@ This is the backend microservice that handles Returns related operations for Alc
 - [Create User Answers](api-docs/createUserAnswers.md): `POST /alcohol-duty-returns/user-answers`
 - [Get User Answers](api-docs/getUserAnswers): `GET /alcohol-duty-returns/user-answers/:appaId/:periodKey`
 - [Get Return For Period](api-docs/getReturn.md): `GET /alcohol-duty-returns/producers/:appaId/returns/:periodKey`
-- [Get Obligation Details](api-docs/obligationDetails.md): `GET /alcohol-duty-returns/obligationDetails/:appaId`
-- [Get Open Obligation](api-docs/openObligation.md): `GET /alcohol-duty-returns/openObligation/:appaId/:periodKey`
+- [Get Open Obligation Details](api-docs/openObligationDetails.md): `GET /alcohol-duty-returns/obligationDetails/open/:appaId`
+- [Get Fulfilled Obligation Details](api-docs/fulfilledObligationDetails.md): `GET /alcohol-duty-returns/obligationDetails/fulfilled/:appaId`
+- [Get Open Obligation for Period](api-docs/openObligationForPeriod.md): `GET /alcohol-duty-returns/openObligation/:appaId/:periodKey`
 - [Get Valid Subscription Regimes](api-docs/subscriptionRegimes.md): `GET /alcohol-duty-returns/subscriptionSummary/:appaId`
 - [Clear User Answers](api-docs/clearUserAnswers.md): `DELETE /alcohol-duty-returns/user-answers/:appaId/:periodKey`
 - [Release Lock](api-docs/releaseLock.md): `DELETE /user-answers/lock/:appaId/:periodKey`

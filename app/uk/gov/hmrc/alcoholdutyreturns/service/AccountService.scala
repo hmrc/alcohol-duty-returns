@@ -22,7 +22,7 @@ import play.api.Logging
 import uk.gov.hmrc.alcoholdutyreturns.connector.AccountConnector
 import uk.gov.hmrc.alcoholdutyreturns.models.ApprovalStatus.{Approved, Insolvent}
 import uk.gov.hmrc.alcoholdutyreturns.models.ObligationStatus.{Fulfilled, Open}
-import uk.gov.hmrc.alcoholdutyreturns.models.{ErrorCodes, ObligationData, ReturnId, SubscriptionSummary}
+import uk.gov.hmrc.alcoholdutyreturns.models.{ErrorCodes, FulfilledObligations, ObligationData, ReturnId, SubscriptionSummary}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.http.ErrorResponse
 
@@ -77,11 +77,19 @@ class AccountService @Inject() (
         )
     }
 
-  def getObligations(
+  def getOpenObligations(
     appaId: String
   )(implicit hc: HeaderCarrier, ec: ExecutionContext): EitherT[Future, ErrorResponse, Seq[ObligationData]] =
-    accountConnector.getObligationData(appaId).leftFlatMap { error =>
-      logger.warn(s"Unable to get an obligations for $appaId - ${error.statusCode} ${error.message}")
+    accountConnector.getOpenObligations(appaId).leftFlatMap { error =>
+      logger.warn(s"Unable to get open obligations for $appaId - ${error.statusCode} ${error.message}")
       EitherT.leftT[Future, Seq[ObligationData]](ErrorCodes.unexpectedResponse)
+    }
+
+  def getFulfilledObligations(
+    appaId: String
+  )(implicit hc: HeaderCarrier, ec: ExecutionContext): EitherT[Future, ErrorResponse, Seq[FulfilledObligations]] =
+    accountConnector.getFulfilledObligations(appaId).leftFlatMap { error =>
+      logger.warn(s"Unable to get fulfilled obligations for $appaId - ${error.statusCode} ${error.message}")
+      EitherT.leftT[Future, Seq[FulfilledObligations]](ErrorCodes.unexpectedResponse)
     }
 }

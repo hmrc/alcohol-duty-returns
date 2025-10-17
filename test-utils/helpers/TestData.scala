@@ -75,7 +75,18 @@ trait TestData extends ModelGenerators {
     periodKey = "24AA"
   )
 
-  def getFulfilledObligationData(now: LocalDate): ObligationData = getObligationData(now).copy(status = Fulfilled)
+  val fulfilledObligations2024: FulfilledObligations =
+    FulfilledObligations(
+      year = 2024,
+      obligations = Seq(
+        getObligationData(LocalDate.of(2024, 12, 31)).copy(status = Fulfilled),
+        getObligationData(LocalDate.of(2024, 11, 30)).copy(status = Fulfilled)
+      )
+    )
+
+  val emptyFulfilledObligations: FulfilledObligations = FulfilledObligations(2023, Seq.empty)
+
+  val fulfilledObligationData = Seq(fulfilledObligations2024, emptyFulfilledObligations)
 
   private val adrPeriodStartDay = 1
 

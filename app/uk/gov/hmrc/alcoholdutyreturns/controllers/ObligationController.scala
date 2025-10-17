@@ -34,12 +34,23 @@ class ObligationController @Inject() (
 )(implicit executionContext: ExecutionContext)
     extends BackendController(controllerComponents) {
 
-  def getObligationDetails(appaId: String): Action[AnyContent] =
+  def getOpenObligationDetails(appaId: String): Action[AnyContent] =
     (authorise andThen checkAppaId(appaId)).async { implicit request =>
-      accountService.getObligations(appaId).value.map {
+      accountService.getOpenObligations(appaId).value.map {
         case Left(errorResponse) =>
           NotFound(s"Error: {${errorResponse.statusCode},${errorResponse.message}}")
         case Right(obligations)  => Ok(Json.toJson(obligations))
+      }
+    }
+
+  def getFulfilledObligationDetails(appaId: String): Action[AnyContent] =
+    (authorise andThen checkAppaId(appaId)).async { implicit request =>
+      accountService.getFulfilledObligations(appaId).value.map {
+        case Left(errorResponse)         =>
+          Status(errorResponse.statusCode)(
+            s"Error: Unable to get fulfilled obligations. Status: ${errorResponse.statusCode}, Message: ${errorResponse.message}"
+          )
+        case Right(fulfilledObligations) => Ok(Json.toJson(fulfilledObligations))
       }
     }
 

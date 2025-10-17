@@ -51,8 +51,11 @@ class AppConfig @Inject() (config: Configuration, servicesConfig: ServicesConfig
   def getOpenObligationDataUrl(returnId: ReturnId) =
     s"$adrAccountHost/alcohol-duty-account/openObligationDetails/${returnId.appaId}/${returnId.periodKey}"
 
-  def getObligationDataUrl(appaId: String): String =
-    s"$adrAccountHost/alcohol-duty-account/obligationDetails/$appaId"
+  def getOpenObligationsUrl(appaId: String): String =
+    s"$adrAccountHost/alcohol-duty-account/obligationDetails/open/$appaId"
+
+  def getFulfilledObligationsUrl(appaId: String): String =
+    s"$adrAccountHost/alcohol-duty-account/obligationDetails/fulfilled/$appaId"
 
   def getCalculateDutyDueByTaxTypeUrl: String = {
     val url = getConfStringAndThrowIfNotFound("alcohol-duty-calculator.url.calculateDutyDueByTaxType")

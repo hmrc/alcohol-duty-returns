@@ -21,7 +21,7 @@ import play.api.Logging
 import play.api.http.Status.NOT_FOUND
 import play.api.libs.json.Reads
 import uk.gov.hmrc.alcoholdutyreturns.config.AppConfig
-import uk.gov.hmrc.alcoholdutyreturns.models.{ErrorCodes, ObligationData, ReturnId, SubscriptionSummary}
+import uk.gov.hmrc.alcoholdutyreturns.models.{ErrorCodes, FulfilledObligations, ObligationData, ReturnId, SubscriptionSummary}
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReadsInstances, HttpResponse, StringContextOps, UpstreamErrorResponse}
 import uk.gov.hmrc.play.bootstrap.http.ErrorResponse
@@ -71,8 +71,13 @@ class AccountConnector @Inject() (
   ): EitherT[Future, ErrorResponse, ObligationData] =
     getData(config.getOpenObligationDataUrl(returnId))
 
-  def getObligationData(appaId: String)(implicit
+  def getOpenObligations(appaId: String)(implicit
     hc: HeaderCarrier
   ): EitherT[Future, ErrorResponse, Seq[ObligationData]] =
-    getData(config.getObligationDataUrl(appaId))
+    getData(config.getOpenObligationsUrl(appaId))
+
+  def getFulfilledObligations(appaId: String)(implicit
+    hc: HeaderCarrier
+  ): EitherT[Future, ErrorResponse, Seq[FulfilledObligations]] =
+    getData(config.getFulfilledObligationsUrl(appaId))
 }
