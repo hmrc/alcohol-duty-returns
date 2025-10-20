@@ -74,6 +74,30 @@ class ReturnsConnectorSpec extends ISpecBase {
           verifyGetWithRetry(getReturnUrl)
         }
       }
+
+      "return an UnexpectedResponse error if the call return a 502 response with retry" in new SetUp {
+        stubGet(getReturnUrl, BAD_GATEWAY, Json.toJson(badGateway).toString())
+        whenReady(connectorWithRetry.getReturn(returnId)) { result =>
+          result mustBe Left(ErrorCodes.unexpectedResponse)
+          verifyGetWithRetry(getReturnUrl)
+        }
+      }
+
+      "return an UnexpectedResponse error if the call return a 503 response with retry" in new SetUp {
+        stubGet(getReturnUrl, SERVICE_UNAVAILABLE, Json.toJson(serviceUnavailable).toString())
+        whenReady(connectorWithRetry.getReturn(returnId)) { result =>
+          result mustBe Left(ErrorCodes.unexpectedResponse)
+          verifyGetWithRetry(getReturnUrl)
+        }
+      }
+
+      "return an UnexpectedResponse error if the call return a 504 response with retry" in new SetUp {
+        stubGet(getReturnUrl, GATEWAY_TIMEOUT, Json.toJson(gatewayTimeout).toString())
+        whenReady(connectorWithRetry.getReturn(returnId)) { result =>
+          result mustBe Left(ErrorCodes.unexpectedResponse)
+          verifyGetWithRetry(getReturnUrl)
+        }
+      }
     }
 
     "submitReturn is called must" - {
@@ -152,6 +176,45 @@ class ReturnsConnectorSpec extends ISpecBase {
           INTERNAL_SERVER_ERROR,
           Json.toJson(returnSubmission).toString(),
           Json.toJson(internalServerError).toString()
+        )
+        whenReady(connectorWithRetry.submitReturn(returnSubmission, id).value) { result =>
+          result mustBe Left(ErrorCodes.unexpectedResponse)
+          verifyPostWithRetry(submitReturnUrl)
+        }
+      }
+
+      "return an UnexpectedResponse error if the call returns a 502 response with retry" in new SetUp {
+        stubPost(
+          submitReturnUrl,
+          BAD_GATEWAY,
+          Json.toJson(returnSubmission).toString(),
+          Json.toJson(badGateway).toString()
+        )
+        whenReady(connectorWithRetry.submitReturn(returnSubmission, id).value) { result =>
+          result mustBe Left(ErrorCodes.unexpectedResponse)
+          verifyPostWithRetry(submitReturnUrl)
+        }
+      }
+
+      "return an UnexpectedResponse error if the call returns a 503 response with retry" in new SetUp {
+        stubPost(
+          submitReturnUrl,
+          SERVICE_UNAVAILABLE,
+          Json.toJson(returnSubmission).toString(),
+          Json.toJson(serviceUnavailable).toString()
+        )
+        whenReady(connectorWithRetry.submitReturn(returnSubmission, id).value) { result =>
+          result mustBe Left(ErrorCodes.unexpectedResponse)
+          verifyPostWithRetry(submitReturnUrl)
+        }
+      }
+
+      "return an UnexpectedResponse error if the call returns a 504 response with retry" in new SetUp {
+        stubPost(
+          submitReturnUrl,
+          GATEWAY_TIMEOUT,
+          Json.toJson(returnSubmission).toString(),
+          Json.toJson(gatewayTimeout).toString()
         )
         whenReady(connectorWithRetry.submitReturn(returnSubmission, id).value) { result =>
           result mustBe Left(ErrorCodes.unexpectedResponse)

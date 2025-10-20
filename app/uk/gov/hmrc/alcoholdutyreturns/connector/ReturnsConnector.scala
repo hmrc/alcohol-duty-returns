@@ -93,9 +93,8 @@ class ReturnsConnector @Inject() (
                   .as[GetReturnDetailsSuccess]
               } match {
                 case Success(returnDetailsSuccess) =>
-                  logger.info(
-                    s"Return obtained successfully (appaId ${returnId.appaId}, periodKey ${returnId.periodKey})"
-                  )
+                  logger
+                    .info(s"Return obtained successfully (appaId ${returnId.appaId}, periodKey ${returnId.periodKey})")
                   Future.successful(Right(returnDetailsSuccess.success))
                 case Failure(e)                    =>
                   logger.error(
@@ -113,13 +112,18 @@ class ReturnsConnector @Inject() (
               logger.warn(s"Return not found (appaId ${returnId.appaId}, periodKey ${returnId.periodKey})")
               Future.successful(Left(ErrorCodes.entityNotFound))
             case UNPROCESSABLE_ENTITY =>
-              logger
-                .warn(
-                  s"Get return unprocessable for (appaId ${returnId.appaId}, periodKey ${returnId.periodKey}): ${response.body}"
-                )
+              logger.warn(
+                s"Get return unprocessable for (appaId ${returnId.appaId}, periodKey ${returnId.periodKey}): ${response.body}"
+              )
               Future.successful(Left(ErrorCodes.unexpectedResponse))
+            // Retry and log on final fail for the following transient errors
+            case BAD_GATEWAY          =>
+              Future.failed(new InternalServerException("Bad gateway"))
+            case SERVICE_UNAVAILABLE  =>
+              Future.failed(new InternalServerException("Service unavailable"))
+            case GATEWAY_TIMEOUT      =>
+              Future.failed(new InternalServerException("Gateway timeout"))
             case _                    =>
-              // Retry - do not log until final failure
               Future.failed(new InternalServerException(response.body))
           }
         }
@@ -156,21 +160,34 @@ class ReturnsConnector @Inject() (
             logger.warn(s"Not found returned for submit return (appaId $appaId, periodKey $periodKey)")
             Future.successful(Left(ErrorCodes.entityNotFound))
           case response if response.status == UNPROCESSABLE_ENTITY =>
-            Try(response.json.as[DuplicateSubmissionError]) match {
-              case Success(dupError) if dupError.errors.code == "044" || dupError.errors.code == "999" =>
-                logger.warn(
-                  s"Return already submitted (appaId $appaId, periodKey $periodKey) - Error code: ${dupError.errors.code}"
-                )
-                Future.successful(Left(ErrorCodes.duplicateSubmission))
-              case _                                                                                   =>
-                logger.warn(
-                  s"Unprocessable entity returned for submit return response (appaId $appaId, periodKey $periodKey): ${response.body}"
-                )
-                Future.successful(Left(ErrorCodes.unexpectedResponse))
-            }
+            checkForDuplicateSubmission(response, appaId, periodKey)
+          // Retry and log on final fail for the following transient errors
+          case response if response.status == BAD_GATEWAY          =>
+            Future.failed(new InternalServerException("Bad gateway"))
+          case response if response.status == SERVICE_UNAVAILABLE  =>
+            Future.failed(new InternalServerException("Service unavailable"))
+          case response if response.status == GATEWAY_TIMEOUT      =>
+            Future.failed(new InternalServerException("Gateway timeout"))
           case response                                            =>
-            // Retry - do not log until final failure
             Future.failed(new InternalServerException(response.body))
         }
+    }
+
+  private def checkForDuplicateSubmission(
+    response: HttpResponse,
+    appaId: String,
+    periodKey: String
+  ): Future[Left[ErrorResponse, Nothing]] =
+    Try(response.json.as[DuplicateSubmissionError]) match {
+      case Success(dupError) if dupError.errors.code == "044" || dupError.errors.code == "999" =>
+        logger.warn(
+          s"Return already submitted (appaId $appaId, periodKey $periodKey) - Error code: ${dupError.errors.code}"
+        )
+        Future.successful(Left(ErrorCodes.duplicateSubmission))
+      case _                                                                                   =>
+        logger.warn(
+          s"Unprocessable entity returned for submit return response (appaId $appaId, periodKey $periodKey): ${response.body}"
+        )
+        Future.successful(Left(ErrorCodes.unexpectedResponse))
     }
 }
