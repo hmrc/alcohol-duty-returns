@@ -406,6 +406,33 @@ trait TestData extends ModelGenerators {
       )
     )
 
+  val badGateway: ReturnDetailsInternalServerError =
+    ReturnDetailsInternalServerError(
+      ReturnDetailsInternalServerErrorInternal(
+        "502",
+        "Bad gateway",
+        "C0000AB8190CB66000000003000007A6"
+      )
+    )
+
+  val serviceUnavailable: ReturnDetailsInternalServerError =
+    ReturnDetailsInternalServerError(
+      ReturnDetailsInternalServerErrorInternal(
+        "503",
+        "Service unavailable",
+        "C0000AB8190CB66000000003000007A6"
+      )
+    )
+
+  val gatewayTimeout: ReturnDetailsInternalServerError =
+    ReturnDetailsInternalServerError(
+      ReturnDetailsInternalServerErrorInternal(
+        "504",
+        "Gateway timeout",
+        "C0000AB8190CB66000000003000007A6"
+      )
+    )
+
   def convertedReturnDetails(periodKey: String, now: Instant): AdrReturnDetails = {
     val periodDate = LocalDate.of(periodKey.take(2).toInt + 2000, periodKey.charAt(3) - 'A' + 1, 1)
 
