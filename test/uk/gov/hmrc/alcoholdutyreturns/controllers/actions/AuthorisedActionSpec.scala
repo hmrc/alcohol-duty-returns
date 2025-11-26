@@ -16,8 +16,8 @@
 
 package uk.gov.hmrc.alcoholdutyreturns.controllers.actions
 
-import org.mockito.ArgumentMatchers.any
-import org.mockito.ArgumentMatchersSugar.eqTo
+import org.mockito.ArgumentMatchers.{any, eq as eqTo}
+import org.mockito.Mockito.when
 import play.api.mvc.{BodyParsers, Request, Result}
 import play.api.test.Helpers._
 import uk.gov.hmrc.alcoholdutyreturns.base.SpecBase
@@ -140,7 +140,7 @@ class AuthorisedActionSpec extends SpecBase {
     }
   }
 
-  "return 401 unauthorized if there is an authorisation exception" in {
+  "return 401 unauthorized if there is an authorisation exception" in
     List(
       InsufficientConfidenceLevel(),
       InsufficientEnrolments(),
@@ -160,7 +160,6 @@ class AuthorisedActionSpec extends SpecBase {
 
       status(result) mustBe UNAUTHORIZED
     }
-  }
 
   "return the exception if there is any other exception" in {
     val msg = "Test Exception"

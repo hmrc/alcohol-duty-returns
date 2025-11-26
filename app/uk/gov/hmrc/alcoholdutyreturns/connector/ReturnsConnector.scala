@@ -22,6 +22,7 @@ import org.apache.pekko.pattern.retry
 import play.api.Logging
 import play.api.http.Status._
 import play.api.libs.json.Json
+import play.api.libs.ws.JsonBodyWritables.writeableOf_JsValue
 import uk.gov.hmrc.alcoholdutyreturns.config.{AppConfig, CircuitBreakerProvider}
 import uk.gov.hmrc.alcoholdutyreturns.connector.helpers.HIPHeaders
 import uk.gov.hmrc.alcoholdutyreturns.models.returns._

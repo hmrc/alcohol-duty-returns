@@ -17,22 +17,25 @@
 package uk.gov.hmrc.alcoholdutyreturns.service
 
 import cats.data.EitherT
-import org.mockito.ArgumentMatchers.any
-import org.mockito.ArgumentMatchersSugar.eqTo
+import org.mockito.ArgumentMatchers.{any, eq as eqTo}
+import org.mockito.Mockito.when
 import uk.gov.hmrc.alcoholdutyreturns.base.SpecBase
 import uk.gov.hmrc.alcoholdutyreturns.connector.AccountConnector
 import uk.gov.hmrc.alcoholdutyreturns.models.ApprovalStatus.{Approved, DeRegistered, Insolvent, Revoked, SmallCiderProducer}
 import uk.gov.hmrc.alcoholdutyreturns.models.ObligationStatus.Fulfilled
-import uk.gov.hmrc.alcoholdutyreturns.models.{ApprovalStatus, ErrorCodes}
+import uk.gov.hmrc.alcoholdutyreturns.models.*
+import uk.gov.hmrc.play.bootstrap.http.ErrorResponse
 
 import java.time.LocalDate
+import scala.concurrent.Future
 
 class AccountServiceSpec extends SpecBase {
   "getSubscriptionSummaryAndCheckStatus must" - {
     Seq[ApprovalStatus](Approved, Insolvent).foreach { status =>
       s"return the subscription summary if the status is ${status.entryName}" in new SetUp {
         val ss = subscriptionSummary.copy(approvalStatus = status)
-        when(accountConnector.getSubscriptionSummary(eqTo(returnId.appaId))(any())).thenReturn(EitherT.rightT(ss))
+        when(accountConnector.getSubscriptionSummary(eqTo(returnId.appaId))(any()))
+          .thenReturn(EitherT.rightT[Future, SubscriptionSummary](ss))
 
         whenReady(accountService.getSubscriptionSummaryAndCheckStatus(returnId.appaId).value) { result =>
           result mustBe Right(ss)
@@ -43,7 +46,8 @@ class AccountServiceSpec extends SpecBase {
     Seq[ApprovalStatus](SmallCiderProducer, DeRegistered, Revoked).foreach { status =>
       s"return InvalidSubscriptionStatus if the status is ${status.entryName}" in new SetUp {
         val ss = subscriptionSummary.copy(approvalStatus = status)
-        when(accountConnector.getSubscriptionSummary(eqTo(returnId.appaId))(any())).thenReturn(EitherT.rightT(ss))
+        when(accountConnector.getSubscriptionSummary(eqTo(returnId.appaId))(any()))
+          .thenReturn(EitherT.rightT[Future, SubscriptionSummary](ss))
 
         whenReady(accountService.getSubscriptionSummaryAndCheckStatus(returnId.appaId).value) { result =>
           result mustBe Left(ErrorCodes.invalidSubscriptionStatus(status))
@@ -53,7 +57,7 @@ class AccountServiceSpec extends SpecBase {
 
     "return an error the connector returns one" in new SetUp {
       when(accountConnector.getSubscriptionSummary(eqTo(returnId.appaId))(any()))
-        .thenReturn(EitherT.leftT(ErrorCodes.invalidJson))
+        .thenReturn(EitherT.leftT[Future, ErrorResponse](ErrorCodes.invalidJson))
 
       whenReady(accountService.getSubscriptionSummaryAndCheckStatus(returnId.appaId).value) { result =>
         result mustBe Left(ErrorCodes.invalidJson)
@@ -64,7 +68,7 @@ class AccountServiceSpec extends SpecBase {
   "getOpenObligationData must" - {
     "return obligation data if Open" in new SetUp {
       when(accountConnector.getOpenObligationData(eqTo(returnId))(any()))
-        .thenReturn(EitherT.rightT(obligationData))
+        .thenReturn(EitherT.rightT[Future, ObligationData](obligationData))
 
       whenReady(accountService.getOpenObligation(returnId).value) { result =>
         result mustBe Right(obligationData)
@@ -73,7 +77,7 @@ class AccountServiceSpec extends SpecBase {
 
     "return an error if Fulfilled" in new SetUp {
       when(accountConnector.getOpenObligationData(eqTo(returnId))(any()))
-        .thenReturn(EitherT.rightT(obligationData.copy(status = Fulfilled)))
+        .thenReturn(EitherT.rightT[Future, ObligationData](obligationData.copy(status = Fulfilled)))
 
       whenReady(accountService.getOpenObligation(returnId).value) { result =>
         result mustBe Left(ErrorCodes.obligationFulfilled)
@@ -82,7 +86,7 @@ class AccountServiceSpec extends SpecBase {
 
     "return an error if the connector returns one" in new SetUp {
       when(accountConnector.getOpenObligationData(eqTo(returnId))(any()))
-        .thenReturn(EitherT.leftT(ErrorCodes.invalidJson))
+        .thenReturn(EitherT.leftT[Future, ErrorResponse](ErrorCodes.invalidJson))
 
       whenReady(accountService.getOpenObligation(returnId).value) { result =>
         result mustBe Left(ErrorCodes.invalidJson)
@@ -92,14 +96,18 @@ class AccountServiceSpec extends SpecBase {
 
   "getOpenObligations must" - {
     "return a sequence of open obligations when successful" in new SetUp {
-      when(accountConnector.getOpenObligations(any())(any())).thenReturn(EitherT.rightT(openObligations))
+      when(accountConnector.getOpenObligations(any())(any()))
+        .thenReturn(EitherT.rightT[Future, Seq[ObligationData]](openObligations))
+
       whenReady(accountService.getOpenObligations(appaId).value) { result =>
         result mustBe Right(openObligations)
       }
     }
 
     "return unexpectedResponse if the connector returns an error" in new SetUp {
-      when(accountConnector.getOpenObligations(any())(any())).thenReturn(EitherT.leftT(ErrorCodes.invalidJson))
+      when(accountConnector.getOpenObligations(any())(any()))
+        .thenReturn(EitherT.leftT[Future, ErrorResponse](ErrorCodes.invalidJson))
+
       whenReady(accountService.getOpenObligations(appaId).value) { result =>
         result mustBe Left(ErrorCodes.unexpectedResponse)
       }
@@ -108,14 +116,18 @@ class AccountServiceSpec extends SpecBase {
 
   "getFulfilledObligations must" - {
     "return a sequence of fulfilled obligations by year when successful" in new SetUp {
-      when(accountConnector.getFulfilledObligations(any())(any())).thenReturn(EitherT.rightT(fulfilledObligationData))
+      when(accountConnector.getFulfilledObligations(any())(any()))
+        .thenReturn(EitherT.rightT[Future, Seq[FulfilledObligations]](fulfilledObligationData))
+
       whenReady(accountService.getFulfilledObligations(appaId).value) { result =>
         result mustBe Right(fulfilledObligationData)
       }
     }
 
     "return unexpectedResponse if the connector returns an error" in new SetUp {
-      when(accountConnector.getFulfilledObligations(any())(any())).thenReturn(EitherT.leftT(ErrorCodes.badRequest))
+      when(accountConnector.getFulfilledObligations(any())(any()))
+        .thenReturn(EitherT.leftT[Future, ErrorResponse](ErrorCodes.badRequest))
+
       whenReady(accountService.getFulfilledObligations(appaId).value) { result =>
         result mustBe Left(ErrorCodes.unexpectedResponse)
       }

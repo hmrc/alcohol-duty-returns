@@ -16,8 +16,6 @@
 
 package uk.gov.hmrc.alcoholdutyreturns.models.returns
 
-import ai.x.play.json.Encoders._
-import ai.x.play.json.Jsonx
 import play.api.libs.json.{Json, OFormat}
 import uk.gov.hmrc.alcoholdutyreturns.models.JsonHelpers.booleanReads
 import uk.gov.hmrc.alcoholdutyreturns.models.JsonHelpers.booleanWrites
@@ -413,8 +411,7 @@ case class SpiritsProducedDetails(
 
 object SpiritsProducedDetails {
 
-  implicit val spiritsProducedDetailsFormat: OFormat[SpiritsProducedDetails] =
-    Jsonx.formatCaseClass[SpiritsProducedDetails]
+  implicit val spiritsProducedDetailsFormat: OFormat[SpiritsProducedDetails] = Json.format[SpiritsProducedDetails]
 
   def fromAdrSpiritsProduced(spiritsProduced: AdrSpiritsProduced): SpiritsProducedDetails =
     // Note the spelling of Whisk(e)y in the downstream API is the wrong way around

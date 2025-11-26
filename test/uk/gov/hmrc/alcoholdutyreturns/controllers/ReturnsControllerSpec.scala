@@ -17,8 +17,8 @@
 package uk.gov.hmrc.alcoholdutyreturns.controllers
 
 import cats.data.EitherT
-import org.mockito.ArgumentMatchers.any
-import org.mockito.ArgumentMatchersSugar.eqTo
+import org.mockito.ArgumentMatchers.{any, eq as eqTo}
+import org.mockito.Mockito.when
 import play.api.libs.json.Json
 import play.api.mvc.Result
 import uk.gov.hmrc.alcoholdutyreturns.base.SpecBase

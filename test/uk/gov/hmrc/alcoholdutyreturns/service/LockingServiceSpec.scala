@@ -17,7 +17,8 @@
 package uk.gov.hmrc.alcoholdutyreturns.service
 
 import org.mockito.ArgumentMatchers.any
-import org.mongodb.scala.{MongoCollection, SingleObservable}
+import org.mockito.Mockito.{times, verify, when}
+import org.mongodb.scala.{MongoCollection, SingleObservable, SingleObservableFuture}
 import uk.gov.hmrc.alcoholdutyreturns.base.SpecBase
 import uk.gov.hmrc.alcoholdutyreturns.models.ReturnId
 import uk.gov.hmrc.alcoholdutyreturns.utils.ADRMongoLockRepository
@@ -32,7 +33,7 @@ class LockingServiceSpec extends SpecBase {
         when(mongoLockRepository.refreshExpiry(any(), any(), any())).thenReturn(Future.successful(false))
         when(mongoLockRepository.takeLock(any(), any(), any())).thenReturn(Future.successful(Some(mock[Lock])))
 
-        whenReady(lockingService.withLock(returnId, internalId)(testData)) { result =>
+        whenReady(lockingService.withLock(returnId, internalId)(() => testData)) { result =>
           result mustBe successResponse
         }
       }
@@ -40,7 +41,7 @@ class LockingServiceSpec extends SpecBase {
       "execute the block of code if user owns the lock and is refreshed" in new SetUp {
         when(mongoLockRepository.refreshExpiry(any(), any(), any())).thenReturn(Future.successful(true))
 
-        whenReady(lockingService.withLock(returnId, internalId)(testData)) { result =>
+        whenReady(lockingService.withLock(returnId, internalId)(() => testData)) { result =>
           result mustBe successResponse
         }
       }
@@ -49,7 +50,7 @@ class LockingServiceSpec extends SpecBase {
         when(mongoLockRepository.refreshExpiry(any(), any(), any())).thenReturn(Future.successful(false))
         when(mongoLockRepository.takeLock(any(), any(), any())).thenReturn(Future.successful(None))
 
-        whenReady(lockingService.withLock(returnId, internalId)(testData)) { result =>
+        whenReady(lockingService.withLock(returnId, internalId)(() => testData)) { result =>
           result mustBe None
         }
       }
@@ -58,10 +59,10 @@ class LockingServiceSpec extends SpecBase {
         val exceptionMessage = "Exception"
 
         when(mongoLockRepository.refreshExpiry(any(), any(), any())).thenReturn(Future.successful(false))
-        when(mongoLockRepository.takeLock(any(), any(), any())).thenThrow(new Exception(exceptionMessage))
+        when(mongoLockRepository.takeLock(any(), any(), any())).thenThrow(new RuntimeException(exceptionMessage))
 
-        val result: Throwable = lockingService.withLock(returnId, internalId)(testData).failed.futureValue
-        result            mustBe an[Exception]
+        val result: Throwable = lockingService.withLock(returnId, internalId)(() => testData).failed.futureValue
+        result            mustBe a[RuntimeException]
         result.getMessage mustBe exceptionMessage
       }
     }
@@ -72,7 +73,7 @@ class LockingServiceSpec extends SpecBase {
         when(mongoLockRepository.takeLock(any(), any(), any())).thenReturn(Future.successful(Some(mock[Lock])))
         when(mongoLockRepository.releaseLock(any(), any())).thenReturn(Future.successful(()))
 
-        whenReady(lockingService.withLockExecuteAndRelease(returnId, internalId)(testData)) { result =>
+        whenReady(lockingService.withLockExecuteAndRelease(returnId, internalId)(() => testData)) { result =>
           result mustBe successResponse
         }
 
@@ -83,7 +84,7 @@ class LockingServiceSpec extends SpecBase {
         when(mongoLockRepository.refreshExpiry(any(), any(), any())).thenReturn(Future.successful(true))
         when(mongoLockRepository.releaseLock(any(), any())).thenReturn(Future.successful(()))
 
-        whenReady(lockingService.withLockExecuteAndRelease(returnId, internalId)(testData)) { result =>
+        whenReady(lockingService.withLockExecuteAndRelease(returnId, internalId)(() => testData)) { result =>
           result mustBe successResponse
         }
 
@@ -94,7 +95,7 @@ class LockingServiceSpec extends SpecBase {
         when(mongoLockRepository.refreshExpiry(any(), any(), any())).thenReturn(Future.successful(false))
         when(mongoLockRepository.takeLock(any(), any(), any())).thenReturn(Future.successful(None))
 
-        whenReady(lockingService.withLockExecuteAndRelease(returnId, internalId)(testData)) { result =>
+        whenReady(lockingService.withLockExecuteAndRelease(returnId, internalId)(() => testData)) { result =>
           result mustBe None
         }
 
@@ -109,7 +110,7 @@ class LockingServiceSpec extends SpecBase {
           .thenReturn(Future.failed(new Exception(exceptionMessage)))
 
         val result: Throwable =
-          lockingService.withLockExecuteAndRelease(returnId, internalId)(testData).failed.futureValue
+          lockingService.withLockExecuteAndRelease(returnId, internalId)(() => testData).failed.futureValue
         result            mustBe an[Exception]
         result.getMessage mustBe exceptionMessage
 

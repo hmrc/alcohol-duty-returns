@@ -16,16 +16,15 @@
 
 package uk.gov.hmrc.alcoholdutyreturns.base
 
-import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock.{aResponse, getRequestedFor, postRequestedFor, urlEqualTo}
 import com.github.tomakehurst.wiremock.matching.EqualToJsonPattern
+import org.scalatest.Suite
+import uk.gov.hmrc.http.test.WireMockSupport
 
-trait WireMockHelper {
-  val wireMockServer: WireMockServer
-  val wireMockHost: String
-  val wireMockPort: Int
-
+trait WireMockHelper extends WireMockSupport {
+  this: Suite =>
+  
   protected val endpointConfigurationPath = "microservice.services"
 
   protected def getWireMockAppConfig(endpointNames: Seq[String]): Map[String, Any] =

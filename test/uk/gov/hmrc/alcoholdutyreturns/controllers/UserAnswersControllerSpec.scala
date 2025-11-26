@@ -17,15 +17,15 @@
 package uk.gov.hmrc.alcoholdutyreturns.controllers
 
 import cats.data.EitherT
-import org.mockito.ArgumentMatchers
-import org.mockito.ArgumentMatchers.any
-import org.mockito.ArgumentMatchersSugar.eqTo
+import org.mockito.ArgumentMatchers.{any, eq as eqTo}
+import org.mockito.Mockito.when
 import play.api.libs.json.Json
 import play.api.mvc.Result
 import uk.gov.hmrc.alcoholdutyreturns.base.SpecBase
-import uk.gov.hmrc.alcoholdutyreturns.models.{ApprovalStatus, ErrorCodes}
+import uk.gov.hmrc.alcoholdutyreturns.models.{ApprovalStatus, ErrorCodes, ObligationData, SubscriptionSummary, UserAnswers}
 import uk.gov.hmrc.alcoholdutyreturns.repositories.{UpdateFailure, UpdateSuccess, UserAnswersRepository}
 import uk.gov.hmrc.alcoholdutyreturns.service.{AccountService, FakeLockingService, LockingService}
+import uk.gov.hmrc.play.bootstrap.http.ErrorResponse
 
 import java.time.LocalDate
 import scala.concurrent.Future
@@ -47,8 +47,7 @@ class UserAnswersControllerSpec extends SpecBase {
 
   "get must" - {
     "return 200 OK with an existing user answers when there is one for the id" in {
-      when(mockUserAnswersRepository.get(ArgumentMatchers.eq(returnId)))
-        .thenReturn(Future.successful(Some(emptyUserAnswers)))
+      when(mockUserAnswersRepository.get(eqTo(returnId))).thenReturn(Future.successful(Some(emptyUserAnswers)))
 
       val result: Future[Result] =
         controller.get(appaId, periodKey)(fakeRequest)
@@ -58,8 +57,7 @@ class UserAnswersControllerSpec extends SpecBase {
     }
 
     "return 404 NOT_FOUND when there is no user answers for the id" in {
-      when(mockUserAnswersRepository.get(ArgumentMatchers.eq(returnId)))
-        .thenReturn(Future.successful(None))
+      when(mockUserAnswersRepository.get(eqTo(returnId))).thenReturn(Future.successful(None))
 
       val result: Future[Result] =
         controller.get(appaId, periodKey)(fakeRequest)
@@ -81,8 +79,7 @@ class UserAnswersControllerSpec extends SpecBase {
         cc
       )
 
-      when(mockUserAnswersRepository.get(ArgumentMatchers.eq(returnId)))
-        .thenReturn(Future.successful(None))
+      when(mockUserAnswersRepository.get(eqTo(returnId))).thenReturn(Future.successful(None))
 
       val result: Future[Result] =
         controller.get(appaId, periodKey)(fakeRequest)
@@ -143,9 +140,9 @@ class UserAnswersControllerSpec extends SpecBase {
     "return 201 CREATED with the user answers that was created when the account service returns a valid UserAnswers" in {
       when(mockUserAnswersRepository.add(any())).thenReturn(Future.successful(userAnswers))
       when(mockAccountService.getSubscriptionSummaryAndCheckStatus(eqTo(appaId))(any(), any()))
-        .thenReturn(EitherT.rightT(subscriptionSummary))
+        .thenReturn(EitherT.rightT[Future, SubscriptionSummary](subscriptionSummary))
       when(mockAccountService.getOpenObligation(eqTo(returnId))(any(), any()))
-        .thenReturn(EitherT.rightT(getObligationData(LocalDate.now(clock))))
+        .thenReturn(EitherT.rightT[Future, ObligationData](getObligationData(LocalDate.now(clock))))
 
       val result: Future[Result] =
         controller.createUserAnswers()(
@@ -172,9 +169,9 @@ class UserAnswersControllerSpec extends SpecBase {
 
       when(mockUserAnswersRepository.add(any())).thenReturn(Future.successful(userAnswers))
       when(mockAccountService.getSubscriptionSummaryAndCheckStatus(eqTo(appaId))(any(), any()))
-        .thenReturn(EitherT.rightT(subscriptionSummary))
+        .thenReturn(EitherT.rightT[Future, SubscriptionSummary](subscriptionSummary))
       when(mockAccountService.getOpenObligation(eqTo(returnId))(any(), any()))
-        .thenReturn(EitherT.rightT(getObligationData(LocalDate.now(clock))))
+        .thenReturn(EitherT.rightT[Future, ObligationData](getObligationData(LocalDate.now(clock))))
 
       val result: Future[Result] =
         controller.createUserAnswers()(
@@ -193,7 +190,7 @@ class UserAnswersControllerSpec extends SpecBase {
       s"return status ${errorResponse.statusCode} if the account service returns the error $errorName when getting the subscription summary" in {
         when(mockUserAnswersRepository.add(any())).thenReturn(Future.successful(userAnswers))
         when(mockAccountService.getSubscriptionSummaryAndCheckStatus(eqTo(appaId))(any(), any()))
-          .thenReturn(EitherT.leftT(errorResponse))
+          .thenReturn(EitherT.leftT[Future, ErrorResponse](errorResponse))
 
         val result: Future[Result] =
           controller.createUserAnswers()(
@@ -215,9 +212,9 @@ class UserAnswersControllerSpec extends SpecBase {
       s"return the status ${errorResponse.statusCode} if the account service returns the error $errorName when getting the open obligations" in {
         when(mockUserAnswersRepository.add(any())).thenReturn(Future.successful(userAnswers))
         when(mockAccountService.getSubscriptionSummaryAndCheckStatus(eqTo(appaId))(any(), any()))
-          .thenReturn(EitherT.rightT(subscriptionSummary))
+          .thenReturn(EitherT.rightT[Future, SubscriptionSummary](subscriptionSummary))
         when(mockAccountService.getOpenObligation(eqTo(returnId))(any(), any()))
-          .thenReturn(EitherT.leftT(errorResponse))
+          .thenReturn(EitherT.leftT[Future, ErrorResponse](errorResponse))
 
         val result: Future[Result] =
           controller.createUserAnswers()(
@@ -232,8 +229,7 @@ class UserAnswersControllerSpec extends SpecBase {
 
   "delete must" - {
     "clear user answers and return 200 OK" in {
-      when(mockUserAnswersRepository.clearUserAnswersById(ArgumentMatchers.eq(returnId)))
-        .thenReturn(Future.successful(()))
+      when(mockUserAnswersRepository.clearUserAnswersById(eqTo(returnId))).thenReturn(Future.successful(()))
 
       val result: Future[Result] =
         controller.delete(appaId, periodKey)(fakeRequest)
@@ -255,8 +251,7 @@ class UserAnswersControllerSpec extends SpecBase {
         cc
       )
 
-      when(mockUserAnswersRepository.clearUserAnswersById(ArgumentMatchers.eq(returnId)))
-        .thenReturn(Future.successful(()))
+      when(mockUserAnswersRepository.clearUserAnswersById(eqTo(returnId))).thenReturn(Future.successful(()))
 
       val result: Future[Result] =
         controller.delete(appaId, periodKey)(fakeRequest)

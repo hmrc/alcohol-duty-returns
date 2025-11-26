@@ -39,7 +39,7 @@ object ReturnId {
     (
       (__ \ "appaId").write[String] and
         (__ \ "periodKey").write[String]
-    )(unlift(ReturnId.unapply))
+    )(o => Tuple.fromProductTyped(o))
 
   implicit val format: OFormat[ReturnId] = OFormat(reads, writes)
 }
@@ -98,7 +98,7 @@ object UserAnswers {
         (__ \ "startedTime").write(MongoJavatimeFormats.instantFormat) and
         (__ \ "lastUpdated").write(MongoJavatimeFormats.instantFormat) and
         (__ \ "validUntil").writeNullable(MongoJavatimeFormats.instantFormat)
-    )(unlift(UserAnswers.unapply))
+    )(o => Tuple.fromProductTyped(o))
 
   implicit val format: OFormat[UserAnswers] = OFormat(reads, writes)
 }

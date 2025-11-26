@@ -20,29 +20,28 @@ import generators.ModelGenerators
 import helpers.TestData
 import org.apache.pekko.actor.ActorSystem
 import org.apache.pekko.stream.Materializer
-import org.mockito.MockitoSugar
-import org.scalatest.{OptionValues, TryValues}
 import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
 import org.scalatest.freespec.AnyFreeSpec
 import org.scalatest.matchers.must.Matchers
+import org.scalatest.{OptionValues, TryValues}
+import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
-import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
-import play.api.{Application, Mode}
 import play.api.http.{HeaderNames, Status, Writeable}
 import play.api.inject.bind
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.mvc.{Result, Results}
 import play.api.test.Helpers.route
 import play.api.test.{DefaultAwaitTimeout, FakeRequest, ResultExtractors, Writeables}
+import play.api.{Application, Mode}
 import uk.gov.hmrc.alcoholdutyreturns.config.AppConfig
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.client.HttpClientV2
-import uk.gov.hmrc.http.test.{HttpClientV2Support, WireMockSupport}
+import uk.gov.hmrc.http.test.HttpClientV2Support
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import java.time.Clock
-import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.ExecutionContext.global
+import scala.concurrent.{ExecutionContext, Future}
 
 trait ISpecBase
     extends AnyFreeSpec
@@ -58,8 +57,6 @@ trait ISpecBase
     with Status
     with HeaderNames
     with MockitoSugar
-    with ScalaCheckPropertyChecks
-    with WireMockSupport
     with HttpClientV2Support
     with AuthStubs
     with IntegrationPatience

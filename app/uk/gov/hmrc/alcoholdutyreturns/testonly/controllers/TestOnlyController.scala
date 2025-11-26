@@ -16,12 +16,13 @@
 
 package uk.gov.hmrc.alcoholdutyreturns.testonly.controllers
 
+import org.mongodb.scala.SingleObservableFuture
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import uk.gov.hmrc.alcoholdutyreturns.controllers.actions.{AuthorisedAction, CheckAppaIdAction}
-import uk.gov.hmrc.alcoholdutyreturns.models.AlcoholRegime._
+import uk.gov.hmrc.alcoholdutyreturns.models.*
+import uk.gov.hmrc.alcoholdutyreturns.models.AlcoholRegime.*
 import uk.gov.hmrc.alcoholdutyreturns.models.ObligationStatus.Open
-import uk.gov.hmrc.alcoholdutyreturns.models._
 import uk.gov.hmrc.alcoholdutyreturns.repositories.UserAnswersRepository
 import uk.gov.hmrc.alcoholdutyreturns.service.LockingService
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
@@ -55,9 +56,9 @@ class TestOnlyController @Inject() (
 
         checkAppaId(appaId).invokeBlock[JsValue](
           request,
-          { implicit request =>
+          implicit request =>
             lockingService
-              .withLock(returnId, request.userId) {
+              .withLock(returnId, request.userId) { () =>
                 val alcoholRegimes      = getAlcoholRegimes(beer, cider, wine, spirits, OFP)
                 val subscriptionSummary = SubscriptionSummary(ApprovalStatus.Approved, alcoholRegimes)
                 val obligationData      = getObligationData(returnId.periodKey, LocalDate.now(clock))
@@ -72,7 +73,6 @@ class TestOnlyController @Inject() (
                 case Some(result) => result
                 case None         => Locked
               }
-          }
         )
       }
     }

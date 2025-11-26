@@ -16,16 +16,15 @@
 
 package uk.gov.hmrc.alcoholdutyreturns.service
 
-import com.networknt.schema.{InputFormat, JsonSchema, JsonSchemaFactory, SpecVersion}
 import com.networknt.schema.oas.OpenApi30
-import enumeratum.{Enum, EnumEntry}
+import com.networknt.schema.{InputFormat, JsonSchema, JsonSchemaFactory, SpecVersion}
 import play.api.libs.json.{Json, Writes}
 import play.api.{Environment, Logging}
 import uk.gov.hmrc.alcoholdutyreturns.config.AppConfig
 import uk.gov.hmrc.alcoholdutyreturns.models.returns.ReturnCreate
 
 import javax.inject.{Inject, Singleton}
-import scala.jdk.CollectionConverters._
+import scala.jdk.CollectionConverters.*
 import scala.jdk.FunctionConverters.enrichAsJavaConsumer
 import scala.util.{Failure, Success, Try}
 
@@ -35,19 +34,14 @@ class SchemaValidationService @Inject() (
   appConfig: AppConfig
 ) extends Logging {
 
-  /** Schemas are loaded when this object is created
-    *  This should be bound as an eagerSingleton() in Module to initialise on startup
+  /** Schemas are loaded when this object is created. This should be bound as an eagerSingleton() in Module to
+    * initialise on startup.
     */
 
-  private sealed trait SchemaType extends EnumEntry
+  private enum SchemaType:
+    case SubmitReturn
 
-  private object SchemaType extends Enum[SchemaType] {
-    val values = findValues
-
-    case object SubmitReturn extends SchemaType
-  }
-
-  import SchemaType._
+  import SchemaType.*
 
   private val schemaFileNames: Map[SchemaType, String] = Map(SubmitReturn -> "submitReturnSchema.json")
 
@@ -85,8 +79,8 @@ class SchemaValidationService @Inject() (
     val loadAttemptedSchemas = SchemaType.values.map { schema =>
       val fileName = schemaFileNames.getOrElse(
         schema, {
-          logger.error(s"Cannot find filename for schema ${schema.entryName}")
-          throw new RuntimeException(s"Cannot find filename for schema ${schema.entryName}")
+          logger.error(s"Cannot find filename for schema $schema")
+          throw new RuntimeException(s"Cannot find filename for schema $schema")
         }
       )
       loadSchema(fileName).map(schema -> _)
@@ -111,7 +105,7 @@ class SchemaValidationService @Inject() (
       schemas
         .get(SubmitReturn)
         .fold[Either[Throwable, JsonSchema]](
-          Left(new RuntimeException(s"Schema ${SubmitReturn.entryName} should have been loaded"))
+          Left(new RuntimeException(s"Schema $SubmitReturn should have been loaded"))
         )(schema => Right(schema))
     case _                                   =>
       logger.error(s"Attempting schema validation against unsupported object type ${obj.getClass.getTypeName}")
@@ -122,8 +116,8 @@ class SchemaValidationService @Inject() (
       )
   }
 
-  /**
-    * @return true if should continue, false if to fail with e.g. BadRequest
+  /** @return
+    *   true if should continue, false if to fail with e.g. BadRequest
     */
   def validateAgainstSchema[T](obj: T)(implicit writes: Writes[T]): Boolean =
     selectSchema(obj) match {

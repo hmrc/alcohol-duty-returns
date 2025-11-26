@@ -79,7 +79,7 @@ class AdrReturnSubmissionSpec extends SpecBase {
     }
   }
 
-  "AdrTypeOfSpirit must" - {
+  "AdrTypeOfSpirit must" -
     Map(
       TypeOfSpiritType.MaltSpirit                -> AdrTypeOfSpirit.Malt,
       TypeOfSpiritType.GrainSpirit               -> AdrTypeOfSpirit.Grain,
@@ -94,7 +94,6 @@ class AdrReturnSubmissionSpec extends SpecBase {
         AdrTypeOfSpirit.fromTypeOfSpiritType(typeOfSpiritType) mustBe adrTypeOfSpirit
       }
     }
-  }
 
   "AdrReturnSubmission must" - {
     "deserialise from json" in new SetUp {

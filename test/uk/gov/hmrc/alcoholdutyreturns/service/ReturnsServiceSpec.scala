@@ -18,11 +18,12 @@ package uk.gov.hmrc.alcoholdutyreturns.service
 
 import cats.data.EitherT
 import org.mockito.ArgumentMatchers.any
+import org.mockito.Mockito.{never, verify, when}
 import uk.gov.hmrc.alcoholdutyreturns.base.SpecBase
 import uk.gov.hmrc.alcoholdutyreturns.connector.{CalculatorConnector, ReturnsConnector}
-import uk.gov.hmrc.alcoholdutyreturns.models.{ErrorCodes, ReturnId}
 import uk.gov.hmrc.alcoholdutyreturns.models.calculation.CalculatedDutyDueByTaxType
 import uk.gov.hmrc.alcoholdutyreturns.models.returns.{ReturnCreate, ReturnCreatedDetails, TotalDutyDuebyTaxType}
+import uk.gov.hmrc.alcoholdutyreturns.models.{ErrorCodes, ReturnId}
 import uk.gov.hmrc.alcoholdutyreturns.repositories.UserAnswersRepository
 import uk.gov.hmrc.play.bootstrap.http.ErrorResponse
 

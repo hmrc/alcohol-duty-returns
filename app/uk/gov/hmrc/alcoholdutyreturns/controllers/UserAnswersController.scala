@@ -48,7 +48,7 @@ class UserAnswersController @Inject() (
     (authorise andThen checkAppaId(appaId)).async { implicit request =>
       val returnId = ReturnId(appaId, periodKey)
       lockingService
-        .withLock(returnId, request.userId) {
+        .withLock(returnId, request.userId) { () =>
           userAnswersRepository.get(returnId).map {
             case Some(ua) => Ok(Json.toJson(ua))
             case None     => NotFound
@@ -67,9 +67,9 @@ class UserAnswersController @Inject() (
 
         checkAppaId(appaId).invokeBlock[JsValue](
           request,
-          { implicit request =>
+          implicit request =>
             lockingService
-              .withLock(userAnswers.returnId, request.userId) {
+              .withLock(userAnswers.returnId, request.userId) { () =>
                 userAnswersRepository.set(userAnswers).map {
                   case UpdateSuccess => Ok(Json.toJson(userAnswers))
                   case UpdateFailure => NotFound
@@ -79,7 +79,6 @@ class UserAnswersController @Inject() (
                 case Some(result) => result
                 case None         => Locked
               }
-          }
         )
       }
     }
@@ -92,9 +91,9 @@ class UserAnswersController @Inject() (
 
         checkAppaId(appaId).invokeBlock[JsValue](
           request,
-          { implicit request =>
+          implicit request =>
             lockingService
-              .withLock(returnId, request.userId) {
+              .withLock(returnId, request.userId) { () =>
                 val eitherAccountDetails = for {
                   subscriptionSummary <- accountService.getSubscriptionSummaryAndCheckStatus(appaId)
                   obligationData      <- accountService.getOpenObligation(returnId)
@@ -121,7 +120,6 @@ class UserAnswersController @Inject() (
                 case Some(result) => result
                 case None         => Locked
               }
-          }
         )
       }
     }
@@ -130,7 +128,7 @@ class UserAnswersController @Inject() (
     (authorise andThen checkAppaId(appaId)).async { implicit request =>
       val returnId = ReturnId(appaId, periodKey)
       lockingService
-        .withLock(returnId, request.userId) {
+        .withLock(returnId, request.userId) { () =>
           userAnswersRepository.clearUserAnswersById(returnId).map { _ =>
             Ok(s"User answers deleted for user ${request.userId} on return $appaId/$periodKey")
           }

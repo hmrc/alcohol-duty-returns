@@ -18,19 +18,18 @@ package uk.gov.hmrc.alcoholdutyreturns.base
 
 import generators.ModelGenerators
 import helpers.TestData
-import org.mockito.MockitoSugar
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.freespec.AnyFreeSpec
 import org.scalatest.matchers.must.Matchers
 import org.scalatest.{BeforeAndAfterEach, OptionValues, TryValues}
+import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
-import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import play.api.Application
 import play.api.http.{HeaderNames, Status}
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.JsValue
-import play.api.mvc._
-import play.api.test.Helpers._
+import play.api.mvc.*
+import play.api.test.Helpers.*
 import play.api.test.{DefaultAwaitTimeout, FakeHeaders, FakeRequest, ResultExtractors}
 import uk.gov.hmrc.alcoholdutyreturns.config.AppConfig
 import uk.gov.hmrc.alcoholdutyreturns.controllers.actions.{FakeAuthorisedAction, FakeCheckAppaIdAction}
@@ -51,7 +50,6 @@ trait SpecBase
     with HeaderNames
     with GuiceOneAppPerSuite
     with MockitoSugar
-    with ScalaCheckPropertyChecks
     with BeforeAndAfterEach
     with TestData
     with ModelGenerators {
