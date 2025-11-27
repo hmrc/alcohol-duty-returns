@@ -16,8 +16,7 @@
 
 package uk.gov.hmrc.alcoholdutyreturns.models
 
-import play.api.http.Status._
-import play.api.libs.json.{Json, OFormat}
+import play.api.http.Status.*
 import uk.gov.hmrc.play.bootstrap.http.ErrorResponse
 
 object ErrorCodes {
@@ -31,13 +30,4 @@ object ErrorCodes {
   val unauthorisedRequest: ErrorResponse                                       = ErrorResponse(UNAUTHORIZED, "Unauthorised request")
   val unexpectedResponse: ErrorResponse                                        = ErrorResponse(INTERNAL_SERVER_ERROR, "Unexpected Response")
   val forbiddenResponse: ErrorResponse                                         = ErrorResponse(FORBIDDEN, "Forbidden request")
-}
-
-case class HttpErrorResponse(
-  code: String,
-  message: String
-)
-
-object HttpErrorResponse {
-  implicit val format: OFormat[HttpErrorResponse] = Json.format[HttpErrorResponse]
 }

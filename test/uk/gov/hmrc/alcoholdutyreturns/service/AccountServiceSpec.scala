@@ -55,7 +55,7 @@ class AccountServiceSpec extends SpecBase {
       }
     }
 
-    "return an error the connector returns one" in new SetUp {
+    "return an error if the connector returns one" in new SetUp {
       when(accountConnector.getSubscriptionSummary(eqTo(returnId.appaId))(any()))
         .thenReturn(EitherT.leftT[Future, ErrorResponse](ErrorCodes.invalidJson))
 
@@ -65,7 +65,7 @@ class AccountServiceSpec extends SpecBase {
     }
   }
 
-  "getOpenObligationData must" - {
+  "getOpenObligation must" - {
     "return obligation data if Open" in new SetUp {
       when(accountConnector.getOpenObligationData(eqTo(returnId))(any()))
         .thenReturn(EitherT.rightT[Future, ObligationData](obligationData))
