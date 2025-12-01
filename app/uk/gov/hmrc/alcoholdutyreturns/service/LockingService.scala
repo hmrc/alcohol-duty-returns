@@ -17,6 +17,7 @@
 package uk.gov.hmrc.alcoholdutyreturns.service
 
 import com.google.inject.{ImplementedBy, Singleton}
+import org.mongodb.scala.SingleObservableFuture
 import play.api.Logging
 import uk.gov.hmrc.alcoholdutyreturns.config.AppConfig
 import uk.gov.hmrc.alcoholdutyreturns.models.ReturnId
@@ -29,8 +30,8 @@ import scala.language.{implicitConversions, postfixOps}
 
 @ImplementedBy(classOf[LockingServiceImpl])
 trait LockingService {
-  def withLock[T](returnId: ReturnId, ownerId: String)(body: => Future[T]): Future[Option[T]]
-  def withLockExecuteAndRelease[T](returnId: ReturnId, userId: String)(body: => Future[T]): Future[Option[T]]
+  def withLock[T](returnId: ReturnId, ownerId: String)(body: () => Future[T]): Future[Option[T]]
+  def withLockExecuteAndRelease[T](returnId: ReturnId, userId: String)(body: () => Future[T]): Future[Option[T]]
   def keepAlive(returnId: ReturnId, ownerId: String): Future[Boolean]
   def releaseLock(returnId: ReturnId, ownerId: String): Future[Unit]
   def releaseAllLocks(): Future[Unit]
@@ -46,7 +47,7 @@ class LockingServiceImpl @Inject() (
 
   private val ttl = config.lockingDurationInSeconds seconds
 
-  def withLock[T](returnId: ReturnId, ownerId: String)(body: => Future[T]): Future[Option[T]] =
+  def withLock[T](returnId: ReturnId, ownerId: String)(body: () => Future[T]): Future[Option[T]] =
     (for {
       refreshed <- mongoLockRepository.refreshExpiry(returnId, ownerId, ttl)
       acquired  <- if (!refreshed) {
@@ -55,7 +56,7 @@ class LockingServiceImpl @Inject() (
                      Future.successful(false)
                    }
       result    <- if (refreshed || acquired) {
-                     body.map(Some(_))
+                     body().map(Some(_))
                    } else {
                      logger.info(s"The return $returnId is locked")
                      Future.successful(None)
@@ -65,7 +66,7 @@ class LockingServiceImpl @Inject() (
       Future.failed(ex)
     }
 
-  def withLockExecuteAndRelease[T](returnId: ReturnId, userId: String)(body: => Future[T]): Future[Option[T]] =
+  def withLockExecuteAndRelease[T](returnId: ReturnId, userId: String)(body: () => Future[T]): Future[Option[T]] =
     withLock(returnId, userId)(body).flatMap {
       case Some(value) =>
         mongoLockRepository
@@ -75,7 +76,7 @@ class LockingServiceImpl @Inject() (
     }
 
   def keepAlive(returnId: ReturnId, ownerId: String): Future[Boolean] =
-    withLock(returnId, ownerId)(Future.successful(())).map(_.isDefined)
+    withLock(returnId, ownerId)(() => Future.successful(())).map(_.isDefined)
 
   def releaseLock(returnId: ReturnId, ownerId: String): Future[Unit] =
     mongoLockRepository.releaseLock(returnId, ownerId)

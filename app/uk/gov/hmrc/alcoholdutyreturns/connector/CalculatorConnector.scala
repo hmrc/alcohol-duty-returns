@@ -20,6 +20,7 @@ import cats.data.EitherT
 import play.api.Logging
 import play.api.http.Status.BAD_REQUEST
 import play.api.libs.json.{Json, Reads, Writes}
+import play.api.libs.ws.JsonBodyWritables.writeableOf_JsValue
 import uk.gov.hmrc.alcoholdutyreturns.config.AppConfig
 import uk.gov.hmrc.alcoholdutyreturns.models.calculation.{CalculateDutyDueByTaxTypeRequest, CalculatedDutyDueByTaxType}
 import uk.gov.hmrc.alcoholdutyreturns.models.ErrorCodes

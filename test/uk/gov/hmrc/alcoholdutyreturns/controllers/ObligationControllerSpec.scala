@@ -22,8 +22,8 @@ import uk.gov.hmrc.alcoholdutyreturns.base.SpecBase
 import uk.gov.hmrc.alcoholdutyreturns.models.{ErrorCodes, FulfilledObligations, ObligationData}
 import uk.gov.hmrc.alcoholdutyreturns.service.AccountService
 import play.api.libs.json.Json
-import org.mockito.ArgumentMatchers.any
-import org.mockito.ArgumentMatchersSugar.eqTo
+import org.mockito.ArgumentMatchers.{any, eq as eqTo}
+import org.mockito.Mockito.when
 import uk.gov.hmrc.play.bootstrap.http.ErrorResponse
 
 import java.time.LocalDate
@@ -57,7 +57,7 @@ class ObligationControllerSpec extends SpecBase {
   "getFulfilledObligationDetails must" - {
     "return 200 OK with fulfilled obligations if successful" in new SetUp {
       when(mockAccountService.getFulfilledObligations(eqTo(appaId))(any(), any()))
-        .thenReturn(EitherT.rightT(fulfilledObligationData))
+        .thenReturn(EitherT.rightT[Future, Seq[FulfilledObligations]](fulfilledObligationData))
 
       val result: Future[Result] =
         controller.getFulfilledObligationDetails(appaId)(fakeRequest)
@@ -82,7 +82,7 @@ class ObligationControllerSpec extends SpecBase {
   "getOpenObligation must" - {
     "return 200 OK with obligation data if successful" in new SetUp {
       when(mockAccountService.getOpenObligation(eqTo(returnId))(any(), any()))
-        .thenReturn(EitherT.rightT(obligationData))
+        .thenReturn(EitherT.rightT[Future, ObligationData](obligationData))
 
       val result: Future[Result] =
         controller.getOpenObligation(appaId, periodKey)(fakeRequest)
@@ -99,7 +99,7 @@ class ObligationControllerSpec extends SpecBase {
     ).foreach { case (errorName, errorResponse) =>
       s"return the status ${errorResponse.statusCode} if the account service returns the error $errorName when getting the open obligation" in new SetUp {
         when(mockAccountService.getOpenObligation(eqTo(returnId))(any(), any()))
-          .thenReturn(EitherT.leftT(errorResponse))
+          .thenReturn(EitherT.leftT[Future, ErrorResponse](errorResponse))
 
         val result: Future[Result] =
           controller.getOpenObligation(appaId, periodKey)(fakeRequest)

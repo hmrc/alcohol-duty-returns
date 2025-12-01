@@ -16,9 +16,11 @@
 
 package uk.gov.hmrc.alcoholdutyreturns.base
 
+import org.scalatest.Suite
 import play.api.http.Status.OK
 
 trait AuthStubs extends WireMockHelper {
+  this: Suite =>
   val authUrl            = "/auth/authorise"
   val testAuthInternalId = "internalId"
 

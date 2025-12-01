@@ -20,8 +20,7 @@ import play.api.libs.json.{Json, OFormat}
 
 import java.time.Instant
 
-/**
-  * For showing an individual return
+/** For showing an individual return
   */
 case class AdrReturnDetails(
   identification: AdrReturnDetailsIdentification,

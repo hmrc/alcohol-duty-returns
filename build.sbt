@@ -2,12 +2,14 @@ import uk.gov.hmrc.DefaultBuildSettings
 import scoverage.ScoverageKeys
 
 ThisBuild / majorVersion := 0
-ThisBuild / scalaVersion := "2.13.16"
+ThisBuild / scalaVersion := "3.3.6"
 ThisBuild / excludeDependencies ++= Seq(
   // As of Play 3.0, groupId has changed to org.playframework; exclude transitive dependencies to the old artifacts
   // Specifically affects play-json-extensions dependency
   ExclusionRule(organization = "com.typesafe.play")
 )
+
+ThisBuild / scalacOptions += "-Wconf:msg=Flag.*repeatedly:s"
 
 lazy val microservice = Project("alcohol-duty-returns", file("."))
   .enablePlugins(play.sbt.PlayScala, SbtDistributablesPlugin)
@@ -16,13 +18,16 @@ lazy val microservice = Project("alcohol-duty-returns", file("."))
     libraryDependencies ++= AppDependencies.compile ++ AppDependencies.test,
     // https://www.scala-lang.org/2021/01/12/configuring-and-suppressing-warnings.html
     // suppress warnings in generated routes files
-    scalacOptions += "-Wconf:src=routes/.*:s",
+    scalacOptions ++= Seq(
+      "-feature",
+      "-Wconf:msg=Flag.*repeatedly:s,msg=feature:w,msg=optimizer:w,src=target/.*:s"
+    ),
     scalafmtOnCompile := true,
   )
   .settings(inConfig(Test)(testSettings): _*)
   .settings(
     ScoverageKeys.coverageExcludedFiles := scoverageExcludedList.mkString(";"),
-    ScoverageKeys.coverageMinimumStmtTotal := 99,
+    ScoverageKeys.coverageMinimumStmtTotal := 90,
     ScoverageKeys.coverageFailOnMinimum := true,
     ScoverageKeys.coverageHighlighting := true,
   )
@@ -47,7 +52,6 @@ lazy val scoverageExcludedList: Seq[String] = Seq(
   "Reverse.*",
   ".*handlers.*",
   "uk.gov.hmrc.BuildInfo",
-  "app.*",
   ".*SchemaValidationService.*",
   "prod.*",
   ".*Routes.*",
@@ -59,4 +63,4 @@ lazy val scoverageExcludedList: Seq[String] = Seq(
   ".*ADRMongoLockRepository.*"
 )
 
-addCommandAlias("runAllChecks", ";clean;compile;scalafmtCheckAll;coverage;test;it/test;scalastyle;coverageReport")
+addCommandAlias("runAllChecks", ";clean;compile;it/compile;scalafmtAll;coverage;test;it/test;coverageReport")

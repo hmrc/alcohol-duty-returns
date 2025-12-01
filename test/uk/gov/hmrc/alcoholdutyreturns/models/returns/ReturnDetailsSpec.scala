@@ -42,6 +42,14 @@ class ReturnDetailsSpec extends SpecBase {
   }
 
   "ReturnCreate must" - {
+    "serialise to json" in new SetUp {
+      Json.toJson(returnCreateSubmissionData) mustBe Json.parse(returnCreateJson)
+    }
+
+    "deserialise from json" in new SetUp {
+      Json.parse(returnCreateJson).as[ReturnCreate] mustBe returnCreateSubmissionData
+    }
+
     "be obtained from the submission data" in new SetUp {
       ReturnCreate.fromAdrReturnSubmission(returnSubmissionData, periodKey) mustBe returnCreateSubmissionData
         .copy(totalDutyDuebyTaxType = None)
@@ -331,6 +339,163 @@ class ReturnDetailsSpec extends SpecBase {
          |        ],
          |        "typeOfSpiritOther": "Coco Pops Vodka"
          |      }
+         |    }
+         |  }
+         |}""".stripMargin
+
+    val returnCreateJson =
+      s"""{
+         |  "periodKey": "24AA",
+         |  "alcoholProducts": {
+         |    "alcoholProductsProducedFilled": "1",
+         |    "regularReturn": [
+         |      {
+         |        "taxType": "331",
+         |        "dutyRate": 1.27,
+         |        "litresProduced": 1000.1,
+         |        "litresOfPureAlcohol": 100.101,
+         |        "dutyDue": 127.12
+         |      },
+         |      {
+         |        "taxType": "332",
+         |        "dutyRate": 1.57,
+         |        "litresProduced": 2000.21,
+         |        "litresOfPureAlcohol": 200.2022,
+         |        "dutyDue": 314.31
+         |      }
+         |    ]
+         |  },
+         |  "overDeclaration": {
+         |    "overDeclFilled": "1",
+         |    "reasonForOverDecl": "Submitted too much",
+         |    "overDeclarationProducts": [
+         |      {
+         |        "returnPeriodAffected": "24AD",
+         |        "taxType": "352",
+         |        "dutyRate": 1.32,
+         |        "litresProduced": 400.04,
+         |        "litresOfPureAlcohol": 40.0404,
+         |        "dutyDue": 52.85
+         |      }
+         |    ]
+         |  },
+         |  "underDeclaration": {
+         |    "underDeclFilled": "1",
+         |    "reasonForUnderDecl": "Submitted too little",
+         |    "underDeclarationProducts": [
+         |      {
+         |        "returnPeriodAffected": "24AC",
+         |        "taxType": "351",
+         |        "dutyRate": 2.32,
+         |        "litresProduced": 300.03,
+         |        "litresOfPureAlcohol": 30.0303,
+         |        "dutyDue": 69.67
+         |      }
+         |    ]
+         |  },
+         |  "spoiltProduct": {
+         |    "spoiltProdFilled": "1",
+         |    "spoiltProductProducts": [
+         |      {
+         |        "returnPeriodAffected": "24AE",
+         |        "taxType": "353",
+         |        "dutyRate": 1.82,
+         |        "litresProduced": 500.05,
+         |        "litresOfPureAlcohol": 50.0505,
+         |        "dutyDue": 91.09
+         |      }
+         |    ]
+         |  },
+         |  "drawback": {
+         |    "drawbackFilled": "1",
+         |    "drawbackProducts": [
+         |      {
+         |        "returnPeriodAffected": "24AF",
+         |        "taxType": "361",
+         |        "dutyRate": 2.21,
+         |        "litresProduced": 600.06,
+         |        "litresOfPureAlcohol": 60.0606,
+         |        "dutyDue": 132.73
+         |      }
+         |    ]
+         |  },
+         |  "repackagedDraught": {
+         |    "repDraughtFilled": "1",
+         |    "repackagedDraughtProducts": [
+         |      {
+         |        "returnPeriodAffected": "24AG",
+         |        "originaltaxType": "371",
+         |        "originaldutyRate": 0.27,
+         |        "newTaxType": "331",
+         |        "dutyRate": 1.27,
+         |        "litresOfRepackaging": 700.07,
+         |        "litresOfPureAlcohol": 70.0707,
+         |        "dutyDue": 70.07
+         |      }
+         |    ]
+         |  },
+         |  "totalDutyDuebyTaxType": [
+         |    {
+         |      "taxType": "332",
+         |      "totalDutyDueTaxType": 314.31
+         |    },
+         |    {
+         |      "taxType": "351",
+         |      "totalDutyDueTaxType": 69.67
+         |    },
+         |    {
+         |      "taxType": "361",
+         |      "totalDutyDueTaxType": -132.73
+         |    },
+         |    {
+         |      "taxType": "353",
+         |      "totalDutyDueTaxType": -91.09
+         |    },
+         |    {
+         |      "taxType": "352",
+         |      "totalDutyDueTaxType": -52.85
+         |    },
+         |    {
+         |      "taxType": "331",
+         |      "totalDutyDueTaxType": 197.19
+         |    }
+         |  ],
+         |  "totalDutyDue": {
+         |    "totalDutyDueAlcoholProducts": 441.53,
+         |    "totalDutyOverDeclaration": 52.85,
+         |    "totalDutyUnderDeclaration": 69.67,
+         |    "totalDutySpoiltProduct": 91.09,
+         |    "totalDutyDrawback": 132.73,
+         |    "totalDutyRepDraughtProducts": 70.07,
+         |    "totalDutyDue": 304.6
+         |  },
+         |  "netDutySuspension": {
+         |    "netDutySuspensionFilled": "1",
+         |    "netDutySuspensionProducts": {
+         |      "totalLtsBeer": 101.1,
+         |      "totalLtsWine": 202.2,
+         |      "totalLtsCider": 303.3,
+         |      "totalLtsSpirit": 404.4,
+         |      "totalLtsOtherFermented": 505.5,
+         |      "totalLtsPureAlcoholBeer": 1010.1011,
+         |      "totalLtsPureAlcoholWine": 2020.2022,
+         |      "totalLtsPureAlcoholCider": 3030.3033,
+         |      "totalLtsPureAlcoholSpirit": 4040.4044,
+         |      "totalLtsPureAlcoholOtherFermented": 5050.5055
+         |    }
+         |  },
+         |  "spiritsProduced": {
+         |    "spiritsProdFilled": "1",
+         |    "spiritsProduced": {
+         |      "totalSpirits": 123.45,
+         |      "scotchWhiskey": 234.56,
+         |      "irishWhisky": 345.67,
+         |      "typeOfSpirit": [
+         |        "01",
+         |        "05",
+         |        "08"
+         |      ],
+         |      "typeOfSpiritOther": "MaltyBeer"
          |    }
          |  }
          |}""".stripMargin

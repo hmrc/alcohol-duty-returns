@@ -17,13 +17,14 @@
 package uk.gov.hmrc.alcoholdutyreturns.controllers
 
 import cats.data.EitherT
-import org.mockito.ArgumentMatchers.any
-import org.mockito.ArgumentMatchersSugar.eqTo
+import org.mockito.ArgumentMatchers.{any, eq as eqTo}
+import org.mockito.Mockito.when
 import play.api.libs.json.Json
 import play.api.mvc.Result
 import uk.gov.hmrc.alcoholdutyreturns.base.SpecBase
-import uk.gov.hmrc.alcoholdutyreturns.models.{ApprovalStatus, ErrorCodes}
+import uk.gov.hmrc.alcoholdutyreturns.models.{ApprovalStatus, ErrorCodes, SubscriptionSummary}
 import uk.gov.hmrc.alcoholdutyreturns.service.AccountService
+import uk.gov.hmrc.play.bootstrap.http.ErrorResponse
 
 import scala.concurrent.Future
 
@@ -31,7 +32,7 @@ class SubscriptionControllerSpec extends SpecBase {
   "getValidSubscriptionRegimes must" - {
     "return 200 OK with subscription regimes if successful" in new SetUp {
       when(mockAccountService.getSubscriptionSummaryAndCheckStatus(eqTo(appaId))(any(), any()))
-        .thenReturn(EitherT.rightT(subscriptionSummary))
+        .thenReturn(EitherT.rightT[Future, SubscriptionSummary](subscriptionSummary))
 
       val result: Future[Result] =
         controller.getValidSubscriptionRegimes(appaId)(fakeRequest)
@@ -48,7 +49,7 @@ class SubscriptionControllerSpec extends SpecBase {
     ).foreach { case (errorName, errorResponse) =>
       s"return status ${errorResponse.statusCode} if the account service returns the error $errorName when getting the subscription summary" in new SetUp {
         when(mockAccountService.getSubscriptionSummaryAndCheckStatus(eqTo(appaId))(any(), any()))
-          .thenReturn(EitherT.leftT(errorResponse))
+          .thenReturn(EitherT.leftT[Future, ErrorResponse](errorResponse))
 
         val result: Future[Result] =
           controller.getValidSubscriptionRegimes(appaId)(fakeRequest)

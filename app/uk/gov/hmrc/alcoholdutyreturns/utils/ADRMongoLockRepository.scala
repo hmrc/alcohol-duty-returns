@@ -25,7 +25,7 @@ import uk.gov.hmrc.mongo.lock.{Lock, LockRepository}
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 import uk.gov.hmrc.mongo.{MongoComponent, TimestampSupport}
 
-import java.time.{Instant, Duration => JavaDuration}
+import java.time.{Duration => JavaDuration, Instant}
 import java.util.concurrent.TimeUnit
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.duration.Duration

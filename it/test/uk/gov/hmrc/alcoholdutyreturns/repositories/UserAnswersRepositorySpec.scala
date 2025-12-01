@@ -17,6 +17,7 @@
 package uk.gov.hmrc.alcoholdutyreturns.repositories
 
 import org.mongodb.scala.model.Filters
+import org.mockito.Mockito.when
 import uk.gov.hmrc.alcoholdutyreturns.base.ISpecBase
 import uk.gov.hmrc.alcoholdutyreturns.config.AppConfig
 import uk.gov.hmrc.alcoholdutyreturns.models.{ReturnId, UserAnswers}
@@ -26,14 +27,14 @@ import java.time.Instant
 import java.time.temporal.ChronoUnit
 
 class UserAnswersRepositorySpec extends ISpecBase with DefaultPlayMongoRepositorySupport[UserAnswers] {
-  private val instant          = Instant.now(clock)
+  private val instant = Instant.now(clock)
 
-  private val DB_TTL_IN_SEC = 100
+  private val DB_TTL_IN_SEC: Long = 100
 
   private val mockAppConfig = mock[AppConfig]
   when(mockAppConfig.dbTimeToLiveInSeconds) thenReturn DB_TTL_IN_SEC
 
-  protected override val repository = new UserAnswersRepository(
+  protected override val repository: UserAnswersRepository = new UserAnswersRepository(
     mongoComponent = mongoComponent,
     appConfig = mockAppConfig,
     clock = clock
