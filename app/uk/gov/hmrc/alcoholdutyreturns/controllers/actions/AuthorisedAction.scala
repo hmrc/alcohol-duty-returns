@@ -64,7 +64,7 @@ class BaseAuthorisedAction @Inject() (
       val internalId: String = getOrElseFailWithUnauthorised(optInternalId, "Unable to retrieve internalId")
       block(IdentifierRequest(request, getAppaId(enrolments), internalId))
     } recover { case e: AuthorisationException =>
-      logger.debug("Got AuthorisationException:", e)
+      logger.debug("[AuthorisedAction] [invokeBlock] Got AuthorisationException:", e)
       Unauthorized(
         Json.toJson(
           ErrorResponse(
@@ -91,7 +91,9 @@ class BaseAuthorisedAction @Inject() (
 
   private def getOrElseFailWithUnauthorised[T](o: Option[T], failureMessage: String): T =
     o.getOrElse {
-      logger.warn(s"Authorised Action failed with error: $failureMessage")
+      logger.warn(
+        s"[AuthorisedAction] [getOrElseFailWithUnauthorised] Authorised Action failed with error: $failureMessage"
+      )
       throw new IllegalStateException(failureMessage)
     }
 }
