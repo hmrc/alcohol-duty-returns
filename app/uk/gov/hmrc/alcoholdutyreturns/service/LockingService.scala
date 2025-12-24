@@ -58,11 +58,11 @@ class LockingServiceImpl @Inject() (
       result    <- if (refreshed || acquired) {
                      body().map(Some(_))
                    } else {
-                     logger.info(s"The return $returnId is locked")
+                     logger.info(s"[LockingService] [withLock] The return $returnId is locked")
                      Future.successful(None)
                    }
     } yield result).recoverWith { case ex =>
-      logger.warn("Exception thrown in locking service", ex)
+      logger.warn("[LockingService] [withLock] Exception thrown in locking service", ex)
       Future.failed(ex)
     }
 

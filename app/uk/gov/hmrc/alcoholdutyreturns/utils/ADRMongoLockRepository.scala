@@ -73,7 +73,9 @@ class ADRMongoLockRepository @Inject() (
                         .toFuture()
       _             =
         if (deleteResult.getDeletedCount != 0) {
-          logger.info(s"Removed ${deleteResult.getDeletedCount} expired locks for $lockId")
+          logger.info(
+            s"[ADRMongoLockRepository] [takeLock] Removed ${deleteResult.getDeletedCount} expired locks for $lockId"
+          )
         }
       lock          = Lock(
                         id = lockId,
@@ -84,15 +86,17 @@ class ADRMongoLockRepository @Inject() (
       _            <- collection
                         .insertOne(lock)
                         .toFuture()
-      _             = logger.debug(s"Took lock '$lockId' for '$owner' at $now. Expires at: $expiryTime")
+      _             = logger.debug(
+                        s"[ADRMongoLockRepository] [takeLock] Took lock '$lockId' for '$owner' at $now. Expires at: $expiryTime"
+                      )
     } yield Some(lock)).recover { case DuplicateKey(_) =>
-      logger.debug(s"Unable to take lock '$lockId' for '$owner'")
+      logger.debug(s"[ADRMongoLockRepository] [takeLock] Unable to take lock '$lockId' for '$owner'")
       None
     }
   }
 
   override def releaseLock(lockId: String, owner: String): Future[Unit] = {
-    logger.debug(s"Releasing lock '$lockId' for '$owner'")
+    logger.debug(s"[ADRMongoLockRepository] [releaseLock] Releasing lock '$lockId' for '$owner'")
     collection
       .deleteOne(
         and(
@@ -106,7 +110,9 @@ class ADRMongoLockRepository @Inject() (
 
   override def disownLock(lockId: String, owner: String, updatedExpiry: Option[Instant] = None): Future[Unit] = {
     logger.debug(
-      s"Disowning lock '$lockId'" + updatedExpiry.map(exp => s" and setting expiryTime to '$exp'").getOrElse("")
+      s"[ADRMongoLockRepository] [disownLock] Disowning lock '$lockId'" + updatedExpiry
+        .map(exp => s" and setting expiryTime to '$exp'")
+        .getOrElse("")
     )
     val expiryUpdate = updatedExpiry.map(exp => Updates.set(Lock.expiryTime, exp)).toSeq
     collection
@@ -140,14 +146,18 @@ class ADRMongoLockRepository @Inject() (
       .toFutureOption()
       .map {
         case Some(_) =>
-          logger.debug(s"Renewed lock '$lockId' for '$owner' at $timeCreated.  Expires at: $expiryTime")
+          logger.debug(
+            s"[ADRMongoLockRepository] [refreshExpiry] Renewed lock '$lockId' for '$owner' at $timeCreated.  Expires at: $expiryTime"
+          )
           true
         case None    =>
-          logger.debug(s"Could not renew lock '$lockId' for '$owner' that does not exist or has expired")
+          logger.debug(
+            s"[ADRMongoLockRepository] [refreshExpiry] Could not renew lock '$lockId' for '$owner' that does not exist or has expired"
+          )
           false
       }
       .recover { case DuplicateKey(_) =>
-        logger.debug(s"Unable to renew lock '$lockId' for '$owner'")
+        logger.debug(s"[ADRMongoLockRepository] [refreshExpiry] Unable to renew lock '$lockId' for '$owner'")
         false
       }
   }

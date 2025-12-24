@@ -54,17 +54,17 @@ class CalculatorConnector @Inject() (
               case Success(result) =>
                 Right(result)
               case Failure(e)      =>
-                logger.warn(s"Parsing failed for calculation result", e)
+                logger.warn(s"[CalculatorConnector] [performCalculation] Parsing failed for calculation result", e)
                 Left(ErrorCodes.invalidJson)
             }
           case Left(errorResponse) if errorResponse.statusCode == BAD_REQUEST =>
             logger.warn(
-              s"Received bad request from calculator API: ${errorResponse.message}"
+              s"[CalculatorConnector] [performCalculation] Received bad request from calculator API: ${errorResponse.message}"
             )
             Left(ErrorCodes.badRequest)
           case Left(errorResponse)                                            =>
             logger.warn(
-              s"Received unexpected response from calculator API: ${errorResponse.statusCode} ${errorResponse.message}"
+              s"[CalculatorConnector] [performCalculation] Received unexpected response from calculator API: ${errorResponse.statusCode} ${errorResponse.message}"
             )
             Left(ErrorCodes.unexpectedResponse)
         }
@@ -73,13 +73,19 @@ class CalculatorConnector @Inject() (
   def calculateDutyDueByTaxType(declarationsByTaxTypeRequest: CalculateDutyDueByTaxTypeRequest)(implicit
     hc: HeaderCarrier
   ): EitherT[Future, ErrorResponse, CalculatedDutyDueByTaxType] = {
-    logger.info("Requesting calculation of duty due by tax type")
+    logger.info("[CalculatorConnector] [calculateDutyDueByTaxType] Requesting calculation of duty due by tax type")
     performCalculation[CalculateDutyDueByTaxTypeRequest, CalculatedDutyDueByTaxType](
       config.getCalculateDutyDueByTaxTypeUrl,
       declarationsByTaxTypeRequest
     ).biSemiflatTap(
-      _ => Future.successful(logger.warn("Calculation of duty due by tax type failed")),
-      _ => Future.successful(logger.info("Calculation of duty due by tax type succeeded"))
+      _ =>
+        Future.successful(
+          logger.warn("[CalculatorConnector] [calculateDutyDueByTaxType] Calculation of duty due by tax type failed")
+        ),
+      _ =>
+        Future.successful(
+          logger.info("[CalculatorConnector] [calculateDutyDueByTaxType] Calculation of duty due by tax type succeeded")
+        )
     )
   }
 }

@@ -39,14 +39,18 @@ class AccountService @Inject() (
       .getSubscriptionSummary(appaId)
       .fold(
         error => {
-          logger.warn(s"Unable to get subscription summary for $appaId - ${error.statusCode} ${error.message}")
+          logger.warn(
+            s"[AccountService] [getSubscriptionSummaryAndCheckStatus] Unable to get subscription summary for $appaId - ${error.statusCode} ${error.message}"
+          )
           Left(error)
         },
         subscriptionSummary =>
           subscriptionSummary.approvalStatus match {
             case Approved | Insolvent => Right(subscriptionSummary)
             case status               =>
-              logger.warn(s"Invalid subscription status for $appaId ${status.entryName}")
+              logger.warn(
+                s"[AccountService] [getSubscriptionSummaryAndCheckStatus] Invalid subscription status for $appaId ${status.entryName}"
+              )
               Left(ErrorCodes.invalidSubscriptionStatus(status))
           }
       )
@@ -61,7 +65,7 @@ class AccountService @Inject() (
         .fold(
           error => {
             logger.warn(
-              s"Unable to get an open obligation for ${returnId.appaId} ${returnId.periodKey} - ${error.statusCode} ${error.message}"
+              s"[AccountService] [getOpenObligation] Unable to get an open obligation for ${returnId.appaId} ${returnId.periodKey} - ${error.statusCode} ${error.message}"
             )
             Left(error)
           },
@@ -70,7 +74,7 @@ class AccountService @Inject() (
               case Open      => Right(obligation)
               case Fulfilled =>
                 logger.warn(
-                  s"Unexpected fulfilled obligation returned (expected open) for ${returnId.appaId} ${returnId.periodKey}"
+                  s"[AccountService] [getOpenObligation] Unexpected fulfilled obligation returned (expected open) for ${returnId.appaId} ${returnId.periodKey}"
                 )
                 Left(ErrorCodes.obligationFulfilled)
             }
@@ -81,7 +85,9 @@ class AccountService @Inject() (
     appaId: String
   )(implicit hc: HeaderCarrier, ec: ExecutionContext): EitherT[Future, ErrorResponse, Seq[ObligationData]] =
     accountConnector.getOpenObligations(appaId).leftFlatMap { error =>
-      logger.warn(s"Unable to get open obligations for $appaId - ${error.statusCode} ${error.message}")
+      logger.warn(
+        s"[AccountService] [getOpenObligations] Unable to get open obligations for $appaId - ${error.statusCode} ${error.message}"
+      )
       EitherT.leftT[Future, Seq[ObligationData]](ErrorCodes.unexpectedResponse)
     }
 
@@ -89,7 +95,9 @@ class AccountService @Inject() (
     appaId: String
   )(implicit hc: HeaderCarrier, ec: ExecutionContext): EitherT[Future, ErrorResponse, Seq[FulfilledObligations]] =
     accountConnector.getFulfilledObligations(appaId).leftFlatMap { error =>
-      logger.warn(s"Unable to get fulfilled obligations for $appaId - ${error.statusCode} ${error.message}")
+      logger.warn(
+        s"[AccountService] [getFulfilledObligations] Unable to get fulfilled obligations for $appaId - ${error.statusCode} ${error.message}"
+      )
       EitherT.leftT[Future, Seq[FulfilledObligations]](ErrorCodes.unexpectedResponse)
     }
 }

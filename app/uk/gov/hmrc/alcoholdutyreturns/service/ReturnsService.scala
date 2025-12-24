@@ -78,7 +78,7 @@ class ReturnsService @Inject() (
                 .get(returnId)
                 .recover { case _ =>
                   logger.warn(
-                    s"Failed retrieving user answers for returnId=$returnId. Continuing the process and auditing without user answers. "
+                    s"[ReturnsService] [submitReturn] Failed retrieving user answers for returnId=$returnId. Continuing the process and auditing without user answers. "
                   )
                   None
                 }
@@ -91,7 +91,7 @@ class ReturnsService @Inject() (
                 .get(returnId)
                 .recover { case _ =>
                   logger.warn(
-                    s"Failed retrieving user answers for returnId=$returnId. Continuing the process without user answers."
+                    s"[ReturnsService] [submitReturn]Failed retrieving user answers for returnId=$returnId. Continuing the process without user answers."
                   )
                   None
                 }

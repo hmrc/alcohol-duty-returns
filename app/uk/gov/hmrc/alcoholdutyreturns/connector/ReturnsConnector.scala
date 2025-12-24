@@ -56,7 +56,7 @@ class ReturnsConnector @Inject() (
       delay = config.retryAttemptsDelay
     ).recoverWith { error =>
       logger.error(
-        s"An exception was returned while trying to get return for (appaId ${returnId.appaId}, periodKey ${returnId.periodKey}): $error"
+        s"[ReturnsConnector] [getReturn] An exception was returned while trying to get return for (appaId ${returnId.appaId}, periodKey ${returnId.periodKey}): $error"
       )
       Future.successful(Left(ErrorResponse(INTERNAL_SERVER_ERROR, ErrorCodes.unexpectedResponse.message)))
     }
@@ -71,7 +71,7 @@ class ReturnsConnector @Inject() (
         delay = config.retryAttemptsDelay
       ).recoverWith { error =>
         logger.error(
-          s"Received unexpected response from submitReturn API (appaId $appaId, periodKey $returnToSubmit.periodKey). Error: ${error.getMessage}"
+          s"[ReturnsConnector] [submitReturn] Received unexpected response from submitReturn API (appaId $appaId, periodKey $returnToSubmit.periodKey). Error: ${error.getMessage}"
         )
         Future.successful(Left(ErrorResponse(INTERNAL_SERVER_ERROR, ErrorCodes.unexpectedResponse.message)))
       }
@@ -81,7 +81,9 @@ class ReturnsConnector @Inject() (
     hc: HeaderCarrier
   ): Future[Either[ErrorResponse, GetReturnDetails]] =
     circuitBreakerProvider.get().withCircuitBreaker {
-      logger.info(s"Getting return (appaId ${returnId.appaId}, periodKey ${returnId.periodKey})")
+      logger.info(
+        s"[ReturnsConnector] [getReturn] Getting return (appaId ${returnId.appaId}, periodKey ${returnId.periodKey})"
+      )
       httpClient
         .get(url"${config.getReturnUrl(returnId)}")
         .setHeader(headers.getReturnsHeaders: _*)
@@ -95,26 +97,30 @@ class ReturnsConnector @Inject() (
               } match {
                 case Success(returnDetailsSuccess) =>
                   logger
-                    .info(s"Return obtained successfully (appaId ${returnId.appaId}, periodKey ${returnId.periodKey})")
+                    .info(
+                      s"[ReturnsConnector] [getReturn] Return obtained successfully (appaId ${returnId.appaId}, periodKey ${returnId.periodKey})"
+                    )
                   Future.successful(Right(returnDetailsSuccess.success))
                 case Failure(e)                    =>
                   logger.error(
-                    s"Parsing failed for return (appaId ${returnId.appaId}, periodKey ${returnId.periodKey})",
+                    s"[ReturnsConnector] [getReturn] Parsing failed for return (appaId ${returnId.appaId}, periodKey ${returnId.periodKey})",
                     e
                   )
                   Future.successful(Left(ErrorCodes.invalidJson))
               }
             case BAD_REQUEST          =>
               logger.warn(
-                s"Bad request returned for get return (appaId ${returnId.appaId}, periodKey ${returnId.periodKey})"
+                s"[ReturnsConnector] [getReturn] Bad request returned for get return (appaId ${returnId.appaId}, periodKey ${returnId.periodKey})"
               )
               Future.successful(Left(ErrorCodes.badRequest))
             case NOT_FOUND            =>
-              logger.warn(s"Return not found (appaId ${returnId.appaId}, periodKey ${returnId.periodKey})")
+              logger.warn(
+                s"[ReturnsConnector] [getReturn] Return not found (appaId ${returnId.appaId}, periodKey ${returnId.periodKey})"
+              )
               Future.successful(Left(ErrorCodes.entityNotFound))
             case UNPROCESSABLE_ENTITY =>
               logger.warn(
-                s"Get return unprocessable for (appaId ${returnId.appaId}, periodKey ${returnId.periodKey}): ${response.body}"
+                s"[ReturnsConnector] [getReturn] Get return unprocessable for (appaId ${returnId.appaId}, periodKey ${returnId.periodKey}): ${response.body}"
               )
               Future.successful(Left(ErrorCodes.unexpectedResponse))
             // Retry and log on final fail for the following transient errors
@@ -135,7 +141,7 @@ class ReturnsConnector @Inject() (
   ): Future[Either[ErrorResponse, ReturnCreatedDetails]] =
     circuitBreakerProvider.get().withCircuitBreaker {
       val periodKey = returnToSubmit.periodKey
-      logger.info(s"Submitting return (appaId $appaId, periodKey $periodKey)")
+      logger.info(s"[ReturnsConnector] [submitReturn] Submitting return (appaId $appaId, periodKey $periodKey)")
       httpClient
         .post(url"${config.submitReturnUrl}")
         .setHeader(headers.submitReturnHeaders(appaId): _*)
@@ -145,20 +151,27 @@ class ReturnsConnector @Inject() (
           case response if response.status == CREATED              =>
             Try(response.json.as[ReturnCreatedSuccess]) match {
               case Success(returnCreatedSuccess) =>
-                logger.info(s"Return submitted successfully (appaId $appaId, periodKey $periodKey)")
+                logger.info(
+                  s"[ReturnsConnector] [submitReturn] Return submitted successfully (appaId $appaId, periodKey $periodKey)"
+                )
                 Future.successful(Right(returnCreatedSuccess.success))
               case Failure(e)                    =>
                 logger
-                  .error(s"Parsing failed for submit return response (appaId $appaId, periodKey $periodKey)", e)
+                  .error(
+                    s"[ReturnsConnector] [submitReturn] Parsing failed for submit return response (appaId $appaId, periodKey $periodKey)",
+                    e
+                  )
                 Future.successful(Left(ErrorCodes.unexpectedResponse))
             }
           case response if response.status == BAD_REQUEST          =>
             logger.warn(
-              s"Bad request returned for submit return (appaId $appaId, periodKey $periodKey): ${response.body}"
+              s"[ReturnsConnector] [submitReturn] Bad request returned for submit return (appaId $appaId, periodKey $periodKey): ${response.body}"
             )
             Future.successful(Left(ErrorCodes.badRequest))
           case response if response.status == NOT_FOUND            =>
-            logger.warn(s"Not found returned for submit return (appaId $appaId, periodKey $periodKey)")
+            logger.warn(
+              s"[ReturnsConnector] [submitReturn] Not found returned for submit return (appaId $appaId, periodKey $periodKey)"
+            )
             Future.successful(Left(ErrorCodes.entityNotFound))
           case response if response.status == UNPROCESSABLE_ENTITY =>
             checkForDuplicateSubmission(response, appaId, periodKey)
@@ -182,12 +195,12 @@ class ReturnsConnector @Inject() (
     Try(response.json.as[DuplicateSubmissionError]) match {
       case Success(dupError) if dupError.errors.code == "044" || dupError.errors.code == "999" =>
         logger.warn(
-          s"Return already submitted (appaId $appaId, periodKey $periodKey) - Error code: ${dupError.errors.code}"
+          s"[ReturnsConnector] [submitReturn] Return already submitted (appaId $appaId, periodKey $periodKey) - Error code: ${dupError.errors.code}"
         )
         Future.successful(Left(ErrorCodes.duplicateSubmission))
       case _                                                                                   =>
         logger.warn(
-          s"Unprocessable entity returned for submit return response (appaId $appaId, periodKey $periodKey): ${response.body}"
+          s"[ReturnsConnector] [submitReturn] Unprocessable entity returned for submit return response (appaId $appaId, periodKey $periodKey): ${response.body}"
         )
         Future.successful(Left(ErrorCodes.unexpectedResponse))
     }

@@ -50,12 +50,12 @@ class AccountConnector @Inject() (
               .fold[Either[ErrorResponse, T]](Left(ErrorCodes.invalidJson))(Right(_))
           case Left(errorResponse) if errorResponse.statusCode == NOT_FOUND =>
             logger.warn(
-              s"Received Not Found from accounts API: ${errorResponse.statusCode} ${errorResponse.message}"
+              s"[AccountConnector] [getData] Received Not Found from accounts API: ${errorResponse.statusCode} ${errorResponse.message}"
             )
             Left(ErrorCodes.entityNotFound)
           case Left(errorResponse)                                          =>
             logger.warn(
-              s"Received unexpected response from accounts API: ${errorResponse.statusCode} ${errorResponse.message}"
+              s"[AccountConnector] [getData] Received unexpected response from accounts API: ${errorResponse.statusCode} ${errorResponse.message}"
             )
             Left(ErrorCodes.unexpectedResponse)
         }
