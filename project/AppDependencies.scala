@@ -9,7 +9,7 @@ object AppDependencies {
     "uk.gov.hmrc"       %% "bootstrap-backend-play-30" % bootstrapVersion,
     "uk.gov.hmrc.mongo" %% "hmrc-mongo-play-30"        % hmrcMongoVersion,
     "org.typelevel"     %% "cats-core"                 % "2.13.0",
-    "com.beachape"      %% "enumeratum-play"           % "1.9.5",
+    "com.beachape"      %% "enumeratum-play"           % "1.9.7",
     "com.networknt"     % "json-schema-validator"      % "1.5.9" exclude("org.slf4j", "slf4j-api")
       exclude("com.fasterxml.jackson.core", "jackson-databind"),
   )
