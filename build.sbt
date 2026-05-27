@@ -22,14 +22,14 @@ lazy val microservice = Project("alcohol-duty-returns", file("."))
       "-feature",
       "-Wconf:msg=Flag.*repeatedly:s,msg=feature:w,msg=optimizer:w,src=target/.*:s"
     ),
-    scalafmtOnCompile := true,
+    scalafmtOnCompile := true
   )
   .settings(inConfig(Test)(testSettings): _*)
   .settings(
     ScoverageKeys.coverageExcludedFiles := scoverageExcludedList.mkString(";"),
     ScoverageKeys.coverageMinimumStmtTotal := 90,
     ScoverageKeys.coverageFailOnMinimum := true,
-    ScoverageKeys.coverageHighlighting := true,
+    ScoverageKeys.coverageHighlighting := true
   )
   .settings(PlayKeys.playDefaultPort := 16001)
 
@@ -40,7 +40,7 @@ lazy val it = project
   .settings(libraryDependencies ++= AppDependencies.itDependencies)
   .settings(
     Test / parallelExecution := false,
-    Test / fork := true,
+    Test / fork := true
   )
 
 lazy val testSettings: Seq[Def.Setting[_]] = Seq(
@@ -63,4 +63,4 @@ lazy val scoverageExcludedList: Seq[String] = Seq(
   ".*ADRMongoLockRepository.*"
 )
 
-addCommandAlias("runAllChecks", ";clean;compile;it/compile;scalafmtAll;coverage;test;it/test;coverageReport")
+addCommandAlias("scalafmtAll", "all scalafmtSbt scalafmt Test/scalafmt it/Test/scalafmt")

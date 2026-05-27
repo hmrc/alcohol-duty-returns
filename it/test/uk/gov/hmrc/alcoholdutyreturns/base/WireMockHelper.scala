@@ -24,16 +24,16 @@ import uk.gov.hmrc.http.test.WireMockSupport
 
 trait WireMockHelper extends WireMockSupport {
   this: Suite =>
-  
+
   protected val endpointConfigurationPath = "microservice.services"
 
   protected def getWireMockAppConfig(endpointNames: Seq[String]): Map[String, Any] =
     endpointNames
       .flatMap(endpointName =>
         Seq(
-          s"$endpointConfigurationPath.$endpointName.host" -> wireMockHost,
-          s"$endpointConfigurationPath.$endpointName.port" -> wireMockPort,
-          s"$endpointConfigurationPath.retry.retry-attempts" -> 0,
+          s"$endpointConfigurationPath.$endpointName.host"        -> wireMockHost,
+          s"$endpointConfigurationPath.$endpointName.port"        -> wireMockPort,
+          s"$endpointConfigurationPath.retry.retry-attempts"      -> 0,
           s"$endpointConfigurationPath.retry.retry-attempts-post" -> 0
         )
       )
@@ -43,9 +43,9 @@ trait WireMockHelper extends WireMockSupport {
     endpointNames
       .flatMap(endpointName =>
         Seq(
-          s"$endpointConfigurationPath.$endpointName.host" -> wireMockHost,
-          s"$endpointConfigurationPath.$endpointName.port" -> wireMockPort,
-          s"$endpointConfigurationPath.retry.retry-attempts" -> 1,
+          s"$endpointConfigurationPath.$endpointName.host"        -> wireMockHost,
+          s"$endpointConfigurationPath.$endpointName.port"        -> wireMockPort,
+          s"$endpointConfigurationPath.retry.retry-attempts"      -> 1,
           s"$endpointConfigurationPath.retry.retry-attempts-post" -> 1
         )
       )
