@@ -130,17 +130,19 @@ class ReturnsConnectorSpec extends ISpecBase {
           Json.toJson(returnSubmission).toString(),
           Json.toJson(processingError(now)).toString()
         )
-        whenReady(connectorWithRetry.submitReturn(returnSubmission, id).value, timeout = Timeout(Span(3, Seconds))) { result =>
-          result mustBe Left(ErrorCodes.badRequest)
-          verifyPostWithoutRetry(submitReturnUrl)
+        whenReady(connectorWithRetry.submitReturn(returnSubmission, id).value, timeout = Timeout(Span(3, Seconds))) {
+          result =>
+            result mustBe Left(ErrorCodes.badRequest)
+            verifyPostWithoutRetry(submitReturnUrl)
         }
       }
 
       "return a NotFound error if the call returns a 404 response without retry" in new SetUp {
         stubPost(submitReturnUrl, NOT_FOUND, Json.toJson(returnSubmission).toString(), "")
-        whenReady(connectorWithRetry.submitReturn(returnSubmission, id).value, timeout = Timeout(Span(3, Seconds))) { result =>
-          result mustBe Left(ErrorCodes.entityNotFound)
-          verifyPostWithoutRetry(submitReturnUrl)
+        whenReady(connectorWithRetry.submitReturn(returnSubmission, id).value, timeout = Timeout(Span(3, Seconds))) {
+          result =>
+            result mustBe Left(ErrorCodes.entityNotFound)
+            verifyPostWithoutRetry(submitReturnUrl)
         }
       }
 
@@ -151,9 +153,10 @@ class ReturnsConnectorSpec extends ISpecBase {
           Json.toJson(returnSubmission).toString(),
           Json.toJson(duplicateSubmission044).toString()
         )
-        whenReady(connectorWithRetry.submitReturn(returnSubmission, id).value, timeout = Timeout(Span(3, Seconds))) { result =>
-          result mustBe Left(ErrorCodes.duplicateSubmission)
-          verifyPostWithoutRetry(submitReturnUrl)
+        whenReady(connectorWithRetry.submitReturn(returnSubmission, id).value, timeout = Timeout(Span(3, Seconds))) {
+          result =>
+            result mustBe Left(ErrorCodes.duplicateSubmission)
+            verifyPostWithoutRetry(submitReturnUrl)
         }
       }
 
@@ -164,9 +167,10 @@ class ReturnsConnectorSpec extends ISpecBase {
           Json.toJson(returnSubmission).toString(),
           Json.toJson(duplicateSubmissionWrongCode).toString()
         )
-        whenReady(connectorWithRetry.submitReturn(returnSubmission, id).value, timeout = Timeout(Span(3, Seconds))) { result =>
-          result mustBe Left(ErrorCodes.unexpectedResponse)
-          verifyPostWithoutRetry(submitReturnUrl)
+        whenReady(connectorWithRetry.submitReturn(returnSubmission, id).value, timeout = Timeout(Span(3, Seconds))) {
+          result =>
+            result mustBe Left(ErrorCodes.unexpectedResponse)
+            verifyPostWithoutRetry(submitReturnUrl)
         }
       }
 
@@ -225,10 +229,10 @@ class ReturnsConnectorSpec extends ISpecBase {
   }
 
   class SetUp {
-    val connector       = appWithHttpClientV2.injector.instanceOf[ReturnsConnector]
+    val connector          = appWithHttpClientV2.injector.instanceOf[ReturnsConnector]
     val connectorWithRetry = appWithHttpClientV2WithRetry.injector.instanceOf[ReturnsConnector]
-    val getReturnUrl    = config.getReturnUrl(returnId)
-    val submitReturnUrl = config.submitReturnUrl
+    val getReturnUrl       = config.getReturnUrl(returnId)
+    val submitReturnUrl    = config.submitReturnUrl
 
     val periodKey = "24AA"
     val id        = appaId
