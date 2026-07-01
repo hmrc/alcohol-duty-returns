@@ -120,7 +120,7 @@ class ReturnsConnector @Inject() (
               Future.successful(Left(ErrorCodes.entityNotFound))
             case UNPROCESSABLE_ENTITY =>
               logger.warn(
-                s"[ReturnsConnector] [getReturn] Get return unprocessable for (appaId ${returnId.appaId}, periodKey ${returnId.periodKey}): ${response.body}"
+                s"[ReturnsConnector] [fetchCall] Get return unprocessable for (appaId ${returnId.appaId}, periodKey ${returnId.periodKey}): ${response.body}"
               )
               Future.successful(Left(ErrorCodes.unexpectedResponse))
             // Retry and log on final fail for the following transient errors
