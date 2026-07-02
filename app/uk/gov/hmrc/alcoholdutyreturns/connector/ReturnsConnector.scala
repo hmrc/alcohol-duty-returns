@@ -82,7 +82,7 @@ class ReturnsConnector @Inject() (
   ): Future[Either[ErrorResponse, GetReturnDetails]] =
     circuitBreakerProvider.get().withCircuitBreaker {
       logger.info(
-        s"[ReturnsConnector] [getReturn] Getting return (appaId ${returnId.appaId}, periodKey ${returnId.periodKey})"
+        s"[ReturnsConnector] [fetchCall] Getting return (appaId ${returnId.appaId}, periodKey ${returnId.periodKey})"
       )
       httpClient
         .get(url"${config.getReturnUrl(returnId)}")
@@ -98,29 +98,29 @@ class ReturnsConnector @Inject() (
                 case Success(returnDetailsSuccess) =>
                   logger
                     .info(
-                      s"[ReturnsConnector] [getReturn] Return obtained successfully (appaId ${returnId.appaId}, periodKey ${returnId.periodKey})"
+                      s"[ReturnsConnector] [fetchCall] Return obtained successfully (appaId ${returnId.appaId}, periodKey ${returnId.periodKey})"
                     )
                   Future.successful(Right(returnDetailsSuccess.success))
                 case Failure(e)                    =>
                   logger.error(
-                    s"[ReturnsConnector] [getReturn] Parsing failed for return (appaId ${returnId.appaId}, periodKey ${returnId.periodKey})",
+                    s"[ReturnsConnector] [fetchCall] Parsing failed for return (appaId ${returnId.appaId}, periodKey ${returnId.periodKey})",
                     e
                   )
                   Future.successful(Left(ErrorCodes.invalidJson))
               }
             case BAD_REQUEST          =>
               logger.warn(
-                s"[ReturnsConnector] [getReturn] Bad request returned for get return (appaId ${returnId.appaId}, periodKey ${returnId.periodKey})"
+                s"[ReturnsConnector] [fetchCall] Bad request returned for get return (appaId ${returnId.appaId}, periodKey ${returnId.periodKey})"
               )
               Future.successful(Left(ErrorCodes.badRequest))
             case NOT_FOUND            =>
               logger.warn(
-                s"[ReturnsConnector] [getReturn] Return not found (appaId ${returnId.appaId}, periodKey ${returnId.periodKey})"
+                s"[ReturnsConnector] [fetchCall] Return not found (appaId ${returnId.appaId}, periodKey ${returnId.periodKey})"
               )
               Future.successful(Left(ErrorCodes.entityNotFound))
             case UNPROCESSABLE_ENTITY =>
               logger.warn(
-                s"[ReturnsConnector] [getReturn] Get return unprocessable for (appaId ${returnId.appaId}, periodKey ${returnId.periodKey}): ${response.body}"
+                s"[ReturnsConnector] [fetchCall] Get return unprocessable for (appaId ${returnId.appaId}, periodKey ${returnId.periodKey}): ${response.body}"
               )
               Future.successful(Left(ErrorCodes.unexpectedResponse))
             // Retry and log on final fail for the following transient errors
