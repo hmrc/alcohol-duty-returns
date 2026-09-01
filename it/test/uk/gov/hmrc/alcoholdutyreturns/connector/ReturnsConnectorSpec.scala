@@ -59,10 +59,10 @@ class ReturnsConnectorSpec extends ISpecBase {
         }
       }
 
-      "return an UnexpectedResponse error if the call returns a 422 response without retry" in new SetUp {
+      "return a noFormBundleFound error if the call returns a 422 response without retry" in new SetUp {
         stubGet(getReturnUrl, UNPROCESSABLE_ENTITY, "")
         whenReady(connectorWithRetry.getReturn(returnId), timeout = Timeout(Span(3, Seconds))) { result =>
-          result mustBe Left(ErrorCodes.unexpectedResponse)
+          result mustBe Left(ErrorCodes.noFormBundleFound)
           verifyGetWithoutRetry(getReturnUrl)
         }
       }
