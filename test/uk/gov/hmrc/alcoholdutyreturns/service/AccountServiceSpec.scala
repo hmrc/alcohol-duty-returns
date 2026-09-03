@@ -18,12 +18,13 @@ package uk.gov.hmrc.alcoholdutyreturns.service
 
 import cats.data.EitherT
 import org.mockito.ArgumentMatchers.{any, eq as eqTo}
-import org.mockito.Mockito.when
+import org.mockito.Mockito.{never, verify, verifyNoInteractions, when}
 import uk.gov.hmrc.alcoholdutyreturns.base.SpecBase
 import uk.gov.hmrc.alcoholdutyreturns.connector.AccountConnector
 import uk.gov.hmrc.alcoholdutyreturns.models.ApprovalStatus.{Approved, DeRegistered, Insolvent, Revoked, SmallCiderProducer}
 import uk.gov.hmrc.alcoholdutyreturns.models.ObligationStatus.Fulfilled
 import uk.gov.hmrc.alcoholdutyreturns.models.*
+import uk.gov.hmrc.alcoholdutyreturns.repositories.ContactPreferenceAskedRepository
 import uk.gov.hmrc.play.bootstrap.http.ErrorResponse
 
 import java.time.LocalDate
@@ -60,6 +61,56 @@ class AccountServiceSpec extends SpecBase {
         .thenReturn(EitherT.leftT[Future, ErrorResponse](ErrorCodes.invalidJson))
 
       whenReady(accountService.getSubscriptionSummaryAndCheckStatus(returnId.appaId).value) { result =>
+        result mustBe Left(ErrorCodes.invalidJson)
+      }
+    }
+  }
+
+  "shouldAskContactPreference must" - {
+    "return false without checking the repository if paperlessReference is already true" in new SetUp {
+      val ss = subscriptionSummary.copy(paperlessReference = true)
+      when(accountConnector.getSubscriptionSummary(eqTo(returnId.appaId))(any()))
+        .thenReturn(EitherT.rightT[Future, SubscriptionSummary](ss))
+
+      whenReady(accountService.shouldAskContactPreference(returnId.appaId).value) { result =>
+        result mustBe Right(false)
+        verifyNoInteractions(contactPreferenceAskedRepository)
+      }
+    }
+
+    "return false and not mark as asked if paperlessReference is false but already asked recently" in new SetUp {
+      val ss = subscriptionSummary.copy(paperlessReference = false)
+      when(accountConnector.getSubscriptionSummary(eqTo(returnId.appaId))(any()))
+        .thenReturn(EitherT.rightT[Future, SubscriptionSummary](ss))
+      when(contactPreferenceAskedRepository.hasBeenAskedRecently(eqTo(returnId.appaId)))
+        .thenReturn(Future.successful(true))
+
+      whenReady(accountService.shouldAskContactPreference(returnId.appaId).value) { result =>
+        result mustBe Right(false)
+        verify(contactPreferenceAskedRepository, never()).markAsked(any())
+      }
+    }
+
+    "return true and mark as asked if paperlessReference is false and not asked recently" in new SetUp {
+      val ss = subscriptionSummary.copy(paperlessReference = false)
+      when(accountConnector.getSubscriptionSummary(eqTo(returnId.appaId))(any()))
+        .thenReturn(EitherT.rightT[Future, SubscriptionSummary](ss))
+      when(contactPreferenceAskedRepository.hasBeenAskedRecently(eqTo(returnId.appaId)))
+        .thenReturn(Future.successful(false))
+      when(contactPreferenceAskedRepository.markAsked(eqTo(returnId.appaId)))
+        .thenReturn(Future.successful(()))
+
+      whenReady(accountService.shouldAskContactPreference(returnId.appaId).value) { result =>
+        result mustBe Right(true)
+        verify(contactPreferenceAskedRepository).markAsked(eqTo(returnId.appaId))
+      }
+    }
+
+    "return an error if the connector returns one" in new SetUp {
+      when(accountConnector.getSubscriptionSummary(eqTo(returnId.appaId))(any()))
+        .thenReturn(EitherT.leftT[Future, ErrorResponse](ErrorCodes.invalidJson))
+
+      whenReady(accountService.shouldAskContactPreference(returnId.appaId).value) { result =>
         result mustBe Left(ErrorCodes.invalidJson)
       }
     }
@@ -135,12 +186,13 @@ class AccountServiceSpec extends SpecBase {
   }
 
   class SetUp {
-    val accountConnector = mock[AccountConnector]
+    val accountConnector                 = mock[AccountConnector]
+    val contactPreferenceAskedRepository = mock[ContactPreferenceAskedRepository]
 
     val obligationData = getObligationData(LocalDate.now(clock))
 
     val openObligations = Seq(obligationData, getObligationData(LocalDate.now(clock).minusMonths(1)))
 
-    val accountService = new AccountService(accountConnector)
+    val accountService = new AccountService(accountConnector, contactPreferenceAskedRepository)
   }
 }
