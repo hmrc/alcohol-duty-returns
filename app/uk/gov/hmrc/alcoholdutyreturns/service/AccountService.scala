@@ -23,6 +23,7 @@ import uk.gov.hmrc.alcoholdutyreturns.connector.AccountConnector
 import uk.gov.hmrc.alcoholdutyreturns.models.ApprovalStatus.{Approved, Insolvent}
 import uk.gov.hmrc.alcoholdutyreturns.models.ObligationStatus.{Fulfilled, Open}
 import uk.gov.hmrc.alcoholdutyreturns.models.{ErrorCodes, FulfilledObligations, ObligationData, ReturnId, SubscriptionSummary}
+import uk.gov.hmrc.alcoholdutyreturns.repositories.ContactPreferenceAskedRepository
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.http.ErrorResponse
 
@@ -30,7 +31,8 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class AccountService @Inject() (
-  accountConnector: AccountConnector
+  accountConnector: AccountConnector,
+  contactPreferenceAskedRepository: ContactPreferenceAskedRepository
 ) extends Logging {
   def getSubscriptionSummaryAndCheckStatus(
     appaId: String
@@ -55,6 +57,20 @@ class AccountService @Inject() (
           }
       )
   }
+
+  def shouldAskContactPreference(
+    appaId: String
+  )(implicit hc: HeaderCarrier, ec: ExecutionContext): EitherT[Future, ErrorResponse, Boolean] =
+    getSubscriptionSummaryAndCheckStatus(appaId).semiflatMap { subscriptionSummary =>
+      if (subscriptionSummary.paperlessReference) {
+        Future.successful(false)
+      } else {
+        contactPreferenceAskedRepository.hasBeenAskedRecently(appaId).flatMap {
+          case true  => Future.successful(false)
+          case false => contactPreferenceAskedRepository.markAsked(appaId).map(_ => true)
+        }
+      }
+    }
 
   def getOpenObligation(
     returnId: ReturnId

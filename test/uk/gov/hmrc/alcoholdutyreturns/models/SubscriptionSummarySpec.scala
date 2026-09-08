@@ -22,9 +22,11 @@ import uk.gov.hmrc.alcoholdutyreturns.base.SpecBase
 class SubscriptionSummarySpec extends SpecBase {
   "SubscriptionSummary must" - {
     val json          =
-      """{"approvalStatus":"Approved","regimes":["Spirits","Wine","Cider","OtherFermentedProduct","Beer"]}"""
+      """{"approvalStatus":"Approved","regimes":["Spirits","Wine","Cider","OtherFermentedProduct","Beer"],"contactPreference":"digital"}"""
+    val paperJson     =
+      """{"approvalStatus":"Approved","regimes":["Spirits","Wine","Cider","OtherFermentedProduct","Beer"],"contactPreference":"paper"}"""
     val noRegimesJson =
-      """{"approvalStatus":"Approved","regimes":[]}"""
+      """{"approvalStatus":"Approved","regimes":[],"contactPreference":"digital"}"""
 
     "serialise to json" in {
       Json.toJson(subscriptionSummary).toString() mustBe json
@@ -32,6 +34,10 @@ class SubscriptionSummarySpec extends SpecBase {
 
     "deserialise from json" in {
       Json.parse(json).as[SubscriptionSummary] mustBe subscriptionSummary
+    }
+
+    "deserialise paperlessReference as false when contactPreference is paper" in {
+      Json.parse(paperJson).as[SubscriptionSummary] mustBe subscriptionSummary.copy(paperlessReference = false)
     }
 
     "throw an error if no regimes" in {

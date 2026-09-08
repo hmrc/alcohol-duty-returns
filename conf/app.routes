@@ -13,6 +13,7 @@ GET         /obligationDetails/fulfilled/:appaId              uk.gov.hmrc.alcoho
 GET         /openObligation/:appaId/:periodKey                uk.gov.hmrc.alcoholdutyreturns.controllers.ObligationController.getOpenObligation(appaId:String, periodKey:String)
 
 GET         /subscriptionSummary/:appaId                      uk.gov.hmrc.alcoholdutyreturns.controllers.SubscriptionController.getValidSubscriptionRegimes(appaId: String)
+POST        /contact-preference/should-ask/:appaId             uk.gov.hmrc.alcoholdutyreturns.controllers.SubscriptionController.shouldAskContactPreference(appaId: String)
 
 GET         /producers/:appaId/returns/:periodKey             uk.gov.hmrc.alcoholdutyreturns.controllers.ReturnsController.getReturn(appaId:String, periodKey:String)
 POST        /producers/:appaId/returns/:periodKey             uk.gov.hmrc.alcoholdutyreturns.controllers.ReturnsController.submitReturn(appaId:String, periodKey:String)
