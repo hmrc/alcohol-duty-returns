@@ -78,6 +78,17 @@ class AccountServiceSpec extends SpecBase {
       }
     }
 
+    "return false without checking the repository if bouncedEmail is true" in new SetUp {
+      val ss = subscriptionSummary.copy(paperlessReference = false, bouncedEmail = true)
+      when(accountConnector.getSubscriptionSummary(eqTo(returnId.appaId))(any()))
+        .thenReturn(EitherT.rightT[Future, SubscriptionSummary](ss))
+
+      whenReady(accountService.shouldAskContactPreference(returnId.appaId).value) { result =>
+        result mustBe Right(false)
+        verifyNoInteractions(contactPreferenceAskedRepository)
+      }
+    }
+
     "return false and not mark as asked if paperlessReference is false but already asked recently" in new SetUp {
       val ss = subscriptionSummary.copy(paperlessReference = false)
       when(accountConnector.getSubscriptionSummary(eqTo(returnId.appaId))(any()))

@@ -21,11 +21,15 @@ import uk.gov.hmrc.alcoholdutyreturns.base.SpecBase
 
 class SubscriptionSummarySpec extends SpecBase {
   "SubscriptionSummary must" - {
-    val json          =
+    val json              =
+      """{"approvalStatus":"Approved","regimes":["Spirits","Wine","Cider","OtherFermentedProduct","Beer"],"contactPreference":"digital","emailBounced":false}"""
+    val paperJson         =
+      """{"approvalStatus":"Approved","regimes":["Spirits","Wine","Cider","OtherFermentedProduct","Beer"],"contactPreference":"paper","emailBounced":false}"""
+    val bouncedEmailJson  =
+      """{"approvalStatus":"Approved","regimes":["Spirits","Wine","Cider","OtherFermentedProduct","Beer"],"contactPreference":"paper","emailBounced":true}"""
+    val noBouncedFlagJson =
       """{"approvalStatus":"Approved","regimes":["Spirits","Wine","Cider","OtherFermentedProduct","Beer"],"contactPreference":"digital"}"""
-    val paperJson     =
-      """{"approvalStatus":"Approved","regimes":["Spirits","Wine","Cider","OtherFermentedProduct","Beer"],"contactPreference":"paper"}"""
-    val noRegimesJson =
+    val noRegimesJson     =
       """{"approvalStatus":"Approved","regimes":[],"contactPreference":"digital"}"""
 
     "serialise to json" in {
@@ -38,6 +42,15 @@ class SubscriptionSummarySpec extends SpecBase {
 
     "deserialise paperlessReference as false when contactPreference is paper" in {
       Json.parse(paperJson).as[SubscriptionSummary] mustBe subscriptionSummary.copy(paperlessReference = false)
+    }
+
+    "deserialise bouncedEmail as true when emailBounced is true" in {
+      Json.parse(bouncedEmailJson).as[SubscriptionSummary] mustBe
+        subscriptionSummary.copy(paperlessReference = false, bouncedEmail = true)
+    }
+
+    "deserialise bouncedEmail as false when emailBounced is absent" in {
+      Json.parse(noBouncedFlagJson).as[SubscriptionSummary] mustBe subscriptionSummary.copy(bouncedEmail = false)
     }
 
     "throw an error if no regimes" in {
