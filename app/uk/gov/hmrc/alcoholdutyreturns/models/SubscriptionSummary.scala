@@ -34,15 +34,18 @@ object ApprovalStatus extends Enum[ApprovalStatus] with PlayJsonEnum[ApprovalSta
 case class SubscriptionSummary(
   approvalStatus: ApprovalStatus,
   regimes: Set[AlcoholRegime],
-  paperlessReference: Boolean
+  paperlessReference: Boolean,
+  bouncedEmail: Boolean = false
 )
 
 object SubscriptionSummary {
+
   private implicit val reads: Reads[SubscriptionSummary] =
     ((JsPath \ "approvalStatus").read[ApprovalStatus] and
       (JsPath \ "regimes").read[Set[AlcoholRegime]] and
-      (JsPath \ "contactPreference").read[String].map(_.equalsIgnoreCase("digital")))(
-      (approvalStatus, regimes, paperlessReference) =>
+      (JsPath \ "contactPreference").read[String].map(_.equalsIgnoreCase("digital")) and
+      (JsPath \ "emailBounced").readNullable[Boolean].map(_.getOrElse(false)))(
+      (approvalStatus, regimes, paperlessReference, bouncedEmail) =>
         SubscriptionSummary.apply(
           approvalStatus,
           if (regimes.nonEmpty) {
@@ -50,15 +53,17 @@ object SubscriptionSummary {
           } else {
             throw new IllegalArgumentException("Expecting at least one regime to be approved")
           },
-          paperlessReference
+          paperlessReference,
+          bouncedEmail
         )
     )
 
   private implicit val writes: OWrites[SubscriptionSummary] =
     ((JsPath \ "approvalStatus").write[ApprovalStatus] and
       (JsPath \ "regimes").write[Set[AlcoholRegime]] and
-      (JsPath \ "contactPreference").write[String])(s =>
-      (s.approvalStatus, s.regimes, if (s.paperlessReference) "digital" else "paper")
+      (JsPath \ "contactPreference").write[String] and
+      (JsPath \ "emailBounced").write[Boolean])(s =>
+      (s.approvalStatus, s.regimes, if (s.paperlessReference) "digital" else "paper", s.bouncedEmail)
     )
 
   implicit val format: Format[SubscriptionSummary] = Format(reads, writes)

@@ -62,7 +62,7 @@ class AccountService @Inject() (
     appaId: String
   )(implicit hc: HeaderCarrier, ec: ExecutionContext): EitherT[Future, ErrorResponse, Boolean] =
     getSubscriptionSummaryAndCheckStatus(appaId).semiflatMap { subscriptionSummary =>
-      if (subscriptionSummary.paperlessReference) {
+      if (subscriptionSummary.paperlessReference || subscriptionSummary.bouncedEmail) {
         Future.successful(false)
       } else {
         contactPreferenceAskedRepository.hasBeenAskedRecently(appaId).flatMap {
