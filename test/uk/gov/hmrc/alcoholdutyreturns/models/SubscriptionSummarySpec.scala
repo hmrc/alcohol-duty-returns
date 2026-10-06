@@ -21,10 +21,16 @@ import uk.gov.hmrc.alcoholdutyreturns.base.SpecBase
 
 class SubscriptionSummarySpec extends SpecBase {
   "SubscriptionSummary must" - {
-    val json          =
-      """{"approvalStatus":"Approved","regimes":["Spirits","Wine","Cider","OtherFermentedProduct","Beer"]}"""
-    val noRegimesJson =
-      """{"approvalStatus":"Approved","regimes":[]}"""
+    val json              =
+      """{"approvalStatus":"Approved","regimes":["Spirits","Wine","Cider","OtherFermentedProduct","Beer"],"contactPreference":"digital","emailBounced":false}"""
+    val paperJson         =
+      """{"approvalStatus":"Approved","regimes":["Spirits","Wine","Cider","OtherFermentedProduct","Beer"],"contactPreference":"paper","emailBounced":false}"""
+    val bouncedEmailJson  =
+      """{"approvalStatus":"Approved","regimes":["Spirits","Wine","Cider","OtherFermentedProduct","Beer"],"contactPreference":"paper","emailBounced":true}"""
+    val noBouncedFlagJson =
+      """{"approvalStatus":"Approved","regimes":["Spirits","Wine","Cider","OtherFermentedProduct","Beer"],"contactPreference":"digital"}"""
+    val noRegimesJson     =
+      """{"approvalStatus":"Approved","regimes":[],"contactPreference":"digital"}"""
 
     "serialise to json" in {
       Json.toJson(subscriptionSummary).toString() mustBe json
@@ -32,6 +38,19 @@ class SubscriptionSummarySpec extends SpecBase {
 
     "deserialise from json" in {
       Json.parse(json).as[SubscriptionSummary] mustBe subscriptionSummary
+    }
+
+    "deserialise paperlessReference as false when contactPreference is paper" in {
+      Json.parse(paperJson).as[SubscriptionSummary] mustBe subscriptionSummary.copy(paperlessReference = false)
+    }
+
+    "deserialise bouncedEmail as true when emailBounced is true" in {
+      Json.parse(bouncedEmailJson).as[SubscriptionSummary] mustBe
+        subscriptionSummary.copy(paperlessReference = false, bouncedEmail = true)
+    }
+
+    "deserialise bouncedEmail as false when emailBounced is absent" in {
+      Json.parse(noBouncedFlagJson).as[SubscriptionSummary] mustBe subscriptionSummary.copy(bouncedEmail = false)
     }
 
     "throw an error if no regimes" in {

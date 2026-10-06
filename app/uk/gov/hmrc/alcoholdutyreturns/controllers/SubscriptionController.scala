@@ -43,4 +43,15 @@ class SubscriptionController @Inject() (
         case Right(subscriptionSummary) => Ok(Json.toJson(subscriptionSummary.regimes))
       }
     }
+
+  def shouldAskContactPreference(appaId: String): Action[AnyContent] =
+    (authorise andThen checkAppaId(appaId)).async { implicit request =>
+      accountService.shouldAskContactPreference(appaId).value.map {
+        case Left(errorResponse) =>
+          Status(errorResponse.statusCode)(
+            s"Error: Unable to get a valid subscription. Status: ${errorResponse.statusCode}, Message: ${errorResponse.message}"
+          )
+        case Right(shouldAsk)    => Ok(Json.toJson(shouldAsk))
+      }
+    }
 }

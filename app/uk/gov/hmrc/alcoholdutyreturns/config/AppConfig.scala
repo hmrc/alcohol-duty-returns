@@ -45,6 +45,8 @@ class AppConfig @Inject() (config: Configuration, servicesConfig: ServicesConfig
   val dbTimeToLiveInSeconds: Long   = config.get[Int]("mongodb.timeToLiveInSeconds")
   val lockingDurationInSeconds: Int = config.get[Int]("mongodb.lockingDurationInSeconds")
 
+  val contactPreferenceAskedTtlInSeconds: Long = config.get[Int]("mongodb.contactPreferenceAskedTtlInSeconds")
+
   def getSubscriptionSummaryUrl(appaId: String): String =
     s"$adrAccountHost/alcohol-duty-account/subscriptionSummary/$appaId"
 

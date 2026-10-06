@@ -46,7 +46,8 @@ trait TestData extends ModelGenerators {
   val alcoholRegimes: AlcoholRegimes    = AlcoholRegimes(Set(Beer, Wine))
   val allAlcoholRegimes: AlcoholRegimes = AlcoholRegimes(Set(Beer, Cider, Spirits, Wine, OtherFermentedProduct))
 
-  val subscriptionSummary: SubscriptionSummary = SubscriptionSummary(Approved, allAlcoholRegimes.regimes)
+  val subscriptionSummary: SubscriptionSummary =
+    SubscriptionSummary(Approved, allAlcoholRegimes.regimes, paperlessReference = true)
 
   val emptyUserAnswers: UserAnswers = UserAnswers(
     returnId,

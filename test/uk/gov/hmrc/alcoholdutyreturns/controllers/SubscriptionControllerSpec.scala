@@ -62,6 +62,50 @@ class SubscriptionControllerSpec extends SpecBase {
     }
   }
 
+  "shouldAskContactPreference must" - {
+    "return 200 OK with true if the service says the user should be asked" in new SetUp {
+      when(mockAccountService.shouldAskContactPreference(eqTo(appaId))(any(), any()))
+        .thenReturn(EitherT.rightT[Future, Boolean](true))
+
+      val result: Future[Result] =
+        controller.shouldAskContactPreference(appaId)(fakeRequest)
+
+      status(result)        mustBe OK
+      contentAsJson(result) mustBe Json.toJson(true)
+    }
+
+    "return 200 OK with false if the service says the user should not be asked" in new SetUp {
+      when(mockAccountService.shouldAskContactPreference(eqTo(appaId))(any(), any()))
+        .thenReturn(EitherT.rightT[Future, Boolean](false))
+
+      val result: Future[Result] =
+        controller.shouldAskContactPreference(appaId)(fakeRequest)
+
+      status(result)        mustBe OK
+      contentAsJson(result) mustBe Json.toJson(false)
+    }
+
+    Seq(
+      ("EntityNotFound", ErrorCodes.entityNotFound),
+      ("InvalidJson", ErrorCodes.invalidJson),
+      ("UnexpectedResponse", ErrorCodes.unexpectedResponse),
+      ("InvalidSubscriptionStatus(Revoked)", ErrorCodes.invalidSubscriptionStatus(ApprovalStatus.Revoked))
+    ).foreach { case (errorName, errorResponse) =>
+      s"return status ${errorResponse.statusCode} if the account service returns the error $errorName" in new SetUp {
+        when(mockAccountService.shouldAskContactPreference(eqTo(appaId))(any(), any()))
+          .thenReturn(EitherT.leftT[Future, Boolean](errorResponse))
+
+        val result: Future[Result] =
+          controller.shouldAskContactPreference(appaId)(fakeRequest)
+
+        status(result) mustBe errorResponse.statusCode
+        contentAsString(
+          result
+        )              mustBe s"Error: Unable to get a valid subscription. Status: ${errorResponse.statusCode}, Message: ${errorResponse.message}"
+      }
+    }
+  }
+
   class SetUp {
     val mockAccountService: AccountService = mock[AccountService]
 

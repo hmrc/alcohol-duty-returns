@@ -23,7 +23,7 @@ import uk.gov.hmrc.alcoholdutyreturns.controllers.actions.{AuthorisedAction, Che
 import uk.gov.hmrc.alcoholdutyreturns.models.*
 import uk.gov.hmrc.alcoholdutyreturns.models.AlcoholRegime.*
 import uk.gov.hmrc.alcoholdutyreturns.models.ObligationStatus.Open
-import uk.gov.hmrc.alcoholdutyreturns.repositories.UserAnswersRepository
+import uk.gov.hmrc.alcoholdutyreturns.repositories.{ContactPreferenceAskedRepository, UserAnswersRepository}
 import uk.gov.hmrc.alcoholdutyreturns.service.LockingService
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
@@ -36,6 +36,7 @@ class TestOnlyController @Inject() (
   authorise: AuthorisedAction,
   checkAppaId: CheckAppaIdAction,
   userAnswersRepository: UserAnswersRepository,
+  contactPreferenceAskedRepository: ContactPreferenceAskedRepository,
   lockingService: LockingService,
   clock: Clock
 )(implicit ec: ExecutionContext)
@@ -44,6 +45,7 @@ class TestOnlyController @Inject() (
   def clearAllData: Action[AnyContent] = Action.async { _ =>
     for {
       _ <- userAnswersRepository.collection.drop().toFuture()
+      _ <- contactPreferenceAskedRepository.collection.drop().toFuture()
       _ <- lockingService.releaseAllLocks()
     } yield Ok("All data cleared")
   }
@@ -60,7 +62,8 @@ class TestOnlyController @Inject() (
             lockingService
               .withLock(returnId, request.userId) { () =>
                 val alcoholRegimes      = getAlcoholRegimes(beer, cider, wine, spirits, OFP)
-                val subscriptionSummary = SubscriptionSummary(ApprovalStatus.Approved, alcoholRegimes)
+                val subscriptionSummary =
+                  SubscriptionSummary(ApprovalStatus.Approved, alcoholRegimes, paperlessReference = true)
                 val obligationData      = getObligationData(returnId.periodKey, LocalDate.now(clock))
                 val userAnswers         =
                   UserAnswers.createUserAnswers(returnAndUserDetails, subscriptionSummary, obligationData, clock)
