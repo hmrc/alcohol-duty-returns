@@ -119,10 +119,11 @@ class ReturnsConnector @Inject() (
               )
               Future.successful(Left(ErrorCodes.entityNotFound))
             case UNPROCESSABLE_ENTITY =>
+              checkForDuplicateSubmission(response, returnId.appaId, returnId.periodKey)
               logger.warn(
                 s"[ReturnsConnector] [fetchCall] Get return unprocessable for (appaId ${returnId.appaId}, periodKey ${returnId.periodKey}): ${response.body}"
               )
-              Future.successful(Left(ErrorCodes.unexpectedResponse))
+              Future.successful(Left(ErrorCodes.noFormBundleFound))
             // Retry and log on final fail for the following transient errors
             case BAD_GATEWAY          =>
               Future.failed(new InternalServerException("Bad gateway"))

@@ -24,6 +24,7 @@ object ErrorCodes {
   val entityNotFound: ErrorResponse                                            = ErrorResponse(NOT_FOUND, "Entity not found")
   val invalidJson: ErrorResponse                                               = ErrorResponse(UNPROCESSABLE_ENTITY, "Invalid Json received")
   val duplicateSubmission: ErrorResponse                                       = ErrorResponse(UNPROCESSABLE_ENTITY, "Return already submitted")
+  val noFormBundleFound: ErrorResponse                                         = ErrorResponse(UNPROCESSABLE_ENTITY, "No Form Bundle Found")
   val obligationFulfilled: ErrorResponse                                       = ErrorResponse(GONE, "Obligation fulfilled")
   def invalidSubscriptionStatus(approvalStatus: ApprovalStatus): ErrorResponse =
     ErrorResponse(FORBIDDEN, s"Invalid subscription status: $approvalStatus")
