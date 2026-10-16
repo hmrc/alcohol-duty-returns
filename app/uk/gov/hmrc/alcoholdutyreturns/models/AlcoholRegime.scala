@@ -16,16 +16,22 @@
 
 package uk.gov.hmrc.alcoholdutyreturns.models
 
-import enumeratum.{Enum, EnumEntry, PlayJsonEnum}
+import play.api.libs.json.{Format, JsError, JsResult, JsString, JsSuccess, JsValue, Reads, Writes}
 
-sealed trait AlcoholRegime extends EnumEntry
+enum AlcoholRegime:
+  case Beer, Cider, Wine, Spirits, OtherFermentedProduct
 
-object AlcoholRegime extends Enum[AlcoholRegime] with PlayJsonEnum[AlcoholRegime] {
-  val values = findValues
+object AlcoholRegime {
+  given Format[AlcoholRegime] = new Format[AlcoholRegime] {
+    def reads(json: JsValue): JsResult[AlcoholRegime] = json match {
+      case JsString("Beer")                  => JsSuccess(Beer)
+      case JsString("Cider")                 => JsSuccess(Cider)
+      case JsString("Wine")                  => JsSuccess(Wine)
+      case JsString("Spirits")               => JsSuccess(Spirits)
+      case JsString("OtherFermentedProduct") => JsSuccess(OtherFermentedProduct)
+      case _                                 => JsError("Invalid Alcohol Regime")
+    }
 
-  case object Beer extends AlcoholRegime
-  case object Cider extends AlcoholRegime
-  case object Wine extends AlcoholRegime
-  case object Spirits extends AlcoholRegime
-  case object OtherFermentedProduct extends AlcoholRegime
+    def writes(alcoholRegime: AlcoholRegime): JsValue = JsString(alcoholRegime.toString)
+  }
 }
