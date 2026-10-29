@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.alcoholdutyreturns.models
 
-import play.api.libs.json.{Format, JsError, JsResult, JsString, JsSuccess, JsValue, Reads, Writes}
+import play.api.libs.json.*
 
 enum AlcoholRegime:
   case Beer, Cider, Wine, Spirits, OtherFermentedProduct
