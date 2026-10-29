@@ -33,7 +33,7 @@ import scala.concurrent.Future
 class AccountServiceSpec extends SpecBase {
   "getSubscriptionSummaryAndCheckStatus must" - {
     Seq[ApprovalStatus](Approved, Insolvent).foreach { status =>
-      s"return the subscription summary if the status is ${status.entryName}" in new SetUp {
+      s"return the subscription summary if the status is ${status.toString}" in new SetUp {
         val ss = subscriptionSummary.copy(approvalStatus = status)
         when(accountConnector.getSubscriptionSummary(eqTo(returnId.appaId))(any()))
           .thenReturn(EitherT.rightT[Future, SubscriptionSummary](ss))
@@ -45,7 +45,7 @@ class AccountServiceSpec extends SpecBase {
     }
 
     Seq[ApprovalStatus](SmallCiderProducer, DeRegistered, Revoked).foreach { status =>
-      s"return InvalidSubscriptionStatus if the status is ${status.entryName}" in new SetUp {
+      s"return InvalidSubscriptionStatus if the status is ${status.toString}" in new SetUp {
         val ss = subscriptionSummary.copy(approvalStatus = status)
         when(accountConnector.getSubscriptionSummary(eqTo(returnId.appaId))(any()))
           .thenReturn(EitherT.rightT[Future, SubscriptionSummary](ss))

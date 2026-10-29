@@ -90,7 +90,7 @@ class AdrReturnSubmissionSpec extends SpecBase {
       TypeOfSpiritType.CiderPerryBased           -> AdrTypeOfSpirit.CiderOrPerry,
       TypeOfSpiritType.Other                     -> AdrTypeOfSpirit.Other
     ).foreach { case (typeOfSpiritType, adrTypeOfSpirit) =>
-      s"convert from TypeOfSpiritType ${typeOfSpiritType.entryName} to AdrTypeOfSpirit ${adrTypeOfSpirit.entryName}" in new SetUp {
+      s"convert from TypeOfSpiritType ${typeOfSpiritType.toString} to AdrTypeOfSpirit ${adrTypeOfSpirit.toString}" in new SetUp {
         AdrTypeOfSpirit.fromTypeOfSpiritType(typeOfSpiritType) mustBe adrTypeOfSpirit
       }
     }
