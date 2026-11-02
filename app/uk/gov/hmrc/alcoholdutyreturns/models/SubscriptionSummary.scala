@@ -16,19 +16,25 @@
 
 package uk.gov.hmrc.alcoholdutyreturns.models
 
-import enumeratum.{Enum, EnumEntry, PlayJsonEnum}
-import play.api.libs.functional.syntax._
-import play.api.libs.json._
+import play.api.libs.functional.syntax.*
+import play.api.libs.json.*
 
-sealed trait ApprovalStatus extends EnumEntry
-object ApprovalStatus extends Enum[ApprovalStatus] with PlayJsonEnum[ApprovalStatus] {
-  val values = findValues
+enum ApprovalStatus:
+  case Approved, SmallCiderProducer, Insolvent, DeRegistered, Revoked
 
-  case object Approved extends ApprovalStatus
-  case object SmallCiderProducer extends ApprovalStatus
-  case object Insolvent extends ApprovalStatus
-  case object DeRegistered extends ApprovalStatus
-  case object Revoked extends ApprovalStatus
+object ApprovalStatus {
+  given format: Format[ApprovalStatus] = new Format[ApprovalStatus] {
+    def reads(json: JsValue): JsResult[ApprovalStatus] = json match {
+      case JsString("Approved")           => JsSuccess(Approved)
+      case JsString("SmallCiderProducer") => JsSuccess(SmallCiderProducer)
+      case JsString("Insolvent")          => JsSuccess(Insolvent)
+      case JsString("DeRegistered")       => JsSuccess(DeRegistered)
+      case JsString("Revoked")            => JsSuccess(Revoked)
+      case _                              => JsError("Invalid Approval Status")
+    }
+
+    def writes(approvalStatus: ApprovalStatus): JsValue = JsString(approvalStatus.toString)
+  }
 }
 
 case class SubscriptionSummary(

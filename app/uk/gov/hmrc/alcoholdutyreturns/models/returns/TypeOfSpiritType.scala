@@ -16,20 +16,13 @@
 
 package uk.gov.hmrc.alcoholdutyreturns.models.returns
 
-import enumeratum.{Enum, EnumEntry}
 import play.api.libs.json._
 
-object TypeOfSpiritType extends Enum[TypeOfSpiritType] {
-  val values = findValues
+enum TypeOfSpiritType:
+  case MaltSpirit, GrainSpirit, NeutralSpiritAgricultural, NeutralSpiritIndustrial, BeerBased, WineMadeWineBased,
+    CiderPerryBased, Other
 
-  case object MaltSpirit extends TypeOfSpiritType
-  case object GrainSpirit extends TypeOfSpiritType
-  case object NeutralSpiritAgricultural extends TypeOfSpiritType
-  case object NeutralSpiritIndustrial extends TypeOfSpiritType
-  case object BeerBased extends TypeOfSpiritType
-  case object WineMadeWineBased extends TypeOfSpiritType
-  case object CiderPerryBased extends TypeOfSpiritType
-  case object Other extends TypeOfSpiritType
+object TypeOfSpiritType {
 
   implicit val typeOfSpiritTypeReads: Reads[TypeOfSpiritType] = {
     case JsString("01") => JsSuccess(MaltSpirit)
@@ -67,5 +60,3 @@ object TypeOfSpiritType extends Enum[TypeOfSpiritType] {
       case AdrTypeOfSpirit.Other               => Other
     }
 }
-
-sealed trait TypeOfSpiritType extends EnumEntry

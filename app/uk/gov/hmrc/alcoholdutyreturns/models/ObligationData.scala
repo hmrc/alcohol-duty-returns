@@ -16,17 +16,22 @@
 
 package uk.gov.hmrc.alcoholdutyreturns.models
 
-import enumeratum.{Enum, EnumEntry, PlayJsonEnum}
-import play.api.libs.json.{Json, OFormat}
-
+import play.api.libs.json.{Format, JsError, JsResult, JsString, JsSuccess, JsValue, Json, OFormat, Reads, Writes}
 import java.time.LocalDate
 
-sealed trait ObligationStatus extends EnumEntry
-object ObligationStatus extends Enum[ObligationStatus] with PlayJsonEnum[ObligationStatus] {
-  val values = findValues
+enum ObligationStatus:
+  case Open, Fulfilled
 
-  case object Open extends ObligationStatus
-  case object Fulfilled extends ObligationStatus
+object ObligationStatus {
+  given Format[ObligationStatus] = new Format[ObligationStatus] {
+    def reads(json: JsValue): JsResult[ObligationStatus] = json match {
+      case JsString("Open")      => JsSuccess(Open)
+      case JsString("Fulfilled") => JsSuccess(Fulfilled)
+      case _                     => JsError("Invalid Obligation Status")
+    }
+
+    def writes(obligationStatus: ObligationStatus): JsValue = JsString(obligationStatus.toString)
+  }
 }
 
 case class ObligationData(

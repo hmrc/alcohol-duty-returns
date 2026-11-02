@@ -51,7 +51,7 @@ class AccountService @Inject() (
             case Approved | Insolvent => Right(subscriptionSummary)
             case status               =>
               logger.warn(
-                s"[AccountService] [getSubscriptionSummaryAndCheckStatus] Invalid subscription status for $appaId ${status.entryName}"
+                s"[AccountService] [getSubscriptionSummaryAndCheckStatus] Invalid subscription status for $appaId ${status.toString}"
               )
               Left(ErrorCodes.invalidSubscriptionStatus(status))
           }

@@ -16,9 +16,7 @@
 
 package uk.gov.hmrc.alcoholdutyreturns.models.returns
 
-import enumeratum.{Enum, EnumEntry, PlayJsonEnum}
-import play.api.libs.json.{Json, OFormat}
-
+import play.api.libs.json.{Format, JsError, JsResult, JsString, JsSuccess, JsValue, Json, OFormat, Reads, Writes}
 import java.time.{Instant, LocalDate}
 
 case class AdrAlcoholQuantity(
@@ -40,33 +38,45 @@ case object AdrDuty {
   implicit val adrDutyFormat: OFormat[AdrDuty] = Json.format[AdrDuty]
 }
 
-sealed trait AdrDutySuspendedAlcoholRegime extends EnumEntry
+enum AdrDutySuspendedAlcoholRegime:
+  case Beer, Cider, Wine, Spirits, OtherFermentedProduct
 
-object AdrDutySuspendedAlcoholRegime
-    extends Enum[AdrDutySuspendedAlcoholRegime]
-    with PlayJsonEnum[AdrDutySuspendedAlcoholRegime] {
-  val values = findValues
+object AdrDutySuspendedAlcoholRegime {
+  given Format[AdrDutySuspendedAlcoholRegime] = new Format[AdrDutySuspendedAlcoholRegime] {
+    def reads(json: JsValue): JsResult[AdrDutySuspendedAlcoholRegime] = json match {
+      case JsString("Beer")                  => JsSuccess(Beer)
+      case JsString("Cider")                 => JsSuccess(Cider)
+      case JsString("Wine")                  => JsSuccess(Wine)
+      case JsString("Spirits")               => JsSuccess(Spirits)
+      case JsString("OtherFermentedProduct") => JsSuccess(OtherFermentedProduct)
+      case _                                 => JsError("Invalid Duty Suspended Alcohol Regime")
+    }
 
-  case object Beer extends AdrDutySuspendedAlcoholRegime
-  case object Cider extends AdrDutySuspendedAlcoholRegime
-  case object Wine extends AdrDutySuspendedAlcoholRegime
-  case object Spirits extends AdrDutySuspendedAlcoholRegime
-  case object OtherFermentedProduct extends AdrDutySuspendedAlcoholRegime
+    def writes(adrDutySuspendedAlcoholRegime: AdrDutySuspendedAlcoholRegime): JsValue = JsString(
+      adrDutySuspendedAlcoholRegime.toString
+    )
+  }
 }
 
-sealed trait AdrTypeOfSpirit extends EnumEntry
+enum AdrTypeOfSpirit:
+  case Malt, Grain, NeutralAgricultural, NeutralIndustrial, Beer, CiderOrPerry, WineOrMadeWine, Other
 
-object AdrTypeOfSpirit extends Enum[AdrTypeOfSpirit] with PlayJsonEnum[AdrTypeOfSpirit] {
-  val values = findValues
+object AdrTypeOfSpirit {
+  given Format[AdrTypeOfSpirit] = new Format[AdrTypeOfSpirit] {
+    def reads(json: JsValue): JsResult[AdrTypeOfSpirit] = json match {
+      case JsString("Malt")                => JsSuccess(Malt)
+      case JsString("Grain")               => JsSuccess(Grain)
+      case JsString("NeutralAgricultural") => JsSuccess(NeutralAgricultural)
+      case JsString("NeutralIndustrial")   => JsSuccess(NeutralIndustrial)
+      case JsString("Beer")                => JsSuccess(Beer)
+      case JsString("CiderOrPerry")        => JsSuccess(CiderOrPerry)
+      case JsString("WineOrMadeWine")      => JsSuccess(WineOrMadeWine)
+      case JsString("Other")               => JsSuccess(Other)
+      case _                               => JsError("Invalid Type of Spirit")
+    }
 
-  case object Malt extends AdrTypeOfSpirit
-  case object Grain extends AdrTypeOfSpirit
-  case object NeutralAgricultural extends AdrTypeOfSpirit
-  case object NeutralIndustrial extends AdrTypeOfSpirit
-  case object Beer extends AdrTypeOfSpirit
-  case object CiderOrPerry extends AdrTypeOfSpirit
-  case object WineOrMadeWine extends AdrTypeOfSpirit
-  case object Other extends AdrTypeOfSpirit
+    def writes(adrTypeOfSpirit: AdrTypeOfSpirit): JsValue = JsString(adrTypeOfSpirit.toString)
+  }
 
   def fromTypeOfSpiritType(typeOfSpiritType: TypeOfSpiritType): AdrTypeOfSpirit =
     typeOfSpiritType match {
