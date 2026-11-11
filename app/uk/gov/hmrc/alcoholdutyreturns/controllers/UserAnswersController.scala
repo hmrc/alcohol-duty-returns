@@ -101,6 +101,7 @@ class UserAnswersController @Inject() (
 
                 eitherAccountDetails.foldF(
                   err => {
+                    println(eitherAccountDetails)
                     logger.warn(
                       s"[UserAnswersController] [createUserAnswers] Unable to create userAnswers for $appaId ${returnId.periodKey} - ${err.statusCode} ${err.message}"
                     )
