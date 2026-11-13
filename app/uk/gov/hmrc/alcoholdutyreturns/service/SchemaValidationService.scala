@@ -61,10 +61,10 @@ class SchemaValidationService @Inject() (
         jsonSchemaFactory.getSchema(is)
       } match {
         case Success(schema) =>
-          logger.info(s"[SchemaValidationService] [loadSchema] Successfully loaded json schema $schemaFileName")
+          logger.info(s"Successfully loaded json schema $schemaFileName")
           Some(schema)
         case Failure(_)      =>
-          logger.error(s"[SchemaValidationService] [loadSchema] Unable to load json schema $schemaFileName")
+          logger.error(s"Unable to load json schema $schemaFileName")
           None
       }
 
@@ -79,7 +79,7 @@ class SchemaValidationService @Inject() (
     val loadAttemptedSchemas = SchemaType.values.map { schema =>
       val fileName = schemaFileNames.getOrElse(
         schema, {
-          logger.error(s"[SchemaValidationService] [schemas] Cannot find filename for schema $schema")
+          logger.error(s"Cannot find filename for schema $schema")
           throw new RuntimeException(s"Cannot find filename for schema $schema")
         }
       )
@@ -89,15 +89,15 @@ class SchemaValidationService @Inject() (
     val schemasLoaded        = loadAttemptedSchemas.flatten
     val numSchemasLoaded     = schemasLoaded.length
 
-    logger.info(s"[SchemaValidationService] [schemas] Validation schemas $numSchemas of $numSchemasLoaded loaded")
+    logger.info(s"Validation schemas $numSchemas of $numSchemasLoaded loaded")
 
     if (numSchemas != numSchemasLoaded) {
       logger.error(
-        s"[SchemaValidationService] [schemas] Only $numSchemas of $numSchemasLoaded schemas loaded - unable to start server"
+        s"Only $numSchemas of $numSchemasLoaded schemas loaded - unable to start server"
       )
       throw new RuntimeException("Schema loading failed")
     } else {
-      logger.info(s"[SchemaValidationService] [schemas] All validation schemas($numSchemas) were loaded")
+      logger.info(s"All validation schemas($numSchemas) were loaded")
       schemasLoaded.toMap
     }
   }
@@ -111,7 +111,7 @@ class SchemaValidationService @Inject() (
         )(schema => Right(schema))
     case _                                   =>
       logger.error(
-        s"[SchemaValidationService] [selectSchema] Attempting schema validation against unsupported object type ${obj.getClass.getTypeName}"
+        s"Attempting schema validation against unsupported object type ${obj.getClass.getTypeName}"
       )
       Left(
         new RuntimeException(
@@ -126,7 +126,7 @@ class SchemaValidationService @Inject() (
   def validateAgainstSchema[T](obj: T)(implicit writes: Writes[T]): Boolean =
     selectSchema(obj) match {
       case Left(e)       =>
-        logger.error(s"[SchemaValidationService] [validateAgainstSchema] ${e.getMessage}")
+        logger.error(s"${e.getMessage}")
         false
       case Right(schema) =>
         val json               = Json.toJson(obj).toString()
@@ -134,12 +134,12 @@ class SchemaValidationService @Inject() (
 
         if (validationFailures.nonEmpty) {
           logger.error(
-            s"[SchemaValidationService] [validateAgainstSchema] Validation of return submission against schema failed: ${validationFailures.mkString("; ")}"
+            s"Validation of return submission against schema failed: ${validationFailures.mkString("; ")}"
           )
           false
         } else {
           logger.info(
-            s"[SchemaValidationService] [validateAgainstSchema] Validation of return submission against schema successful"
+            s"Validation of return submission against schema successful"
           )
           true
         }
