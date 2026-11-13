@@ -20,7 +20,7 @@ import cats.data.EitherT
 import com.google.inject.{Inject, Singleton}
 import play.api.Logging
 import uk.gov.hmrc.alcoholdutyreturns.connector.AccountConnector
-import uk.gov.hmrc.alcoholdutyreturns.models.ApprovalStatus.{Approved, Insolvent}
+import uk.gov.hmrc.alcoholdutyreturns.models.ApprovalStatus.*
 import uk.gov.hmrc.alcoholdutyreturns.models.ObligationStatus.{Fulfilled, Open}
 import uk.gov.hmrc.alcoholdutyreturns.models.{ErrorCodes, FulfilledObligations, ObligationData, ReturnId, SubscriptionSummary}
 import uk.gov.hmrc.alcoholdutyreturns.repositories.ContactPreferenceAskedRepository
@@ -48,8 +48,8 @@ class AccountService @Inject() (
         },
         subscriptionSummary =>
           subscriptionSummary.approvalStatus match {
-            case Approved | Insolvent => Right(subscriptionSummary)
-            case status               =>
+            case Approved | Insolvent | DeRegistered => Right(subscriptionSummary)
+            case status                              =>
               logger.warn(
                 s"[AccountService] [getSubscriptionSummaryAndCheckStatus] Invalid subscription status for $appaId ${status.toString}"
               )
